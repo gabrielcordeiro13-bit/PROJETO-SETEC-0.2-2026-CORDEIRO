@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal de Jogos Web</title>
+    <meta
+      name="description"
+      content="Portal de jogos educativos com navegação entre jogos em HTML, CSS e JavaScript puro."
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar" aria-label="Cabeçalho do portal">
+        <div class="brand-block">
+          <p class="eyebrow">Projeto escolar</p>
+          <h1>Portal de Jogos Web</h1>
+          <p class="subtitle">Aprenda programação enquanto joga!</p>
+        </div>
+      </header>
+
+      <main>
+        <section class="screen active" data-screen="menu" aria-label="Menu principal do portal">
+          <div class="intro-panel">
+            <div class="intro-copy">
+              <p class="label">Biblioteca interativa</p>
+              <h2>Escolha um jogo</h2>
+            </div>
+            <p>
+              Explore desafios de lógica, estratégia e palavras em uma experiência
+              organizada, responsiva e pensada para estudantes.
+            </p>
+          </div>
+
+          <div class="about-panel" aria-label="Sobre o projeto">
+            <h3>Sobre o Projeto</h3>
+            <p>
+              Este portal reúne atividades educativas em HTML, CSS e JavaScript
+              puro para estimular raciocínio, atenção e criatividade.
+            </p>
+          </div>
+
+          <div class="game-grid" aria-label="Lista de jogos disponíveis">
+            <article class="game-card" data-game-card="block-wood">
+              <div class="card-surface wood-surface" aria-hidden="true">
+                <div class="game-icon puzzle-icon">
+                  <span class="icon-block"></span>
+                  <span class="icon-block"></span>
+                  <span class="icon-block"></span>
+                  <span class="icon-block"></span>
+                </div>
+              </div>
+
+              <div class="card-header">
+                <span class="badge badge-wood">Puzzle</span>
+                <h3>Block Wood Puzzle</h3>
+              </div>
+
+              <p>
+                Monte peças no tabuleiro, complete linhas e colunas e conquiste a
+                maior pontuação.
+              </p>
+
+              <button type="button" class="primary-button" data-open-game="block-wood" aria-label="Jogar Block Wood Puzzle">
+                Jogar
+              </button>
+            </article>
+
+            <article class="game-card" data-game-card="pacman">
+              <div class="card-surface pacman-surface" aria-hidden="true">
+                <div class="game-icon pacman-icon">
+                  <span class="maze-dot"></span>
+                  <span class="maze-dot"></span>
+                  <span class="maze-dot"></span>
+                  <span class="maze-dot"></span>
+                </div>
+              </div>
+
+              <div class="card-header">
+                <span class="badge badge-pacman">Arcade</span>
+                <h3>Pac-Man</h3>
+              </div>
+
+              <p>
+                Percorra o labirinto, colete as pastilhas e escape dos fantasmas.
+              </p>
+
+              <button type="button" class="primary-button" data-open-game="pacman" aria-label="Jogar Pac-Man">
+                Jogar
+              </button>
+            </article>
+
+            <article class="game-card" data-game-card="hangman">
+              <div class="card-surface hangman-surface" aria-hidden="true">
+                <div class="game-icon hangman-icon">
+                  <span class="letter-letter">A</span>
+                  <span class="letter-letter">B</span>
+                  <span class="letter-letter">C</span>
+                </div>
+              </div>
+
+              <div class="card-header">
+                <span class="badge badge-hangman">Palavras</span>
+                <h3>Jogo da Forca</h3>
+              </div>
+
+              <p>
+                Descubra palavras relacionadas a tecnologia usando as dicas disponíveis.
+              </p>
+
+              <button type="button" class="primary-button" data-open-game="hangman" aria-label="Jogar Jogo da Forca">
+                Jogar
+              </button>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen" data-screen="block-wood" aria-label="Jogo Block Wood Puzzle">
+          <div class="game-header">
+            <button type="button" class="back-button" data-back-to-menu aria-label="Voltar ao menu principal">
+              ← Voltar ao Menu Principal
+            </button>
+            <h2>Block Wood Puzzle</h2>
+          </div>
+
+          <div class="game-stage" aria-live="polite"></div>
+        </section>
+
+        <section class="screen" data-screen="pacman" aria-label="Jogo Pac-Man">
+          <div class="game-header">
+            <button type="button" class="back-button" data-back-to-menu aria-label="Voltar ao menu principal">
+              ← Voltar ao Menu Principal
+            </button>
+            <h2>Pac-Man</h2>
+          </div>
+
+          <div class="game-stage" aria-live="polite"></div>
+        </section>
+
+        <section class="screen" data-screen="hangman" aria-label="Jogo da Forca">
+          <div class="game-header">
+            <button type="button" class="back-button" data-back-to-menu aria-label="Voltar ao menu principal">
+              ← Voltar ao Menu Principal
+            </button>
+            <h2>Jogo da Forca</h2>
+          </div>
+
+          <div class="game-stage" aria-live="polite"></div>
+        </section>
+      </main>
+
+      <footer class="site-footer" aria-label="Informações do aluno">
+        <p>Gabriel dos Santos Cordeiro</p>
+        <p>2º Ano de Desenvolvimento de Sistemas</p>
+        <p>Colégio Estadual Barbosa Ferraz</p>
+      </footer>
+    </div>
+
+    <div class="modal-overlay hidden" id="game-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-card">
+        <p class="label">Status do jogo</p>
+        <h3 id="modal-title">Atenção</h3>
+        <p id="modal-message">Mensagem do jogo.</p>
+        <button type="button" class="primary-button modal-button" id="modal-action-button">Continuar</button>
+      </div>
+    </div>
+
+    <script src="js/block-wood.js"></script>
+    <script src="js/pacman.js"></script>
+    <script src="js/hangman.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
