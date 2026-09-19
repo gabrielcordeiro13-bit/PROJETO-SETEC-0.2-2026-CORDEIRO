@@ -12,13 +12,53 @@
 
   let currentModalAction = null;
   let navigationBound = false;
-  let gameModulesInitialized = false;
+
+  const gameDefinitions = [
+    { key: 'block-wood', init: 'initBlockWoodGame' },
+    { key: 'pacman', init: 'initPacmanGame' },
+    { key: 'hangman', init: 'initHangmanGame' },
+  ];
+
+  function cleanupGameRuntime(key) {
+    const runtime = window.__gameRuntimeRegistry && window.__gameRuntimeRegistry[key];
+    if (runtime && typeof runtime.cleanup === 'function') {
+      runtime.cleanup();
+    }
+  }
+
+  function cleanupAllGames() {
+    gameDefinitions.forEach((definition) => cleanupGameRuntime(definition.key));
+  }
+
+  function ensureGameVisible(key) {
+    const definition = gameDefinitions.find((item) => item.key === key);
+    if (!definition) {
+      return;
+    }
+
+    if (typeof window[definition.init] === 'function') {
+      window[definition.init]();
+    }
+  }
 
   function showScreen(screenName) {
     screens.forEach((screen) => {
       const isActive = screen.dataset.screen === screenName;
       screen.classList.toggle('active', isActive);
     });
+
+    if (screenName === 'menu') {
+      cleanupAllGames();
+      return;
+    }
+
+    gameDefinitions.forEach((definition) => {
+      if (definition.key !== screenName) {
+        cleanupGameRuntime(definition.key);
+      }
+    });
+
+    ensureGameVisible(screenName);
   }
 
   function openModal(title, message, actionText, actionCallback) {
@@ -49,29 +89,10 @@
     }
 
     if (typeof currentModalAction === 'function') {
-      currentModalAction();
+      const callback = currentModalAction;
       currentModalAction = null;
+      callback();
     }
-  }
-
-  function initializeGameModules() {
-    if (gameModulesInitialized) {
-      return;
-    }
-
-    if (typeof window.initBlockWoodGame === 'function') {
-      window.initBlockWoodGame();
-    }
-
-    if (typeof window.initPacmanGame === 'function') {
-      window.initPacmanGame();
-    }
-
-    if (typeof window.initHangmanGame === 'function') {
-      window.initHangmanGame();
-    }
-
-    gameModulesInitialized = true;
   }
 
   window.portalModal = {
@@ -119,6 +140,5 @@
   document.addEventListener('DOMContentLoaded', () => {
     bindNavigation();
     showScreen('menu');
-    initializeGameModules();
   });
 })();

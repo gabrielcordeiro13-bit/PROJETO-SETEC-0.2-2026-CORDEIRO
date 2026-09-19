@@ -1,32 +1,31 @@
 (function () {
   const WORDS = [
-    { word: 'HTML', hint: 'Linguagem de marcação usada para estruturar páginas web.' },
-    { word: 'CSS', hint: 'Tecnologia que controla estilo, layout e aparência visual.' },
-    { word: 'JAVASCRIPT', hint: 'Linguagem de programação que torna páginas interativas.' },
-    { word: 'ALGORITMO', hint: 'Sequência lógica de passos para resolver um problema.' },
-    { word: 'VARIAVEL', hint: 'Armazena valores em um programa.' },
-    { word: 'FUNCAO', hint: 'Bloco reutilizável de código para executar uma tarefa.' },
-    { word: 'ARRAY', hint: 'Estrutura que guarda vários valores em uma lista.' },
-    { word: 'OBJETO', hint: 'Estrutura que pode conter dados e comportamentos.' },
-    { word: 'NAVEGADOR', hint: 'Software usado para abrir páginas da internet.' },
-    { word: 'SERVIDOR', hint: 'Computador que entrega dados e serviços para outros dispositivos.' },
-    { word: 'PROGRAMA', hint: 'Conjunto de instruções que executa uma tarefa.' },
-    { word: 'BANCO', hint: 'Sistema que armazena dados de forma organizada.' },
-    { word: 'COMPUTADOR', hint: 'Máquina que processa informações e executa programas.' },
-    { word: 'INTERNET', hint: 'Rede mundial de computadores interconectados.' },
-    { word: 'SOFTWARE', hint: 'Parte lógica do computador, como programas e aplicativos.' },
-    { word: 'HARDWARE', hint: 'Parte física de um computador.' },
-    { word: 'TECLADO', hint: 'Dispositivo usado para digitar instruções e textos.' },
-    { word: 'MOUSE', hint: 'Dispositivo apontador usado em computadores.' },
-    { word: 'BROWSER', hint: 'Termo em inglês para navegador.' },
-    { word: 'DOM', hint: 'Modelo de objetos da página usado pelo JavaScript.' },
-    { word: 'LOOP', hint: 'Estrutura que repete instruções várias vezes.' },
-    { word: 'STRING', hint: 'Tipo de dado usado para representar texto.' },
-    { word: 'BOOLEAN', hint: 'Tipo de dado que assume verdadeiro ou falso.' },
-    { word: 'APLICATIVO', hint: 'Programa preparado para uma tarefa específica.' },
-    { word: 'BACKEND', hint: 'Parte do sistema que trata lógica e dados no servidor.' },
-    { word: 'FRONTEND', hint: 'Parte do sistema que o usuário vê e usa.' },
-    { word: 'DESENVOLVIMENTO', hint: 'Processo de criação de software e sistemas.' },
+    { category: 'Tecnologia', word: 'HTML', hint: 'Linguagem de marcação usada para estruturar páginas web.' },
+    { category: 'Tecnologia', word: 'CSS', hint: 'Tecnologia que controla estilo, layout e aparência visual.' },
+    { category: 'Tecnologia', word: 'JAVASCRIPT', hint: 'Linguagem de programação que torna páginas interativas.' },
+    { category: 'Tecnologia', word: 'ALGORITMO', hint: 'Sequência lógica de passos para resolver um problema.' },
+    { category: 'Tecnologia', word: 'VARIAVEL', hint: 'Armazena valores em um programa.' },
+    { category: 'Tecnologia', word: 'FUNCAO', hint: 'Bloco reutilizável de código para executar uma tarefa.' },
+    { category: 'Tecnologia', word: 'ARRAY', hint: 'Estrutura que guarda vários valores em uma lista.' },
+    { category: 'Tecnologia', word: 'OBJETO', hint: 'Estrutura que pode conter dados e comportamentos.' },
+    { category: 'Tecnologia', word: 'NAVEGADOR', hint: 'Software usado para abrir páginas da internet.' },
+    { category: 'Tecnologia', word: 'SERVIDOR', hint: 'Computador que entrega dados e serviços para outros dispositivos.' },
+    { category: 'Animais', word: 'GATO', hint: 'Animal doméstico conhecido pela independência e pelo ronronar.' },
+    { category: 'Animais', word: 'PASSARO', hint: 'Animal que voa e geralmente possui penas.' },
+    { category: 'Animais', word: 'TIGRE', hint: 'Grande felino com listras e muita agilidade.' },
+    { category: 'Esportes', word: 'FUTEBOL', hint: 'Esporte mais popular do mundo, jogado com os pés.' },
+    { category: 'Esportes', word: 'BASQUETE', hint: 'Esporte jogado com uma bola e um aro.' },
+    { category: 'Esportes', word: 'NATACAO', hint: 'Modalidade esportiva praticada em piscina ou mar.' },
+    { category: 'Natureza', word: 'ARVORE', hint: 'Ser vivo que cresce no solo e produz folhas e frutos.' },
+    { category: 'Natureza', word: 'RIO', hint: 'Curso de água que segue em direção ao mar ou a outro rio.' },
+    { category: 'Escola', word: 'LIVRO', hint: 'Objeto usado para ler e estudar conteúdos diversos.' },
+    { category: 'Escola', word: 'PROFESSOR', hint: 'Pessoa que ensina e orienta os alunos.' },
+    { category: 'Alimentos', word: 'MELANCIA', hint: 'Fruta roxa com polpa doce e sementes pequenas.' },
+    { category: 'Alimentos', word: 'PAO', hint: 'Alimento comum feito a partir de farinha e fermento.' },
+    { category: 'Países', word: 'BRASIL', hint: 'País localizado na América do Sul.' },
+    { category: 'Países', word: 'CANADA', hint: 'País muito grande localizado na América do Norte.' },
+    { category: 'Profissões', word: 'MEDICO', hint: 'Profissional que cuida da saúde das pessoas.' },
+    { category: 'Profissões', word: 'ENGENHEIRO', hint: 'Pessoa que cria, projeta e resolve problemas técnicos.' },
   ];
 
   function createHangmanUi(stage) {
@@ -58,12 +57,12 @@
       return;
     }
 
-    if (window.__hangmanRuntime && window.__hangmanRuntime.stage === stage) {
+    if (window.__gameRuntimeRegistry?.['hangman'] && window.__gameRuntimeRegistry['hangman'].stage === stage) {
       return;
     }
 
-    if (window.__hangmanRuntime && typeof window.__hangmanRuntime.cleanup === 'function') {
-      window.__hangmanRuntime.cleanup();
+    if (window.__gameRuntimeRegistry?.['hangman'] && typeof window.__gameRuntimeRegistry['hangman'].cleanup === 'function') {
+      window.__gameRuntimeRegistry['hangman'].cleanup();
     }
 
     createHangmanUi(stage);
@@ -77,6 +76,7 @@
 
     let selectedWord = '';
     let hint = '';
+    let category = 'Tecnologia';
     let guessedLetters = [];
     let mistakes = 0;
     let finished = false;
@@ -91,12 +91,14 @@
       },
     };
 
-    window.__hangmanRuntime = runtime;
+    window.__gameRuntimeRegistry = window.__gameRuntimeRegistry || {};
+    window.__gameRuntimeRegistry['hangman'] = runtime;
 
     function chooseRandomWord() {
       const item = WORDS[Math.floor(Math.random() * WORDS.length)];
       selectedWord = item.word.toUpperCase();
       hint = item.hint;
+      category = item.category;
     }
 
     function renderWord() {
@@ -124,7 +126,11 @@
         button.disabled = used || finished;
 
         if (used) {
-          button.classList.add('used');
+          if (selectedWord.includes(letter)) {
+            button.classList.add('correct');
+          } else {
+            button.classList.add('incorrect');
+          }
         }
 
         button.addEventListener('click', () => {
@@ -240,18 +246,14 @@
       mistakes = 0;
       finished = false;
       errorCounter.textContent = '0';
-      hintBox.textContent = `Dica: ${hint}`;
+      hintBox.textContent = `Categoria: ${category} | Dica: ${hint}`;
       renderWord();
       renderKeyboard();
       drawHangman();
     }
 
     const handleKeyDown = (event) => {
-      if (finished) {
-        return;
-      }
-
-      if (event.repeat) {
+      if (finished || event.repeat) {
         return;
       }
 

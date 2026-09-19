@@ -270,7 +270,12 @@
     }
 
     const current = Number(scoreEl.textContent) || 0;
-    scoreEl.textContent = String(current + points);
+    const nextScore = current + points;
+    scoreEl.textContent = String(nextScore);
+
+    if (window.blockWoodState) {
+      window.blockWoodState.score = nextScore;
+    }
   }
 
   function summarizePlacement(boardState, piece, row, col) {
@@ -323,11 +328,13 @@
       return;
     }
 
-    if (stage.dataset.blockWoodInitialized === 'true') {
+    if (window.__gameRuntimeRegistry?.['block-wood'] && window.__gameRuntimeRegistry['block-wood'].stage === stage) {
       return;
     }
 
-    stage.dataset.blockWoodInitialized = 'true';
+    if (window.__gameRuntimeRegistry?.['block-wood'] && typeof window.__gameRuntimeRegistry['block-wood'].cleanup === 'function') {
+      window.__gameRuntimeRegistry['block-wood'].cleanup();
+    }
 
     buildGameUi(stage);
 
@@ -445,71 +452,97 @@
       handlePointerMove(event);
     }
 
-    function bindPieceEvents() {
-      stage.addEventListener('pointermove', (event) => {
-        if (state.isDragging) {
-          handlePointerMove(event);
-        }
-      });
+    const tray = document.getElementById('block-tray');
+    const resetButton = document.getElementById('block-reset');
 
-      stage.addEventListener('pointerup', (event) => {
-        if (state.isDragging) {
-          dropPieceOnBoard(event);
-        }
-      });
+    const pointerMoveHandler = (event) => {
+      if (state.isDragging) {
+        handlePointerMove(event);
+      }
+    };
 
-      stage.addEventListener('pointercancel', () => {
-        state.isDragging = false;
-        state.dragPiece = null;
-        state.dragOrigin = null;
-        renderBoard(state.board, null, null);
-      });
-    }
+    const pointerUpHandler = (event) => {
+      if (state.isDragging) {
+        dropPieceOnBoard(event);
+      }
+    };
 
-    function bindTrayInteractions() {
-      const tray = document.getElementById('block-tray');
-      if (!tray) {
+    const pointerCancelHandler = () => {
+      state.isDragging = false;
+      state.dragPiece = null;
+      state.dragOrigin = null;
+      renderBoard(state.board, null, null);
+    };
+
+    const trayClickHandler = (event) => {
+      const pieceEl = event.target.closest('.block-piece');
+      if (!pieceEl) {
         return;
       }
 
-      tray.addEventListener('click', (event) => {
-        const pieceEl = event.target.closest('.block-piece');
-        if (!pieceEl) {
-          return;
+      const targetIndex = Number(pieceEl.dataset.pieceIndex);
+      setActivePieceFromIndex(targetIndex);
+    };
+
+    const trayPointerDownHandler = (event) => {
+      const pieceEl = event.target.closest('.block-piece');
+      if (!pieceEl) {
+        return;
+      }
+      const targetIndex = Number(pieceEl.dataset.pieceIndex);
+      startDragging(targetIndex, event);
+    };
+
+    const resetHandler = () => {
+      state.board = makeBoard();
+      state.score = 0;
+      const scoreEl = document.getElementById('block-score');
+      if (scoreEl) {
+        scoreEl.textContent = '0';
+      }
+      refillPieces();
+      renderBoard(state.board, null, null);
+    };
+
+    const runtime = {
+      stage,
+      cleanup() {
+        stage.removeEventListener('pointermove', pointerMoveHandler);
+        stage.removeEventListener('pointerup', pointerUpHandler);
+        stage.removeEventListener('pointercancel', pointerCancelHandler);
+
+        if (tray) {
+          tray.removeEventListener('click', trayClickHandler);
+          tray.removeEventListener('pointerdown', trayPointerDownHandler);
         }
 
-        const targetIndex = Number(pieceEl.dataset.pieceIndex);
-        setActivePieceFromIndex(targetIndex);
-      });
-
-      tray.addEventListener('pointerdown', (event) => {
-        const pieceEl = event.target.closest('.block-piece');
-        if (!pieceEl) {
-          return;
+        if (resetButton) {
+          resetButton.removeEventListener('click', resetHandler);
         }
-        const targetIndex = Number(pieceEl.dataset.pieceIndex);
-        startDragging(targetIndex, event);
-      });
+
+        stage.dataset.blockWoodInitialized = 'false';
+      },
+    };
+
+    window.__gameRuntimeRegistry = window.__gameRuntimeRegistry || {};
+    window.__gameRuntimeRegistry['block-wood'] = runtime;
+    stage.dataset.blockWoodInitialized = 'true';
+
+    stage.addEventListener('pointermove', pointerMoveHandler);
+    stage.addEventListener('pointerup', pointerUpHandler);
+    stage.addEventListener('pointercancel', pointerCancelHandler);
+
+    if (tray) {
+      tray.addEventListener('click', trayClickHandler);
+      tray.addEventListener('pointerdown', trayPointerDownHandler);
     }
 
-    const resetButton = document.getElementById('block-reset');
     if (resetButton) {
-      resetButton.addEventListener('click', () => {
-        state.board = makeBoard();
-        state.score = 0;
-        const scoreEl = document.getElementById('block-score');
-        if (scoreEl) {
-          scoreEl.textContent = '0';
-        }
-        refillPieces();
-        renderBoard(state.board, null, null);
-      });
+      resetButton.addEventListener('click', resetHandler);
     }
 
     refillPieces();
     renderBoard(state.board, null, null);
-    bindTrayInteractions();
-    bindPieceEvents();
   }
 
   window.initBlockWoodGame = initBlockWoodGame;
