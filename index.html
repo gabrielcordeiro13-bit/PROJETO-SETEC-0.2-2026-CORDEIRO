@@ -13,31 +13,92 @@
   <body>
     <div class="page-shell">
       <header class="topbar" aria-label="Cabeçalho do portal">
-        <div class="brand-block">
-          <p class="eyebrow">Projeto escolar</p>
-          <h1>Portal de Jogos Web</h1>
-          <p class="subtitle">Aprenda programação enquanto joga!</p>
+        <div class="brand-bar">
+          <div class="brand-lockup" aria-label="SETEC 2026">
+            <span class="brand-mark">SETEC</span>
+            <span class="brand-year">2026</span>
+          </div>
+
+          <nav class="main-nav" aria-label="Navegação principal">
+            <a href="#inicio">Início</a>
+            <a href="#jogos">Jogos</a>
+            <a href="#sobre">Sobre</a>
+          </nav>
         </div>
       </header>
 
-      <main>
+      <main id="inicio">
         <section class="screen active" data-screen="menu" aria-label="Menu principal do portal">
-          <div class="intro-panel">
-            <div class="intro-copy">
-              <p class="label">Biblioteca interativa</p>
+          <div class="hero-panel">
+            <div class="hero-copy">
+              <p class="eyebrow">Portal de jogos escolar</p>
+              <h1>SETEC 2026</h1>
+              <p class="subtitle">Entre, escolha seu jogo e divirta-se.</p>
+
+              <div class="hero-actions">
+                <a class="primary-button hero-button" href="#jogos">Explorar jogos</a>
+                <a class="secondary-button" href="#sobre">Conhecer o projeto</a>
+              </div>
+            </div>
+
+            <div class="hero-visual" aria-hidden="true">
+              <div class="visual-stage">
+                <div class="device-card">
+                  <span class="device-pill">Arcade</span>
+                  <div class="device-screen">
+                    <span class="screen-block gold"></span>
+                    <span class="screen-block sky"></span>
+                    <span class="screen-block mint"></span>
+                  </div>
+                </div>
+                <div class="floating-card card-top">Puzzle</div>
+                <div class="floating-card card-bottom">Palavras</div>
+              </div>
+            </div>
+          </div>
+
+          <section class="spotlight-panel" aria-label="Jogo em destaque">
+            <div class="spotlight-copy">
+              <p class="label">Em destaque</p>
+              <h2>Pac-Man</h2>
+              <p>
+                Uma aventura rápida no labirinto, cheia de energia, estratégia e
+                muita diversão para testar sua atenção.
+              </p>
+
+              <div class="spotlight-meta" aria-label="Categorias do jogo em destaque">
+                <span class="chip chip-arcade">Arcade</span>
+                <span class="chip chip-accent">Labirinto</span>
+              </div>
+
+              <button type="button" class="primary-button" data-open-game="pacman" aria-label="Jogar Pac-Man agora">
+                Jogar agora
+              </button>
+            </div>
+
+            <div class="spotlight-preview" aria-hidden="true">
+              <div class="preview-grid">
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+              </div>
+              <div class="preview-character"></div>
+            </div>
+          </section>
+
+          <div class="catalog-header" id="jogos">
+            <div>
+              <p class="label">Biblioteca de jogos</p>
               <h2>Escolha um jogo</h2>
             </div>
             <p>
-              Explore desafios de lógica, estratégia e palavras em uma experiência
-              organizada, responsiva e pensada para estudantes.
-            </p>
-          </div>
-
-          <div class="about-panel" aria-label="Sobre o projeto">
-            <h3>Sobre o Projeto</h3>
-            <p>
-              Este portal reúne atividades educativas em HTML, CSS e JavaScript
-              puro para estimular raciocínio, atenção e criatividade.
+              Jogos interativos em HTML, CSS e JavaScript, com desafios de lógica,
+              arcade e palavras para explorar.
             </p>
           </div>
 
@@ -114,6 +175,19 @@
               </button>
             </article>
           </div>
+
+          <section class="about-panel" id="sobre" aria-label="Sobre o projeto">
+            <div class="about-copy">
+              <p class="label">Sobre o projeto</p>
+              <h3>Um portal para aprender jogando</h3>
+            </div>
+
+            <p>
+              O SETEC 2026 reúne jogos criados com HTML, CSS e JavaScript puro para
+              estimular raciocínio, criatividade e curiosidade. Novos desafios serão
+              adicionados ao longo do projeto para expandir a biblioteca.
+            </p>
+          </section>
         </section>
 
         <section class="screen" data-screen="block-wood" aria-label="Jogo Block Wood Puzzle">
