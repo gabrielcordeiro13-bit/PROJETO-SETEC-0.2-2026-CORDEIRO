@@ -9,9 +9,11 @@
   const modalTitle = document.getElementById('modal-title');
   const modalMessage = document.getElementById('modal-message');
   const modalActionButton = document.getElementById('modal-action-button');
+  const loadingOverlay = document.getElementById('loading-overlay');
 
   let currentModalAction = null;
   let navigationBound = false;
+  let navigationRequest = 0;
 
   const gameDefinitions = [
     { key: 'block-wood', init: 'initBlockWoodGame' },
@@ -41,7 +43,28 @@
     }
   }
 
+  function showLoading() {
+    if (!loadingOverlay) {
+      return;
+    }
+
+    loadingOverlay.classList.remove('hidden');
+    loadingOverlay.setAttribute('aria-hidden', 'false');
+  }
+
+  function hideLoading() {
+    if (!loadingOverlay) {
+      return;
+    }
+
+    loadingOverlay.classList.add('hidden');
+    loadingOverlay.setAttribute('aria-hidden', 'true');
+  }
+
   function showScreen(screenName) {
+    navigationRequest += 1;
+    const requestId = navigationRequest;
+
     screens.forEach((screen) => {
       const isActive = screen.dataset.screen === screenName;
       screen.classList.toggle('active', isActive);
@@ -49,6 +72,7 @@
 
     if (screenName === 'menu') {
       cleanupAllGames();
+      hideLoading();
       return;
     }
 
@@ -58,7 +82,19 @@
       }
     });
 
-    ensureGameVisible(screenName);
+    showLoading();
+    window.requestAnimationFrame(() => {
+      if (requestId !== navigationRequest) {
+        return;
+      }
+
+      ensureGameVisible(screenName);
+      window.requestAnimationFrame(() => {
+        if (requestId === navigationRequest) {
+          hideLoading();
+        }
+      });
+    });
   }
 
   function openModal(title, message, actionText, actionCallback) {
@@ -109,6 +145,14 @@
       button.addEventListener('click', () => {
         const target = button.dataset.openGame;
         showScreen(target);
+      });
+    });
+
+    document.querySelectorAll('.main-nav a, .hero-actions a').forEach((link) => {
+      link.addEventListener('click', () => {
+        if (link.getAttribute('href')?.startsWith('#')) {
+          showScreen('menu');
+        }
       });
     });
 

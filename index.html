@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portal de Jogos Web</title>
+    <title>SETEC 2026 | Portal Arcade</title>
     <meta
       name="description"
       content="Portal de jogos educativos com navegação entre jogos em HTML, CSS e JavaScript puro."
@@ -237,6 +237,22 @@
         <h3 id="modal-title">Atenção</h3>
         <p id="modal-message">Mensagem do jogo.</p>
         <button type="button" class="primary-button modal-button" id="modal-action-button">Continuar</button>
+      </div>
+    </div>
+
+    <div class="loading-overlay hidden" id="loading-overlay" aria-hidden="true" role="status" aria-live="polite">
+      <div class="loading-cabinet">
+        <p class="loading-kicker">SETEC SYSTEM</p>
+        <div class="loading-screen">
+          <span class="loading-pixel pixel-one"></span>
+          <span class="loading-pixel pixel-two"></span>
+          <strong id="loading-title">CARREGANDO...</strong>
+          <span class="loading-pixel pixel-three"></span>
+        </div>
+        <div class="loading-meter" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <p class="loading-status">INSERINDO CARTUCHO</p>
       </div>
     </div>
 
