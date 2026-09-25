@@ -3,16 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SETEC 2026 | Portal Arcade</title>
+    <title>SETEC 2026 | Portal de Experiências Tecnológicas</title>
     <meta
       name="description"
-      content="Portal de jogos educativos com navegação entre jogos em HTML, CSS e JavaScript puro."
+      content="SETEC 2026: portal educacional de jogos em HTML, CSS e JavaScript puro. Jogue Block Wood Puzzle, Pac-Man e Forca. Responsivo, acessível e com recordes locais."
     />
+    <meta name="theme-color" content="#050609" />
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
     <div class="page-shell">
-      <header class="topbar" aria-label="Cabeçalho do portal">
+      <header class="topbar">
         <div class="brand-bar">
           <div class="brand-lockup" aria-label="SETEC 2026">
             <span class="brand-mark">SETEC</span>
@@ -20,24 +23,73 @@
           </div>
 
           <nav class="main-nav" aria-label="Navegação principal">
-            <a href="#inicio">Início</a>
-            <a href="#jogos">Jogos</a>
-            <a href="#sobre">Sobre</a>
+            <a href="#inicio" data-nav-menu>Início</a>
+            <a href="#jogos" data-nav-menu>Jogos</a>
+            <a href="#progresso" data-nav-menu>Progresso</a>
+            <a href="#sobre" data-nav-menu>Sobre</a>
           </nav>
+
+          <button type="button" id="botao-acessibilidade" class="a11y-toggle" aria-expanded="false" aria-controls="painel-acessibilidade">
+            ♿ Acessibilidade
+          </button>
+        </div>
+
+        <div class="a11y-panel hidden" id="painel-acessibilidade" role="dialog" aria-label="Painel de acessibilidade" aria-hidden="true">
+          <div class="a11y-row">
+            <strong>Tamanho do texto</strong>
+            <div class="a11y-btns" role="group" aria-label="Tamanho do texto">
+              <button type="button" data-a11y-fonte="pequena">Pequeno</button>
+              <button type="button" data-a11y-fonte="media">Médio</button>
+              <button type="button" data-a11y-fonte="grande">Grande</button>
+              <button type="button" data-a11y-fonte="extra">Extra</button>
+            </div>
+          </div>
+          <div class="a11y-row">
+            <strong>Contraste e foco</strong>
+            <div class="a11y-btns">
+              <button type="button" id="a11y-contraste" aria-pressed="false">Alto contraste</button>
+              <button type="button" id="a11y-foco" aria-pressed="false">Destacar foco</button>
+            </div>
+          </div>
+          <div class="a11y-row">
+            <strong>Movimento</strong>
+            <div class="a11y-btns" role="group" aria-label="Preferência de movimento">
+              <button type="button" id="a11y-mov-auto" aria-pressed="true">Automático</button>
+              <button type="button" id="a11y-mov-reduzido" aria-pressed="false">Reduzir animações</button>
+              <button type="button" id="a11y-mov-completo" aria-pressed="false">Movimento completo</button>
+            </div>
+          </div>
+          <div class="a11y-row">
+            <strong>Dados locais</strong>
+            <div class="a11y-btns">
+              <button type="button" id="a11y-limpar">Apagar recordes e preferências</button>
+              <button type="button" id="a11y-fechar">Fechar painel</button>
+            </div>
+          </div>
+          <p class="a11y-note">Suas preferências ficam salvas apenas neste navegador. Nenhum dado pessoal é coletado.</p>
         </div>
       </header>
 
-      <main id="inicio">
-        <section class="screen active" data-screen="menu" aria-label="Menu principal do portal">
-          <div class="hero-panel">
+      <main id="conteudo">
+        <section class="screen active" data-screen="menu" aria-label="Página inicial do portal">
+          <div class="hero-panel" id="inicio">
             <div class="hero-copy">
-              <p class="eyebrow">Portal de jogos escolar</p>
+              <p class="eyebrow">Portal de experiências tecnológicas · Colégio Estadual Barbosa Ferraz</p>
               <h1>SETEC 2026</h1>
-              <p class="subtitle">Entre, escolha seu jogo e divirta-se.</p>
+              <p class="subtitle">
+                Um portal de jogos educativos criado com HTML, CSS e JavaScript puro.
+                Encaixe blocos, desvie de fantasmas e descubra palavras da tecnologia —
+                no computador, tablet ou celular, com ou sem mouse.
+              </p>
+              <ul class="hero-points">
+                <li>✓ 3 jogos completos e jogáveis</li>
+                <li>✓ Teclado, mouse e toque</li>
+                <li>✓ Recordes salvos no seu navegador</li>
+              </ul>
 
               <div class="hero-actions">
-                <a class="primary-button hero-button" href="#jogos">Explorar jogos</a>
-                <a class="secondary-button" href="#sobre">Conhecer o projeto</a>
+                <a class="primary-button hero-button" href="#jogos" data-nav-menu>Explorar jogos</a>
+                <a class="secondary-button" href="#sobre" data-nav-menu>Conhecer o projeto</a>
               </div>
             </div>
 
@@ -60,10 +112,11 @@
           <section class="spotlight-panel" aria-label="Jogo em destaque">
             <div class="spotlight-copy">
               <p class="label">Em destaque</p>
-              <h2>Pac-Man</h2>
+              <h2>Pac-Man do laboratório</h2>
               <p>
-                Uma aventura rápida no labirinto, cheia de energia, estratégia e
-                muita diversão para testar sua atenção.
+                Percorra o labirinto, coma todos os pontos, use a energia para
+                capturar fantasmas e avance de fase. Agora com pausa, recorde
+                local e controles de toque.
               </p>
 
               <div class="spotlight-meta" aria-label="Categorias do jogo em destaque">
@@ -91,14 +144,14 @@
             </div>
           </section>
 
-          <div class="catalog-header" id="jogos">
+          <div class="catalog-header" id="jogos" tabindex="-1">
             <div>
               <p class="label">Biblioteca de jogos</p>
               <h2>Escolha um jogo</h2>
             </div>
             <p>
-              Jogos interativos em HTML, CSS e JavaScript, com desafios de lógica,
-              arcade e palavras para explorar.
+              Três desafios de Arcade, Puzzle e Palavras. Cada card mostra o
+              objetivo e a dificuldade — escolha e comece em segundos.
             </p>
           </div>
 
@@ -114,14 +167,19 @@
               </div>
 
               <div class="card-header">
-                <span class="badge badge-wood">Puzzle</span>
+                <span class="badge badge-wood">Puzzle · Lógica</span>
                 <h3>Block Wood Puzzle</h3>
               </div>
 
-              <p>
-                Monte peças no tabuleiro, complete linhas e colunas e conquiste a
-                maior pontuação.
+              <p class="card-desc">
+                Encaixe peças num tabuleiro 9×9, complete linhas e colunas para
+                removê-las e some pontos até não caber mais nada.
               </p>
+              <dl class="card-meta">
+                <div><dt>Objetivo</dt><dd>Limpar linhas e bater recorde</dd></div>
+                <div><dt>Dificuldade</dt><dd>Média · estratégia</dd></div>
+                <div><dt>Recorde</dt><dd><span data-recorde="block-wood">0</span> pts</dd></div>
+              </dl>
 
               <button type="button" class="primary-button" data-open-game="block-wood" aria-label="Jogar Block Wood Puzzle">
                 Jogar
@@ -139,13 +197,19 @@
               </div>
 
               <div class="card-header">
-                <span class="badge badge-pacman">Arcade</span>
+                <span class="badge badge-pacman">Arcade · Labirinto</span>
                 <h3>Pac-Man</h3>
               </div>
 
-              <p>
-                Percorra o labirinto, colete as pastilhas e escape dos fantasmas.
+              <p class="card-desc">
+                Coma todos os pontos do labirinto, desvie dos 3 fantasmas e use
+                os pontos de energia para virar o jogo.
               </p>
+              <dl class="card-meta">
+                <div><dt>Objetivo</dt><dd>Limpar a fase com 3 vidas</dd></div>
+                <div><dt>Dificuldade</dt><dd>Fácil de aprender</dd></div>
+                <div><dt>Recorde</dt><dd><span data-recorde="pacman">0</span> pts</dd></div>
+              </dl>
 
               <button type="button" class="primary-button" data-open-game="pacman" aria-label="Jogar Pac-Man">
                 Jogar
@@ -162,13 +226,19 @@
               </div>
 
               <div class="card-header">
-                <span class="badge badge-hangman">Palavras</span>
+                <span class="badge badge-hangman">Palavras · Educação</span>
                 <h3>Jogo da Forca</h3>
               </div>
 
-              <p>
-                Descubra palavras relacionadas a tecnologia usando as dicas disponíveis.
+              <p class="card-desc">
+                Descubra palavras de programação, ciência, IA, espaço e
+                sustentabilidade com dicas. 6 erros e o desenho completa.
               </p>
+              <dl class="card-meta">
+                <div><dt>Objetivo</dt><dd>Acertar a palavra com dicas</dd></div>
+                <div><dt>Dificuldade</dt><dd>Fácil · Médio · Difícil</dd></div>
+                <div><dt>Recorde</dt><dd><span data-recorde="hangman">0</span> pts</dd></div>
+              </dl>
 
               <button type="button" class="primary-button" data-open-game="hangman" aria-label="Jogar Jogo da Forca">
                 Jogar
@@ -176,67 +246,95 @@
             </article>
           </div>
 
-          <section class="about-panel" id="sobre" aria-label="Sobre o projeto">
+          <section class="progress-panel" id="progresso" aria-label="Seu progresso" tabindex="-1">
+            <div class="progress-copy">
+              <p class="label">Progresso local</p>
+              <h2>Recordes e conquistas</h2>
+              <p>
+                Tudo fica salvo apenas neste navegador, sem cadastro e sem dados
+                pessoais. Jogue, desbloqueie conquistas e acompanhe sua evolução.
+              </p>
+              <p id="conquistas-contagem" class="progress-count" role="status">0 de 10 desbloqueadas</p>
+            </div>
+            <ul class="conquistas" id="conquistas-lista" aria-label="Lista de conquistas"></ul>
+          </section>
+
+          <section class="about-panel" id="sobre" aria-label="Sobre o projeto" tabindex="-1">
             <div class="about-copy">
               <p class="label">Sobre o projeto</p>
-              <h3>Um portal para aprender jogando</h3>
+              <h2>Um portal para aprender jogando</h2>
+              <p>
+                O SETEC 2026 é um trabalho de desenvolvimento do 2º ano de
+                Desenvolvimento de Sistemas: um portal de jogos feito com
+                <strong>HTML semântico, CSS responsivo e JavaScript puro</strong>,
+                sem frameworks e sem backend.
+              </p>
+              <ul class="tech-list">
+                <li>Manipulação do DOM e eventos (teclado, mouse e toque)</li>
+                <li>Lógica de jogos: tabuleiro, colisões, turnos e estados</li>
+                <li>Canvas para o Pac-Man e a Forca</li>
+                <li>Responsividade (celular, tablet e desktop) e acessibilidade</li>
+                <li>Armazenamento local (recordes, conquistas e preferências)</li>
+                <li>Organização em arquivos por jogo + núcleo compartilhado</li>
+              </ul>
+              <p class="about-note">
+                Todo o visual — labirinto, peças, forca e efeitos neon — foi
+                recriado com código próprio do projeto, sem copiar assets de terceiros.
+              </p>
             </div>
-
-            <p>
-              O SETEC 2026 reúne jogos criados com HTML, CSS e JavaScript puro para
-              estimular raciocínio, criatividade e curiosidade. Novos desafios serão
-              adicionados ao longo do projeto para expandir a biblioteca.
-            </p>
           </section>
         </section>
 
         <section class="screen" data-screen="block-wood" aria-label="Jogo Block Wood Puzzle">
           <div class="game-header">
             <button type="button" class="back-button" data-back-to-menu aria-label="Voltar ao menu principal">
-              ← Voltar ao Menu Principal
+              ← Biblioteca
             </button>
-            <h2>Block Wood Puzzle</h2>
+            <h2 tabindex="-1">Block Wood Puzzle</h2>
           </div>
 
-          <div class="game-stage" aria-live="polite"></div>
+          <div class="game-stage"></div>
         </section>
 
         <section class="screen" data-screen="pacman" aria-label="Jogo Pac-Man">
           <div class="game-header">
             <button type="button" class="back-button" data-back-to-menu aria-label="Voltar ao menu principal">
-              ← Voltar ao Menu Principal
+              ← Biblioteca
             </button>
-            <h2>Pac-Man</h2>
+            <h2 tabindex="-1">Pac-Man</h2>
           </div>
 
-          <div class="game-stage" aria-live="polite"></div>
+          <div class="game-stage"></div>
         </section>
 
         <section class="screen" data-screen="hangman" aria-label="Jogo da Forca">
           <div class="game-header">
             <button type="button" class="back-button" data-back-to-menu aria-label="Voltar ao menu principal">
-              ← Voltar ao Menu Principal
+              ← Biblioteca
             </button>
-            <h2>Jogo da Forca</h2>
+            <h2 tabindex="-1">Jogo da Forca</h2>
           </div>
 
-          <div class="game-stage" aria-live="polite"></div>
+          <div class="game-stage"></div>
         </section>
       </main>
 
-      <footer class="site-footer" aria-label="Informações do aluno">
-        <p>Gabriel dos Santos Cordeiro</p>
-        <p>2º Ano de Desenvolvimento de Sistemas</p>
-        <p>Colégio Estadual Barbosa Ferraz</p>
+      <footer class="site-footer" aria-label="Informações do projeto">
+        <p><strong>SETEC 2026</strong> · Gabriel dos Santos Cordeiro · 2º Ano de Desenvolvimento de Sistemas</p>
+        <p>Colégio Estadual Barbosa Ferraz · HTML + CSS + JavaScript puro · Sem coleta de dados pessoais</p>
+        <p><button type="button" class="link-button" id="limpar-dados-rodape">Apagar dados locais (recordes e preferências)</button></p>
       </footer>
     </div>
 
-    <div class="modal-overlay hidden" id="game-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-overlay hidden" id="game-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-message">
       <div class="modal-card">
         <p class="label">Status do jogo</p>
         <h3 id="modal-title">Atenção</h3>
         <p id="modal-message">Mensagem do jogo.</p>
-        <button type="button" class="primary-button modal-button" id="modal-action-button">Continuar</button>
+        <div class="modal-actions">
+          <button type="button" class="secondary-button modal-button" id="modal-cancel-button">Fechar</button>
+          <button type="button" class="primary-button modal-button" id="modal-action-button">Continuar</button>
+        </div>
       </div>
     </div>
 
@@ -256,6 +354,10 @@
       </div>
     </div>
 
+    <div class="sr-only" id="setec-live" role="status" aria-live="polite"></div>
+    <div class="setec-toast" id="setec-toast" role="status" aria-live="polite"></div>
+
+    <script src="js/setec-core.js"></script>
     <script src="js/block-wood.js"></script>
     <script src="js/pacman.js"></script>
     <script src="js/hangman.js"></script>

@@ -1870,3 +1870,160 @@ h1 {
     padding: 14px;
   }
 }
+
+/* ===== SETEC 2026: acessibilidade, progresso, jogos (incremento preservando a identidade) ===== */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip-link {
+  position: absolute; left: 12px; top: -60px; z-index: 100;
+  padding: 12px 18px; background: var(--warning); color: #080a0f;
+  font-weight: 900; text-decoration: none; border: 2px solid #080a0f;
+}
+.skip-link:focus { top: 12px; }
+
+/* Escala de fonte via preferências (apenas texto, sem quebrar layout) */
+body.font-pequena { font-size: 14px; }
+body.font-media { font-size: 16px; }
+body.font-grande { font-size: 18px; }
+body.font-extra { font-size: 20px; }
+
+.a11y-toggle {
+  padding: 10px 14px; background: #0c1a2d; color: var(--primary);
+  border: 2px solid var(--primary); font-weight: 900; cursor: pointer;
+  min-height: 44px;
+}
+.a11y-toggle:hover { background: var(--primary); color: #03070e; }
+.a11y-panel {
+  margin-top: 12px; padding: 16px; border: 2px solid var(--primary);
+  background: #080b13; display: grid; gap: 14px;
+}
+.a11y-panel.hidden { display: none; }
+.a11y-row { display: grid; gap: 8px; }
+.a11y-row strong { color: var(--warning); text-transform: uppercase; font-size: .75rem; letter-spacing: .1em; }
+.a11y-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.a11y-btns button {
+  min-height: 44px; padding: 10px 14px; background: #0c1a2d; color: var(--text);
+  border: 2px solid #2d5c8c; font-weight: 700; cursor: pointer;
+}
+.a11y-btns button[aria-pressed="true"] { border-color: var(--warning); color: var(--warning); }
+.a11y-note { color: var(--muted); font-size: .85rem; margin: 0; }
+
+/* Alto contraste e foco forte */
+body.alto-contraste { --muted: #ffffff; --text: #ffffff; --line: #7fd8ff; }
+body.alto-contraste .game-card p,
+body.alto-contraste .spotlight-copy p,
+body.alto-contraste .subtitle,
+body.alto-contraste .catalog-header p:last-child,
+body.alto-contraste .about-panel p:last-child { color: #fff; }
+body.alto-contraste .block-cell { border-color: #fff; }
+body.foco-forte button:focus-visible,
+body.foco-forte a:focus-visible,
+body.foco-forte .block-cell.cursor,
+body.foco-forte [tabindex]:focus-visible {
+  outline: 4px solid var(--warning) !important; outline-offset: 3px;
+}
+
+/* Movimento */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+body.reduzir-movimento *, body.reduzir-movimento *::before, body.reduzir-movimento *::after {
+  animation: none !important; transition: none !important;
+}
+
+/* Hero / cards / progresso */
+.hero-points { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 6px; color: var(--muted); }
+.card-desc { min-height: 3.2em; }
+.card-meta { display: grid; gap: 8px; margin: 0; }
+.card-meta div { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid #24405f; padding-top: 8px; }
+.card-meta dt { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; }
+.card-meta dd { margin: 0; font-weight: 700; text-align: right; }
+.progress-panel { margin-top: 28px; padding: 22px 24px; border: 2px solid var(--line); background: var(--panel); box-shadow: var(--shadow); }
+.progress-panel h2 { color: var(--warning); margin: 0 0 8px; }
+.progress-count { color: var(--primary); font-weight: 900; }
+.conquistas { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.conquista { border: 1px solid #2d5c8c; padding: 10px 12px; display: grid; gap: 4px; color: var(--muted); background: #0b1525; }
+.conquista strong { color: var(--text); }
+.conquista.desbloqueada { border-color: var(--warning); }
+.conquista.desbloqueada strong { color: var(--warning); }
+.tech-list { margin: 12px 0; padding-left: 20px; display: grid; gap: 6px; color: var(--muted); }
+.about-note { border-left: 4px solid var(--accent); padding-left: 12px; }
+.link-button { background: none; border: none; color: var(--primary); text-decoration: underline; cursor: pointer; padding: 8px; min-height: 44px; }
+
+/* Instruções dos jogos */
+.game-intro { border: 2px dashed var(--warning); padding: 16px; margin-bottom: 18px; background: rgba(255,212,41,.05); }
+.game-intro h3 { color: var(--warning); margin: 0 0 10px; }
+.game-intro ol { margin: 0 0 14px; padding-left: 22px; display: grid; gap: 8px; color: var(--muted); line-height: 1.6; }
+.game-intro strong { color: var(--text); }
+.game-intro kbd { border: 1px solid var(--primary); padding: 1px 6px; color: var(--primary); font-family: inherit; }
+.status-box { border-color: var(--warning); color: var(--warning); min-height: 44px; }
+.pacman-status, .hangman-msg { color: var(--muted); line-height: 1.6; margin: 0; }
+.tray-label { color: var(--muted); margin: 0 0 8px; }
+.block-side { display: grid; gap: 10px; align-content: start; }
+.block-cell { cursor: pointer; min-height: 0; padding: 0; appearance: none; }
+.block-cell.cursor { outline: 3px solid var(--warning); outline-offset: -1px; }
+.block-cell.preview-valid { outline: 3px solid #4ade80; outline-offset: -3px; }
+.block-cell.preview-invalid { outline: 3px dashed #ff7d7d; outline-offset: -3px; }
+.block-piece { cursor: pointer; }
+.block-piece.sem-espaco { opacity: .55; }
+.block-piece:focus-visible { outline: 3px solid var(--warning); outline-offset: 2px; }
+
+/* Pac-Man controles touch */
+.pacman-controls { display: grid; grid-template-columns: repeat(3, 64px); gap: 10px; justify-content: center; margin-top: 6px; }
+.pacman-control-btn {
+  width: 64px; height: 64px; font-size: 1.5rem; cursor: pointer;
+  background: #0c1a2d; color: var(--primary); border: 2px solid var(--primary);
+}
+.pacman-control-btn:hover { background: var(--primary); color: #03070e; }
+.pacman-control-btn:active { transform: translate(2px, 2px); }
+.pacman-control-btn.ativo {
+  background: var(--warning);
+  border-color: var(--warning);
+  color: #080a0f;
+}
+.pacman-turma {
+  margin: 2px 0 0;
+  text-align: center;
+  color: var(--warning);
+  font-weight: 900;
+  letter-spacing: .2em;
+  font-size: .8rem;
+}
+
+/* Forca: acerto/erro não só por cor */
+.key-button.correct { background: rgba(74,222,128,.25); border-color: #4ade80; color: #d1fae5; }
+.key-button.incorrect { background: rgba(255,75,85,.22); border-color: #ff4b55; color: #fecaca; text-decoration: line-through; }
+.key-button:focus-visible { outline: 3px solid var(--warning); outline-offset: 2px; }
+.hangman-meta { color: var(--primary); font-weight: 700; margin: 0; }
+.word-space { width: 18px; }
+.hangman-msg { min-height: 1.6em; }
+
+/* Modal / toast */
+.modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.modal-actions .modal-button { flex: 1 1 140px; }
+.setec-toast { position: fixed; right: 16px; bottom: 16px; z-index: 60; display: grid; gap: 10px; max-width: min(360px, calc(100vw - 32px)); }
+.toast-item { border: 2px solid var(--warning); background: #0b111d; padding: 12px 14px; display: grid; gap: 4px; box-shadow: 6px 6px 0 #020307; }
+.toast-item strong { color: var(--warning); }
+.toast-item span { color: var(--muted); font-size: .9rem; }
+
+/* Responsivo real: sem overflow, alvos grandes */
+img, canvas, .block-board, .game-stage { max-width: 100%; }
+.game-stage { overflow-x: hidden; }
+.block-board { width: min(100%, 480px); margin: 0 auto; }
+@media (max-width: 920px) {
+  .conquistas { grid-template-columns: 1fr; }
+  .block-grid { grid-template-columns: 1fr; }
+  .block-tray { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .brand-bar { flex-wrap: wrap; }
+}
+@media (max-width: 560px) {
+  .block-tray { grid-template-columns: 1fr; }
+  .block-piece-grid { transform: scale(.9); }
+  .modal-actions { flex-direction: column; }
+  .modal-actions .modal-button { width: 100%; }
+  .topbar .brand-bar { gap: 12px; }
+  .a11y-toggle { width: 100%; }
+}
