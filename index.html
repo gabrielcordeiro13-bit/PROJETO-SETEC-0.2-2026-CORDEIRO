@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SETEC 2026 | Portal Arcade</title>
+    <meta
+      name="description"
+      content="Portal de jogos educativos com navegação entre jogos em HTML, CSS e JavaScript puro."
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar" aria-label="Cabeçalho do portal">
+        <div class="brand-bar">
+          <div class="brand-lockup" aria-label="SETEC 2026">
+            <span class="brand-mark">SETEC</span>
+            <span class="brand-year">2026</span>
+          </div>
+
+          <nav class="main-nav" aria-label="Navegação principal">
+            <a href="#inicio">Início</a>
+            <a href="#jogos">Jogos</a>
+            <a href="#sobre">Sobre</a>
+          </nav>
+        </div>
+      </header>
+
+      <main id="inicio">
+        <section class="screen active" data-screen="menu" aria-label="Menu principal do portal">
+          <div class="hero-panel">
+            <div class="hero-copy">
+              <p class="eyebrow">Portal de jogos escolar</p>
+              <h1>SETEC 2026</h1>
+              <p class="subtitle">Entre, escolha seu jogo e divirta-se.</p>
+
+              <div class="hero-actions">
+                <a class="primary-button hero-button" href="#jogos">Explorar jogos</a>
+                <a class="secondary-button" href="#sobre">Conhecer o projeto</a>
+              </div>
+            </div>
+
+            <div class="hero-visual" aria-hidden="true">
+              <div class="visual-stage">
+                <div class="device-card">
+                  <span class="device-pill">Arcade</span>
+                  <div class="device-screen">
+                    <span class="screen-block gold"></span>
+                    <span class="screen-block sky"></span>
+                    <span class="screen-block mint"></span>
+                  </div>
+                </div>
+                <div class="floating-card card-top">Puzzle</div>
+                <div class="floating-card card-bottom">Palavras</div>
+              </div>
+            </div>
+          </div>
+
+          <section class="spotlight-panel" aria-label="Jogo em destaque">
+            <div class="spotlight-copy">
+              <p class="label">Em destaque</p>
+              <h2>Pac-Man</h2>
+              <p>
+                Uma aventura rápida no labirinto, cheia de energia, estratégia e
+                muita diversão para testar sua atenção.
+              </p>
+
+              <div class="spotlight-meta" aria-label="Categorias do jogo em destaque">
+                <span class="chip chip-arcade">Arcade</span>
+                <span class="chip chip-accent">Labirinto</span>
+              </div>
+
+              <button type="button" class="primary-button" data-open-game="pacman" aria-label="Jogar Pac-Man agora">
+                Jogar agora
+              </button>
+            </div>
+
+            <div class="spotlight-preview" aria-hidden="true">
+              <div class="preview-grid">
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+                <span class="preview-dot"></span>
+              </div>
+              <div class="preview-character"></div>
+            </div>
+          </section>
+
+          <div class="catalog-header" id="jogos">
+            <div>
+              <p class="label">Biblioteca de jogos</p>
+              <h2>Escolha um jogo</h2>
+            </div>
+            <p>
+              Jogos interativos em HTML, CSS e JavaScript, com desafios de lógica,
+              arcade e palavras para explorar.
+            </p>
+          </div>
+
+          <div class="game-grid" aria-label="Lista de jogos disponíveis">
+            <article class="game-card" data-game-card="block-wood">
+              <div class="card-surface wood-surface" aria-hidden="true">
+                <div class="game-icon puzzle-icon">
+                  <span class="icon-block"></span>
+                  <span class="icon-block"></span>
+                  <span class="icon-block"></span>
+                  <span class="icon-block"></span>
+                </div>
+              </div>
+
+              <div class="card-header">
+                <span class="badge badge-wood">Puzzle</span>
+                <h3>Block Wood Puzzle</h3>
+              </div>
+
+              <p>
+                Monte peças no tabuleiro, complete linhas e colunas e conquiste a
+                maior pontuação.
+              </p>
+
+              <button type="button" class="primary-button" data-open-game="block-wood" aria-label="Jogar Block Wood Puzzle">
+                Jogar
+              </button>
+            </article>
+
+            <article class="game-card" data-game-card="pacman">
+              <div class="card-surface pacman-surface" aria-hidden="true">
+                <div class="game-icon pacman-icon">
+                  <span class="maze-dot"></span>
+                  <span class="maze-dot"></span>
+                  <span class="maze-dot"></span>
+                  <span class="maze-dot"></span>
+                </div>
+              </div>
+
+              <div class="card-header">
+                <span class="badge badge-pacman">Arcade</span>
+                <h3>Pac-Man</h3>
+              </div>
+
+              <p>
+                Percorra o labirinto, colete as pastilhas e escape dos fantasmas.
+              </p>
+
+              <button type="button" class="primary-button" data-open-game="pacman" aria-label="Jogar Pac-Man">
+                Jogar
+              </button>
+            </article>
+
+            <article class="game-card" data-game-card="hangman">
+              <div class="card-surface hangman-surface" aria-hidden="true">
+                <div class="game-icon hangman-icon">
+                  <span class="letter-letter">A</span>
+                  <span class="letter-letter">B</span>
+                  <span class="letter-letter">C</span>
+                </div>
+              </div>
+
+              <div class="card-header">
+                <span class="badge badge-hangman">Palavras</span>
+                <h3>Jogo da Forca</h3>
+              </div>
+
+              <p>
+                Descubra palavras relacionadas a tecnologia usando as dicas disponíveis.
+              </p>
+
+              <button type="button" class="primary-button" data-open-game="hangman" aria-label="Jogar Jogo da Forca">
+                Jogar
+              </button>
+            </article>
+          </div>
+
+          <section class="about-panel" id="sobre" aria-label="Sobre o projeto">
+            <div class="about-copy">
+              <p class="label">Sobre o projeto</p>
+              <h3>Um portal para aprender jogando</h3>
+            </div>
+
+            <p>
+              O SETEC 2026 reúne jogos criados com HTML, CSS e JavaScript puro para
+              estimular raciocínio, criatividade e curiosidade. Novos desafios serão
+              adicionados ao longo do projeto para expandir a biblioteca.
+            </p>
+          </section>
+        </section>
+
+        <section class="screen" data-screen="block-wood" aria-label="Jogo Block Wood Puzzle">
+          <div class="game-header">
+            <button type="button" class="back-button" data-back-to-menu aria-label="Voltar ao menu principal">
+              ← Voltar ao Menu Principal
+            </button>
+            <h2>Block Wood Puzzle</h2>
+          </div>
+
+          <div class="game-stage" aria-live="polite"></div>
+        </section>
+
+        <section class="screen" data-screen="pacman" aria-label="Jogo Pac-Man">
+          <div class="game-header">
+            <button type="button" class="back-button" data-back-to-menu aria-label="Voltar ao menu principal">
+              ← Voltar ao Menu Principal
+            </button>
+            <h2>Pac-Man</h2>
+          </div>
+
+          <div class="game-stage" aria-live="polite"></div>
+        </section>
+
+        <section class="screen" data-screen="hangman" aria-label="Jogo da Forca">
+          <div class="game-header">
+            <button type="button" class="back-button" data-back-to-menu aria-label="Voltar ao menu principal">
+              ← Voltar ao Menu Principal
+            </button>
+            <h2>Jogo da Forca</h2>
+          </div>
+
+          <div class="game-stage" aria-live="polite"></div>
+        </section>
+      </main>
+
+      <footer class="site-footer" aria-label="Informações do aluno">
+        <p>Gabriel dos Santos Cordeiro</p>
+        <p>2º Ano de Desenvolvimento de Sistemas</p>
+        <p>Colégio Estadual Barbosa Ferraz</p>
+      </footer>
+    </div>
+
+    <div class="modal-overlay hidden" id="game-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-card">
+        <p class="label">Status do jogo</p>
+        <h3 id="modal-title">Atenção</h3>
+        <p id="modal-message">Mensagem do jogo.</p>
+        <button type="button" class="primary-button modal-button" id="modal-action-button">Continuar</button>
+      </div>
+    </div>
+
+    <div class="loading-overlay hidden" id="loading-overlay" aria-hidden="true" role="status" aria-live="polite">
+      <div class="loading-cabinet">
+        <p class="loading-kicker">SETEC SYSTEM</p>
+        <div class="loading-screen">
+          <span class="loading-pixel pixel-one"></span>
+          <span class="loading-pixel pixel-two"></span>
+          <strong id="loading-title">CARREGANDO...</strong>
+          <span class="loading-pixel pixel-three"></span>
+        </div>
+        <div class="loading-meter" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <p class="loading-status">INSERINDO CARTUCHO</p>
+      </div>
+    </div>
+
+    <script src="js/block-wood.js"></script>
+    <script src="js/pacman.js"></script>
+    <script src="js/hangman.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
