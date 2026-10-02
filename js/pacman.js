@@ -71,7 +71,8 @@
   function criarUi(stage) {
     stage.innerHTML =
       '<div class="pacman-game">' +
-      '<section class="game-intro" aria-label="Como jogar Pac-Man">' +
+      '<section class="game-intro" role="dialog" aria-label="Como jogar Pac-Man">' +
+      '<div class="intro-card">' +
       '<h3>Como jogar</h3>' +
       '<ol>' +
       '<li><strong>Objetivo:</strong> coma todos os pontos; os 4 grandes dão energia para capturar fantasmas.</li>' +
@@ -79,6 +80,7 @@
       '<li><strong>Extras:</strong> o túnel do meio liga os dois lados. A fruta bônus vale +100.</li>' +
       '</ol>' +
       '<button type="button" class="primary-button" id="pacman-start">Começar a jogar</button>' +
+      '</div>' +
       '</section>' +
       '<div class="pacman-panel">' +
       '<div class="stat-box">Pontos: <span id="pacman-score">0</span></div>' +
@@ -155,6 +157,9 @@
       try { reg.pacman.cleanup(); } catch (e) {}
     }
     var c = core();
+    if (c && typeof c.tocarSom !== 'function') {
+      try { c.tocarSom = function () {}; } catch (e) {} // núcleo antigo: segue sem som
+    }
     if (c) c.countPlay('pacman');
 
     criarUi(stage);

@@ -62,7 +62,8 @@
   function criarUi(stage) {
     stage.innerHTML =
       '<div class="hangman-game">' +
-      '<section class="game-intro" aria-label="Como jogar o Jogo da Forca">' +
+      '<section class="game-intro" role="dialog" aria-label="Como jogar o Jogo da Forca">' +
+      '<div class="intro-card">' +
       '<h3>Como jogar</h3>' +
       '<ol>' +
       '<li><strong>Objetivo:</strong> descubra a palavra com as dicas antes de errar 6 letras.</li>' +
@@ -70,6 +71,7 @@
       '<li><strong>Pontos:</strong> acertos valem pontos; vencer sem erros dá bônus.</li>' +
       '</ol>' +
       '<button type="button" class="primary-button" id="hangman-start">Começar a jogar</button>' +
+      '</div>' +
       '</section>' +
       '<div class="hangman-topbar">' +
       '<div class="stat-box">Tentativas: <span id="hangman-left">6</span></div>' +
@@ -103,6 +105,9 @@
       try { reg.hangman.cleanup(); } catch (e) {}
     }
     var c = core();
+    if (c && typeof c.tocarSom !== 'function') {
+      try { c.tocarSom = function () {}; } catch (e) {} // núcleo antigo: segue sem som
+    }
     if (c) c.countPlay('hangman');
 
     criarUi(stage);

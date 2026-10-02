@@ -110,6 +110,9 @@
     }
 
     var c = core();
+    if (c && typeof c.tocarSom !== 'function') {
+      try { c.tocarSom = function () {}; } catch (e) {} // núcleo antigo: segue sem som
+    }
     if (c) c.countPlay('block-wood');
 
     stage.innerHTML = '';
@@ -126,10 +129,15 @@
       '<li><strong>Controles:</strong> arraste a peça, ou toque na peça e depois na casa. No teclado: <kbd>1</kbd>–<kbd>3</kbd>, <kbd>setas</kbd> e <kbd>Enter</kbd>.</li>' +
       '<li><strong>Fim:</strong> se nenhuma peça couber, a partida termina. Bata seu recorde!</li>' +
       '</ol>';
-    var startBtn = el('button', 'primary-button', 'Começar a jogar');
+    var     startBtn = el('button', 'primary-button', 'Começar a jogar');
     startBtn.type = 'button';
     startBtn.id = 'block-start';
     intro.appendChild(startBtn);
+    var cartao = el('div', 'intro-card');
+    while (intro.firstChild) cartao.appendChild(intro.firstChild);
+    intro.appendChild(cartao);
+    intro.setAttribute('role', 'dialog');
+    intro.setAttribute('aria-label', 'Como jogar Block Wood Puzzle');
 
     // HUD
     var hud = el('div', 'block-topbar');
