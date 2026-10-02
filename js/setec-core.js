@@ -1,5 +1,6 @@
-/* SETEC 2026 - Núcleo: armazenamento local, conquistas, acessibilidade.
- * Apenas HTML/CSS/JS puro, sem dependências. Sem coleta de dados pessoais. */
+/* SETEC 2026 - Núcleo: armazenamento local, conquistas, acessibilidade e sons.
+ * Apenas HTML/CSS/JS puro, sem dependências. Sem coleta de dados pessoais.
+ * Sons via WebAudio (sem arquivos externos), desligáveis no painel. */
 (function () {
   'use strict';
 
@@ -24,7 +25,7 @@
       jogadas: { 'block-wood': 0, pacman: 0, hangman: 0 },
       vitoriasForcaSeq: 0,
       conquistas: {},
-      prefs: { fonte: 'media', contraste: false, foco: false, movimento: 'auto' }
+      prefs: { fonte: 'media', contraste: false, foco: false, movimento: 'auto', som: true }
     };
   }
 
@@ -60,6 +61,7 @@
           base.prefs.contraste = parsed.prefs.contraste === true;
           base.prefs.foco = parsed.prefs.foco === true;
           if (['auto', 'reduzido', 'completo'].indexOf(parsed.prefs.movimento) >= 0) base.prefs.movimento = parsed.prefs.movimento;
+          if (typeof parsed.prefs.som === 'boolean') base.prefs.som = parsed.prefs.som;
         }
       }
       return base;
@@ -100,9 +102,18 @@
     return false;
   }
 
+  function getPlays(gameKey) {
+    return state.jogadas[gameKey] || 0;
+  }
+
+  function totalPlays() {
+    return getPlays('block-wood') + getPlays('pacman') + getPlays('hangman');
+  }
+
   function countPlay(gameKey) {
     state.jogadas[gameKey] = (state.jogadas[gameKey] || 0) + 1;
     saveState();
+    renderRecords();
     if (state.jogadas[gameKey] === 1) unlock('primeiro-jogo');
   }
 
@@ -149,7 +160,7 @@
     var toast = document.createElement('div');
     toast.className = 'toast-item';
     var title = document.createElement('strong');
-    title.textContent = 'Conquista: ' + def.nome;
+    title.textContent = '★ Conquista: ' + def.nome;
     var desc = document.createElement('span');
     desc.textContent = def.descricao;
     toast.appendChild(title);
@@ -160,6 +171,67 @@
       if (toast.parentNode) toast.parentNode.removeChild(toast);
     }, 5000);
     return true;
+  }
+
+  /* ---- efeitos sonoros discretos (WebAudio, sem arquivos) ---- */
+  var audioCtx = null;
+  var ultimoBipPonto = 0;
+
+  function garantirAudio() {
+    try {
+      if (!audioCtx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        audioCtx = new AC();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function bip(freq, duracao, tipo, volume, atraso) {
+    try {
+      var ctx = garantirAudio();
+      if (!ctx) return;
+      var t0 = ctx.currentTime + (atraso || 0);
+      var osc = ctx.createOscillator();
+      var ganho = ctx.createGain();
+      osc.type = tipo || 'square';
+      osc.frequency.setValueAtTime(freq, t0);
+      ganho.gain.setValueAtTime(volume || 0.035, t0);
+      ganho.gain.exponentialRampToValueAtTime(0.0001, t0 + duracao);
+      osc.connect(ganho);
+      ganho.connect(ctx.destination);
+      osc.start(t0);
+      osc.stop(t0 + duracao + 0.02);
+    } catch (e) { /* som indisponível: jogo segue em silêncio */ }
+  }
+
+  function tocarSom(nome) {
+    try {
+      if (!state.prefs.som) return;
+      var agora = (window.performance && performance.now()) || Date.now();
+      switch (nome) {
+        case 'ponto':
+          if (agora - ultimoBipPonto < 70) return; // evita saraivada em sequências rápidas
+          ultimoBipPonto = agora;
+          bip(660, 0.05, 'square', 0.025);
+          break;
+        case 'colocar': bip(440, 0.07, 'triangle', 0.04); break;
+        case 'linha': bip(523, 0.08, 'triangle', 0.045); bip(784, 0.1, 'triangle', 0.045, 0.08); break;
+        case 'energia': bip(330, 0.09, 'sawtooth', 0.03); bip(660, 0.12, 'sawtooth', 0.03, 0.09); break;
+        case 'fantasma': bip(880, 0.1, 'square', 0.04); bip(440, 0.14, 'square', 0.04, 0.1); break;
+        case 'fruta': bip(988, 0.08, 'sine', 0.05); bip(1319, 0.12, 'sine', 0.05, 0.08); break;
+        case 'acerto': bip(740, 0.07, 'sine', 0.045); break;
+        case 'erro': bip(196, 0.16, 'sawtooth', 0.035); break;
+        case 'recorde': bip(659, 0.09, 'triangle', 0.05); bip(880, 0.09, 'triangle', 0.05, 0.09); bip(1175, 0.16, 'triangle', 0.05, 0.18); break;
+        case 'vitoria': bip(523, 0.1, 'triangle', 0.05); bip(659, 0.1, 'triangle', 0.05, 0.1); bip(784, 0.18, 'triangle', 0.05, 0.2); break;
+        case 'derrota': bip(330, 0.14, 'sawtooth', 0.035); bip(220, 0.2, 'sawtooth', 0.035, 0.14); break;
+        default: break;
+      }
+    } catch (e) { /* nunca quebra o jogo por causa de som */ }
   }
 
   function applyPrefs() {
@@ -185,6 +257,8 @@
       if (mRed) mRed.setAttribute('aria-pressed', String(state.prefs.movimento === 'reduzido'));
       if (mFull) mFull.setAttribute('aria-pressed', String(state.prefs.movimento === 'completo'));
       if (mAuto) mAuto.setAttribute('aria-pressed', String(state.prefs.movimento === 'auto'));
+      var s = document.getElementById('a11y-som');
+      if (s) s.setAttribute('aria-pressed', String(state.prefs.som === true));
     } catch (e) {}
   }
 
@@ -199,6 +273,15 @@
       var game = el.getAttribute('data-recorde');
       el.textContent = String(getBest(game));
     });
+    document.querySelectorAll('[data-recorde-texto]').forEach(function (el) {
+      var game = el.getAttribute('data-recorde-texto');
+      el.textContent = getPlays(game) > 0 ? (String(getBest(game)) + ' pts') : 'Ainda não jogado';
+    });
+    document.querySelectorAll('[data-partidas]').forEach(function (el) {
+      el.textContent = String(getPlays(el.getAttribute('data-partidas')));
+    });
+    var tot = document.getElementById('total-partidas');
+    if (tot) tot.textContent = String(totalPlays());
   }
 
   function renderAchievements() {
@@ -209,7 +292,7 @@
       var li = document.createElement('li');
       li.className = 'conquista' + (state.conquistas[a.id] ? ' desbloqueada' : '');
       var name = document.createElement('strong');
-      name.textContent = (state.conquistas[a.id] ? '✓ ' : '○ ') + a.nome;
+      name.textContent = (state.conquistas[a.id] ? '★ ' : '○ ') + a.nome;
       var desc = document.createElement('span');
       desc.textContent = a.descricao;
       li.appendChild(name);
@@ -236,9 +319,12 @@
     clear: clearState,
     getBest: getBest,
     setBest: setBest,
+    getPlays: getPlays,
+    totalPlays: totalPlays,
     countPlay: countPlay,
     unlock: unlock,
     announce: announce,
+    tocarSom: tocarSom,
     applyPrefs: applyPrefs,
     setPref: setPref,
     renderRecords: renderRecords,

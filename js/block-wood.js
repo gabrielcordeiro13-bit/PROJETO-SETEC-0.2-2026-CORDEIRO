@@ -210,13 +210,19 @@
 
     function setStatus(msg) { statusBox.textContent = msg; }
 
-    function atualizarHud() {
+    function atualizarHud(pulsar) {
       var s = document.getElementById('block-score');
       var l = document.getElementById('block-lines');
       var b = document.getElementById('block-best');
       if (s) s.textContent = String(state.pontos);
       if (l) l.textContent = String(state.linhas);
       if (b) b.textContent = String(c ? c.getBest('block-wood') : 0);
+      if (pulsar && s && s.parentElement) {
+        var box = s.parentElement;
+        box.classList.remove('pulso');
+        void box.offsetWidth;
+        box.classList.add('pulso');
+      }
     }
 
     function pintarTabuleiro() {
@@ -292,14 +298,18 @@
       if (!alguma) {
         state.terminado = true;
         var recorde = false;
-        if (c) recorde = c.setBest('block-wood', state.pontos);
+        if (c) {
+          recorde = c.setBest('block-wood', state.pontos);
+          c.tocarSom('derrota');
+          if (recorde) c.tocarSom('recorde');
+        }
         pintarTabuleiro(); desenharBandeja();
         setStatus('Fim de jogo! Pontuação final: ' + state.pontos + ' pontos.');
         announce('Fim de jogo no Block Wood Puzzle. Pontuação final: ' + state.pontos + ' pontos.' + (recorde ? ' Novo recorde!' : ''));
         if (window.portalModal && typeof window.portalModal.open === 'function') {
           window.portalModal.open(
-            'Fim de jogo',
-            'Sua pontuação foi ' + state.pontos + ' pontos em ' + state.jogadas + ' jogadas, com ' + state.linhas + ' linhas/colunas removidas.' + (recorde ? ' Novo recorde!' : ''),
+            recorde ? '★ Novo recorde! ★' : 'Fim de jogo',
+            'Sua pontuação foi ' + state.pontos + ' pontos em ' + state.jogadas + ' jogadas, com ' + state.linhas + ' linhas/colunas removidas.' + (recorde ? ' ★ Novo recorde! ★' : ''),
             'Jogar novamente',
             function () { reiniciar(); },
             function () {}
@@ -339,7 +349,8 @@
       if (state.pecas.length === 0) reporPecas();
       else state.ativo = Math.min(state.ativo, state.pecas.length - 1);
       state.cursor = { l: Math.min(8, Math.max(0, linha)), c: Math.min(8, Math.max(0, coluna)) };
-      atualizarHud(); pintarTabuleiro(); desenharBandeja(); desenharCursorEPreview();
+      atualizarHud(true); pintarTabuleiro(); desenharBandeja(); desenharCursorEPreview();
+      if (c) c.tocarSom(limp > 0 ? 'linha' : 'colocar');
       var msg = '+' + (base + bonus) + ' pontos. Peça ' + peca.nome + ' posicionada.';
       if (limp > 0) msg += ' ' + limp + (limp === 1 ? ' linha/coluna removida!' : ' linhas/colunas removidas! Bônus!');
       setStatus(msg);

@@ -90,6 +90,12 @@
       '<button type="button" class="primary-button" id="pacman-reset">Reiniciar</button>' +
       '</div>' +
       '<p class="pacman-status" id="pacman-status" role="status" aria-live="polite">Pressione Começar para jogar.</p>' +
+      '<div class="pausa-overlay hidden" id="pacman-pausa-overlay" role="dialog" aria-label="Jogo pausado">' +
+      '<div class="pausa-card"><h3>Jogo pausado</h3><p>Respire e continue quando quiser.</p>' +
+      '<button type="button" class="primary-button" id="pacman-continuar">Continuar</button>' +
+      '<button type="button" class="secondary-button" id="pacman-reiniciar2">Reiniciar</button>' +
+      '<button type="button" class="secondary-button" id="pacman-biblioteca">Voltar à biblioteca</button>' +
+      '</div></div>' +
       '<div class="pacman-canvas-wrap">' +
       '<canvas id="pacman-canvas" tabindex="0" width="' + LARG + '" height="' + ALT + '" role="img" aria-label="Labirinto do Pac-Man da turma 2 D S. Use as setas ou as letras W A S D para mover."></canvas>' +
       '</div>' +
@@ -185,8 +191,22 @@
     var cadeiaFantasmas = 0;
     var fruta = null; // {x, y, someEm}
     var frutaGerada = false;
+    var flutuantes = []; // textos "+200" desenhados no canvas
     var rafId = null, ultimoTs = 0;
     var invencivelAte = 0;
+
+    function pulsoPlacar() {
+      var box = scoreEl && scoreEl.parentElement;
+      if (!box) return;
+      box.classList.remove('pulso');
+      void box.offsetWidth;
+      box.classList.add('pulso');
+    }
+
+    function flutuar(x, y, texto) {
+      flutuantes.push({ x: x, y: y, texto: texto, ate: performance.now() + 900 });
+      if (flutuantes.length > 12) flutuantes.shift();
+    }
 
     function velJogador() { return TILE * (6.4 + Math.min(2, (fase - 1) * 0.4)); }
     function velFantasma() { return TILE * (5.8 + Math.min(2, (fase - 1) * 0.4)); }
@@ -224,7 +244,7 @@
       var pj = centroDe(JOGADOR_INI.l, JOGADOR_INI.c);
       jogador.x = pj.x; jogador.y = pj.y;
       jogador.dir = { l: 0, c: -1 }; jogador.prox = { l: 0, c: -1 };
-      jogador.movendo = false;
+      jogador.movendo = false; jogador.alvo = null;
       var vagas = [
         centroDe(INTERIOR.l, INTERIOR.c - 1),
         centroDe(INTERIOR.l, INTERIOR.c),
@@ -234,6 +254,7 @@
       fantasmas.forEach(function (f, i) {
         f.x = vagas[i].x; f.y = vagas[i].y;
         f.y0 = vagas[i].y;
+        f.alvo = null;
         f.dir = { l: 0, c: i % 2 === 0 ? -1 : 1 };
         f.modo = 'casa'; f.vuln = false; f.pontos = null; f.espera = 0;
       });
@@ -264,15 +285,18 @@
       pellets.delete(k); powerSet.delete(k);
       comidosFase += 1;
       if (ehPower) {
-        pontos += 50;
+        pontos += 25;
         energiaAte = performance.now() + duracaoEnergia() * 1000;
         cadeiaFantasmas = 0;
         fantasmas.forEach(function (f) { if (f.modo === 'ativo') f.vuln = true; });
         setStatus('Energia! Fantasmas vulneráveis — coma-os!');
         announce('Modo energia ativado. Fantasmas vulneráveis.');
+        if (c) c.tocarSom('energia');
       } else {
         pontos += 10;
+        if (c) c.tocarSom('ponto');
       }
+      pulsoPlacar();
       if (!frutaGerada && comidosFase >= 30) {
         frutaGerada = true;
         var fp = centroDe(FRUTA_POS.l, FRUTA_POS.c);
@@ -296,23 +320,33 @@
       var dx = jogador.x - fruta.x, dy = jogador.y - fruta.y;
       if (dx * dx + dy * dy < (TILE * 0.7) * (TILE * 0.7)) {
         pontos += 100;
+        flutuar(fruta.x, fruta.y - TILE, '+100');
         fruta = null;
         setStatus('Fruta bônus! +100 pontos.');
         announce('Fruta bônus comida. Mais 100 pontos.');
         salvarRecorde();
         hud();
+        pulsoPlacar();
+        if (c) c.tocarSom('fruta');
       }
     }
 
     function concluirFase() {
       estado = 'fim';
-      if (c) { c.unlock('pacman-fase'); c.setBest('pacman', pontos); }
-      announce('Fase ' + fase + ' concluída com ' + pontos + ' pontos!');
+      var recorde = false;
+      if (c) {
+        c.unlock('pacman-fase');
+        recorde = c.setBest('pacman', pontos);
+        c.tocarSom('vitoria');
+        if (recorde) c.tocarSom('recorde');
+      }
+      announce('Fase ' + fase + ' concluída com ' + pontos + ' pontos!' + (recorde ? ' Novo recorde!' : ''));
       hud();
       if (window.portalModal && typeof window.portalModal.open === 'function') {
         window.portalModal.open(
-          'Fase ' + fase + ' concluída!',
-          'Você comeu todos os ' + totalDaFase + ' pontos com ' + pontos + ' pontos totais. Avançar para a fase ' + (fase + 1) + '?',
+          recorde ? '★ Novo recorde! ★' : 'Fase ' + fase + ' concluída!',
+          'Você comeu todos os ' + totalDaFase + ' pontos com ' + pontos + ' pontos totais.' +
+          (recorde ? ' ★ Novo recorde! ★' : '') + ' Avançar para a fase ' + (fase + 1) + '?',
           'Próxima fase',
           function () {
             fase += 1;
@@ -333,6 +367,7 @@
       vidas -= 1;
       hud();
       announce('Vida perdida. Restam ' + vidas + ' vidas.');
+      if (c) c.tocarSom('erro');
       if (vidas <= 0) { encerrar(); return; }
       posarEntidades();
       invencivelAte = performance.now() + 1200;
@@ -342,13 +377,19 @@
 
     function encerrar() {
       estado = 'fim';
-      if (c) c.setBest('pacman', pontos);
+      var recorde = false;
+      if (c) {
+        recorde = c.setBest('pacman', pontos);
+        c.tocarSom('derrota');
+        if (recorde) c.tocarSom('recorde');
+      }
       hud();
-      announce('Fim de jogo no Pac-Man. Pontuação: ' + pontos + ' pontos na fase ' + fase + '.');
+      announce('Fim de jogo no Pac-Man. Pontuação: ' + pontos + ' pontos na fase ' + fase + '.' + (recorde ? ' Novo recorde!' : ''));
       if (window.portalModal && typeof window.portalModal.open === 'function') {
         window.portalModal.open(
-          'Fim de jogo',
-          'O laboratório entrou em modo de segurança na fase ' + fase + ' com ' + pontos + ' pontos.',
+          recorde ? '★ Novo recorde! ★' : 'Fim de jogo',
+          'O laboratório entrou em modo de segurança na fase ' + fase + ' com ' + pontos + ' pontos.' +
+          (recorde ? ' ★ Novo recorde! ★' : ''),
           'Jogar novamente',
           function () { reiniciarTudo(); },
           function () {}
@@ -356,58 +397,70 @@
       }
     }
 
-    /* ---- movimento suave do jogador ---- */
+    /* ---- movimento suave do jogador (alvo = próximo centro de tile) ---- */
+    function proximoCentro(x, y, d) {
+      var t = tileDe(x, y);
+      return { x: (t.c + d.c) * TILE + TILE / 2, y: (t.l + d.l) * TILE + TILE / 2 };
+    }
+
     function passoJogador(dt) {
       var vel = velJogador() * dt;
-      while (vel > 0.0001) {
-        var d = jogador.movendo ? jogador.dir : jogador.prox;
-        var centro = centroMaisProximo(jogador.x, jogador.y, d);
-        var dist = Math.abs(centro.x - jogador.x) + Math.abs(centro.y - jogador.y);
-        if (dist > vel) {
-          jogador.x += d.c * vel; jogador.y += d.l * vel;
-          jogador.x = envolverX(jogador.x);
+      var guard = 0;
+      while (vel > 0.0001 && guard < 8) {
+        guard += 1;
+        if (!jogador.movendo || !jogador.alvo) {
+          var t0 = tileDe(jogador.x, jogador.y);
+          if (andaJogador(t0.l + jogador.prox.l, t0.c + jogador.prox.c)) {
+            jogador.dir = { l: jogador.prox.l, c: jogador.prox.c };
+            jogador.movendo = true;
+            jogador.alvo = proximoCentro(jogador.x, jogador.y, jogador.dir);
+          } else {
+            jogador.movendo = false;
+            jogador.alvo = null;
+            break;
+          }
+        }
+        var falta = Math.abs(jogador.alvo.x - jogador.x) + Math.abs(jogador.alvo.y - jogador.y);
+        if (falta > vel) {
+          jogador.x += jogador.dir.c * vel;
+          jogador.y += jogador.dir.l * vel;
           vel = 0;
         } else {
-          jogador.x = centro.x; jogador.y = centro.y;
-          vel -= dist;
+          jogador.x = jogador.alvo.x;
+          jogador.y = jogador.alvo.y;
+          vel -= falta;
+          if (jogador.x < 0 || jogador.x >= LARG) jogador.x = envolverX(jogador.x); // túnel
           var t = tileDe(jogador.x, jogador.y);
-          // tenta virar para a direção pedida
+          comerSeHouver();
+          if (estado !== 'jogando') return;
+          var d = jogador.dir;
           if ((jogador.prox.l !== d.l || jogador.prox.c !== d.c) &&
               andaJogador(t.l + jogador.prox.l, t.c + jogador.prox.c)) {
             jogador.dir = { l: jogador.prox.l, c: jogador.prox.c };
-            jogador.movendo = true;
-            d = jogador.dir;
           }
-          if (!jogador.movendo) {
-            if (andaJogador(t.l + d.l, t.c + d.c)) { jogador.dir = { l: d.l, c: d.c }; jogador.movendo = true; }
-            else { vel = 0; } // parado até receber direção livre
-          } else if (!andaJogador(t.l + d.l, t.c + d.c)) {
-            // tenta manter virando com a pedida, senão para
-            if (andaJogador(t.l + jogador.prox.l, t.c + jogador.prox.c)) {
-              jogador.dir = { l: jogador.prox.l, c: jogador.prox.c };
-            } else { jogador.movendo = false; vel = 0; }
+          d = jogador.dir;
+          if (andaJogador(t.l + d.l, t.c + d.c)) {
+            jogador.alvo = proximoCentro(jogador.x, jogador.y, d);
+          } else {
+            jogador.movendo = false;
+            jogador.alvo = null;
+            vel = 0;
           }
-          comerSeHouver();
-          if (estado !== 'jogando') return;
         }
       }
       comerFrutaSeHouver();
     }
 
-    function centroMaisProximo(x, y, d) {
-      var t = tileDe(x, y);
-      var cx = t.c * TILE + TILE / 2, cy = t.l * TILE + TILE / 2;
-      // se já passou do centro na direção do movimento, mira o próximo
-      if (d.c > 0 && x > cx + 0.5) cx += TILE;
-      if (d.c < 0 && x < cx - 0.5) cx -= TILE;
-      if (d.l > 0 && y > cy + 0.5) cy += TILE;
-      if (d.l < 0 && y < cy - 0.5) cy -= TILE;
-      return { x: cx, y: cy };
-    }
     function envolverX(x) {
       if (x < 0) return x + LARG;
       if (x >= LARG) return x - LARG;
       return x;
+    }
+    /* Posições X extras para desenhar atravessando o túnel sem sumir. */
+    function xsDesenho(x) {
+      if (x < TILE) return [x, x + LARG];
+      if (x > LARG - TILE) return [x, x - LARG];
+      return [x];
     }
 
     /* ---- fantasmas ---- */
@@ -464,6 +517,7 @@
         if (f.y <= alvoY + 0.5) {
           f.y = alvoY;
           f.modo = 'ativo';
+          f.alvo = null;
           f.dir = { l: 0, c: -1 };
         }
         return;
@@ -505,39 +559,44 @@
         }
         return;
       }
-      // modo ativo: anda até o centro do próximo tile e decide
+      // modo ativo: persegue o alvo até o próximo centro e decide a direção
       var rest = base;
       var guard = 0;
-      while (rest > 0.0001 && guard < 6) {
+      while (rest > 0.0001 && guard < 8) {
         guard += 1;
-        var centro = centroMaisProximo(f.x, f.y, f.dir);
-        var d2 = Math.abs(centro.x - f.x) + Math.abs(centro.y - f.y);
-        if (d2 > rest) {
-          f.x = envolverX(f.x + f.dir.c * rest);
-          f.y += f.dir.l * rest;
-          rest = 0;
-        } else {
-          f.x = centro.x; f.y = centro.y;
-          rest -= d2;
+        if (!f.alvo) {
           var tt = tileDe(f.x, f.y);
           var ops = opcoesEm(tt.l, tt.c, f.dir, f);
           if (!ops.length) {
             f.dir = { l: -f.dir.l, c: -f.dir.c }; // beco: reverte
-            continue;
-          }
-          var escolha;
-          if (f.vuln || Math.random() < 0.12) {
-            escolha = ops[Math.floor(Math.random() * ops.length)];
+            f.alvo = proximoCentro(f.x, f.y, f.dir);
           } else {
-            var alvo = alvoDoFantasma(f, idx);
-            var melhor = ops[0], md = Infinity;
-            for (var i = 0; i < ops.length; i += 1) {
-              var dd = Math.abs((tt.l + ops[i].l) - alvo.l) + Math.abs((tt.c + ops[i].c) - alvo.c);
-              if (dd < md) { md = dd; melhor = ops[i]; }
+            var escolha;
+            if (f.vuln || Math.random() < 0.12) {
+              escolha = ops[Math.floor(Math.random() * ops.length)];
+            } else {
+              var alvo = alvoDoFantasma(f, idx);
+              var melhor = ops[0], md = Infinity;
+              for (var i = 0; i < ops.length; i += 1) {
+                var dd = Math.abs((tt.l + ops[i].l) - alvo.l) + Math.abs((tt.c + ops[i].c) - alvo.c);
+                if (dd < md) { md = dd; melhor = ops[i]; }
+              }
+              escolha = melhor;
             }
-            escolha = melhor;
+            f.dir = { l: escolha.l, c: escolha.c };
+            f.alvo = proximoCentro(f.x, f.y, f.dir);
           }
-          f.dir = { l: escolha.l, c: escolha.c };
+        }
+        var falta = Math.abs(f.alvo.x - f.x) + Math.abs(f.alvo.y - f.y);
+        if (falta > rest) {
+          f.x = envolverX(f.x + f.dir.c * rest);
+          f.y += f.dir.l * rest;
+          rest = 0;
+        } else {
+          f.x = f.alvo.x; f.y = f.alvo.y;
+          rest -= falta;
+          if (f.x < 0 || f.x >= LARG) f.x = envolverX(f.x);
+          f.alvo = null;
         }
       }
     }
@@ -559,12 +618,15 @@
           cadeiaFantasmas = Math.min(3, cadeiaFantasmas + 1);
           pontos += ganho;
           f.vuln = false;
+          f.alvo = null;
           f.modo = 'olhos'; f.pontos = null;
+          flutuar(f.x, f.y - TILE, '+' + ganho);
           setStatus('Fantasma capturado! +' + ganho + ' pontos.');
           announce('Fantasma capturado. Mais ' + ganho + ' pontos. Total: ' + pontos + '.');
-          if (c) { c.unlock('pacman-fantasma'); if (pontos >= 500) c.unlock('pacman-500'); }
+          if (c) { c.unlock('pacman-fantasma'); if (pontos >= 500) c.unlock('pacman-500'); c.tocarSom('fantasma'); }
           salvarRecorde();
           hud();
+          pulsoPlacar();
         } else {
           perderVida();
           return;
@@ -579,7 +641,6 @@
     /* ---- desenho ---- */
     function desenhar(agora) {
       ctx.clearRect(0, 0, LARG, ALT);
-      desenharMarcaDagua();
       // paredes com visual neon arredondado
       for (var l = 0; l < ROWS; l += 1) {
         for (var cc = 0; cc < COLS; cc += 1) {
@@ -611,6 +672,9 @@
           }
         }
       }
+      // marca d'água da turma sobre o labirinto (bem apagada) e
+      // personagens por cima dela: visível sem atrapalhar o jogo
+      desenharMarcaDagua();
       // porta da casinha
       var pd = centroDe(PORTA.l, PORTA.c);
       ctx.fillStyle = '#ff9ecb';
@@ -618,18 +682,35 @@
       desenharFruta();
       desenharJogador(agora);
       fantasmas.forEach(desenharFantasma);
+      desenharFlutuantes();
+    }
+
+    function desenharFlutuantes() {
+      var agoraMs = performance.now();
+      flutuantes = flutuantes.filter(function (fl) { return agoraMs < fl.ate; });
+      flutuantes.forEach(function (fl) {
+        var resto = (fl.ate - agoraMs) / 900; // 1 -> 0
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, resto * 1.5);
+        ctx.fillStyle = '#ffd429';
+        ctx.font = '900 ' + Math.floor(TILE * 0.55) + 'px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(fl.texto, fl.x, fl.y - (1 - resto) * TILE * 0.8);
+        ctx.restore();
+      });
     }
 
     function desenharMarcaDagua() {
       ctx.save();
-      ctx.globalAlpha = 0.07;
-      ctx.translate(LARG / 2, ALT / 2);
-      ctx.rotate(-Math.PI / 2); // deitada lateralmente
+      ctx.globalAlpha = 0.05;
       ctx.fillStyle = '#21d4ff';
-      ctx.font = '900 ' + Math.floor(TILE * 2.6) + 'px Impact, "Arial Black", sans-serif';
+      ctx.font = '900 ' + Math.floor(TILE * 2.4) + 'px Impact, "Arial Black", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(TURMA, 0, 0);
+      try { ctx.letterSpacing = '6px'; } catch (e) {}
+      ctx.fillText(TURMA, LARG / 2, ALT / 2);
+      try { ctx.letterSpacing = '0px'; } catch (e2) {}
       ctx.restore();
     }
 
@@ -637,28 +718,40 @@
       var boca = (c && c.prefersReducedMotion()) ? 0.25 : 0.15 + Math.abs(Math.sin(agora / 120)) * 0.5;
       var ang = Math.atan2(jogador.dir.l, jogador.dir.c);
       var raio = TILE * 0.46;
-      ctx.fillStyle = '#ffe135';
-      ctx.beginPath();
-      ctx.moveTo(jogador.x, jogador.y);
-      if (estado === 'fim' && vidas <= 0) ctx.arc(jogador.x, jogador.y, raio, 0, Math.PI * 2);
-      else ctx.arc(jogador.x, jogador.y, raio, ang + boca, ang - boca + Math.PI * 2);
-      ctx.closePath();
-      ctx.fill();
+      var xs = xsDesenho(jogador.x);
+      for (var k = 0; k < xs.length; k += 1) {
+        (function (px) {
+          ctx.fillStyle = '#ffe135';
+          ctx.beginPath();
+          ctx.moveTo(px, jogador.y);
+          if (estado === 'fim' && vidas <= 0) ctx.arc(px, jogador.y, raio, 0, Math.PI * 2);
+          else ctx.arc(px, jogador.y, raio, ang + boca, ang - boca + Math.PI * 2);
+          ctx.closePath();
+          ctx.fill();
+        })(xs[k]);
+      }
     }
 
     function desenharFantasma(f) {
+      var xs = xsDesenho(f.x);
+      for (var k = 0; k < xs.length; k += 1) {
+        desenharFantasmaEm(f, xs[k], f.y);
+      }
+    }
+
+    function desenharFantasmaEm(f, gx, gy) {
       var w = TILE * 0.4, cima = TILE * 0.3, base = TILE * 0.36;
       if (f.modo === 'olhos') {
         // só os olhos voltando para casa
         ctx.fillStyle = '#fff';
         ctx.beginPath();
-        ctx.arc(f.x - w * 0.35, f.y - cima * 0.3, w * 0.22, 0, Math.PI * 2);
-        ctx.arc(f.x + w * 0.35, f.y - cima * 0.3, w * 0.22, 0, Math.PI * 2);
+        ctx.arc(gx - w * 0.35, gy - cima * 0.3, w * 0.22, 0, Math.PI * 2);
+        ctx.arc(gx + w * 0.35, gy - cima * 0.3, w * 0.22, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#2e5dff';
         ctx.beginPath();
-        ctx.arc(f.x - w * 0.35 + f.dir.c * 1.5, f.y - cima * 0.3, w * 0.11, 0, Math.PI * 2);
-        ctx.arc(f.x + w * 0.35 + f.dir.c * 1.5, f.y - cima * 0.3, w * 0.11, 0, Math.PI * 2);
+        ctx.arc(gx - w * 0.35 + f.dir.c * 1.5, gy - cima * 0.3, w * 0.11, 0, Math.PI * 2);
+        ctx.arc(gx + w * 0.35 + f.dir.c * 1.5, gy - cima * 0.3, w * 0.11, 0, Math.PI * 2);
         ctx.fill();
         return;
       }
@@ -666,40 +759,40 @@
       var piscando = vulneravel && (energiaAte - performance.now() < 1500) && Math.floor(performance.now() / 250) % 2 === 0;
       ctx.fillStyle = vulneravel ? (piscando ? '#ffffff' : '#2e5dff') : f.cor;
       ctx.beginPath();
-      ctx.arc(f.x, f.y - cima * 0.4, w, Math.PI, 0);
-      ctx.lineTo(f.x + w, f.y + base);
-      ctx.lineTo(f.x + w * 0.66, f.y + base * 0.62);
-      ctx.lineTo(f.x + w * 0.33, f.y + base);
-      ctx.lineTo(f.x, f.y + base * 0.62);
-      ctx.lineTo(f.x - w * 0.33, f.y + base);
-      ctx.lineTo(f.x - w * 0.66, f.y + base * 0.62);
-      ctx.lineTo(f.x - w, f.y + base);
+      ctx.arc(gx, gy - cima * 0.4, w, Math.PI, 0);
+      ctx.lineTo(gx + w, gy + base);
+      ctx.lineTo(gx + w * 0.66, gy + base * 0.62);
+      ctx.lineTo(gx + w * 0.33, gy + base);
+      ctx.lineTo(gx, gy + base * 0.62);
+      ctx.lineTo(gx - w * 0.33, gy + base);
+      ctx.lineTo(gx - w * 0.66, gy + base * 0.62);
+      ctx.lineTo(gx - w, gy + base);
       ctx.closePath();
       ctx.fill();
-      var olhoY = f.y - cima * 0.35, olhoR = TILE * 0.09;
+      var olhoY = gy - cima * 0.35, olhoR = TILE * 0.09;
       var olhaX = f.dir.c * 1.2, olhaY = f.dir.l * 1.2;
       if (vulneravel) {
         ctx.fillStyle = piscando ? '#2e5dff' : '#ffb8b8';
         ctx.beginPath();
-        ctx.arc(f.x - olhoR, olhoY, olhoR * 0.6, 0, Math.PI * 2);
-        ctx.arc(f.x + olhoR, olhoY, olhoR * 0.6, 0, Math.PI * 2);
+        ctx.arc(gx - olhoR, olhoY, olhoR * 0.6, 0, Math.PI * 2);
+        ctx.arc(gx + olhoR, olhoY, olhoR * 0.6, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = ctx.fillStyle;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(f.x - w * 0.5, f.y + base * 0.35);
-        ctx.lineTo(f.x + w * 0.5, f.y + base * 0.35);
+        ctx.moveTo(gx - w * 0.5, gy + base * 0.35);
+        ctx.lineTo(gx + w * 0.5, gy + base * 0.35);
         ctx.stroke();
       } else {
         ctx.fillStyle = '#fff';
         ctx.beginPath();
-        ctx.arc(f.x - olhoR * 1.4 + olhaX, olhoY + olhaY, olhoR, 0, Math.PI * 2);
-        ctx.arc(f.x + olhoR * 1.4 + olhaX, olhoY + olhaY, olhoR, 0, Math.PI * 2);
+        ctx.arc(gx - olhoR * 1.4 + olhaX, olhoY + olhaY, olhoR, 0, Math.PI * 2);
+        ctx.arc(gx + olhoR * 1.4 + olhaX, olhoY + olhaY, olhoR, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#2438ff';
         ctx.beginPath();
-        ctx.arc(f.x - olhoR * 1.4 + olhaX * 2, olhoY + olhaY * 2, olhoR * 0.5, 0, Math.PI * 2);
-        ctx.arc(f.x + olhoR * 1.4 + olhaX * 2, olhoY + olhaY * 2, olhoR * 0.5, 0, Math.PI * 2);
+        ctx.arc(gx - olhoR * 1.4 + olhaX * 2, olhoY + olhaY * 2, olhoR * 0.5, 0, Math.PI * 2);
+        ctx.arc(gx + olhoR * 1.4 + olhaX * 2, olhoY + olhaY * 2, olhoR * 0.5, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -760,10 +853,14 @@
       var intro = stage.querySelector('.game-intro');
       if (intro) intro.style.display = 'none';
       pontos = 0; vidas = 3; fase = 1;
+      invencivelAte = 0;
       montarPellets(); posarEntidades();
       estado = 'jogando';
       setStatus('Novo jogo! Coma todos os pontos.');
       hud(); ultimoTs = 0;
+      mostrarPausa(false);
+      var pauseBtn = document.getElementById('pacman-pause');
+      if (pauseBtn) pauseBtn.textContent = 'Pausar';
       if (!rafId) rafId = window.requestAnimationFrame(laco);
     }
 
@@ -788,22 +885,47 @@
       }
       if (e.key === 'p' || e.key === 'P') { e.preventDefault(); alternarPausa(); }
       if (e.key === 'r' || e.key === 'R') { e.preventDefault(); reiniciarTudo(); }
+      if (e.key === 'Escape') {
+        var modal = document.getElementById('game-modal');
+        if (modal && !modal.classList.contains('hidden')) return; // modal trata o ESC
+        if (estado === 'jogando' || estado === 'pausa') { e.preventDefault(); alternarPausa(); }
+      }
+    }
+
+    function overlayPausa() { return document.getElementById('pacman-pausa-overlay'); }
+
+    function mostrarPausa(aberta) {
+      var ov = overlayPausa();
+      if (!ov) return;
+      ov.classList.toggle('hidden', !aberta);
+      if (aberta) {
+        var cont = document.getElementById('pacman-continuar');
+        if (cont) cont.focus();
+      }
     }
 
     function alternarPausa() {
       var btn = document.getElementById('pacman-pause');
       if (estado === 'jogando') {
         estado = 'pausa';
-        setStatus('Jogo pausado. Pressione P ou o botão Continuar.');
+        setStatus('Jogo pausado. Continue, reinicie ou volte à biblioteca.');
         if (btn) btn.textContent = 'Continuar';
+        mostrarPausa(true);
         announce('Jogo pausado.');
       } else if (estado === 'pausa') {
         estado = 'jogando';
         setStatus('Jogo retomado!');
         if (btn) btn.textContent = 'Pausar';
+        mostrarPausa(false);
         ultimoTs = 0;
         announce('Jogo retomado.');
       }
+    }
+
+    function irParaBiblioteca() {
+      mostrarPausa(false);
+      var voltar = stage.querySelector('[data-back-to-menu]');
+      if (voltar) voltar.click();
     }
 
     function definirDir(nome) {
@@ -865,6 +987,9 @@
     });
     document.getElementById('pacman-reset').addEventListener('click', reiniciarTudo);
     document.getElementById('pacman-pause').addEventListener('click', alternarPausa);
+    document.getElementById('pacman-continuar').addEventListener('click', alternarPausa);
+    document.getElementById('pacman-reiniciar2').addEventListener('click', reiniciarTudo);
+    document.getElementById('pacman-biblioteca').addEventListener('click', irParaBiblioteca);
     document.addEventListener('keydown', onKey);
 
     reg.pacman = {

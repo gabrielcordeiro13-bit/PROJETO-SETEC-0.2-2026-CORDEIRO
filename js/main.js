@@ -150,6 +150,10 @@
       if (!c) return;
       c.setPref('foco', !c.getState().prefs.foco);
     });
+    document.getElementById('a11y-som').addEventListener('click', function () {
+      if (!c) return;
+      c.setPref('som', !c.getState().prefs.som);
+    });
     ['reduzido', 'completo', 'auto'].forEach(function (modo) {
       var id = modo === 'reduzido' ? 'a11y-mov-reduzido' : modo === 'completo' ? 'a11y-mov-completo' : 'a11y-mov-auto';
       var btn = document.getElementById(id);

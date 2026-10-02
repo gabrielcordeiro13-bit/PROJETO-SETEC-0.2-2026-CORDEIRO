@@ -60,6 +60,12 @@
             </div>
           </div>
           <div class="a11y-row">
+            <strong>Sons do jogo</strong>
+            <div class="a11y-btns">
+              <button type="button" id="a11y-som" aria-pressed="true">Efeitos sonoros</button>
+            </div>
+          </div>
+          <div class="a11y-row">
             <strong>Dados locais</strong>
             <div class="a11y-btns">
               <button type="button" id="a11y-limpar">Apagar recordes e preferências</button>
@@ -81,7 +87,7 @@
                 Jogue no computador, tablet ou celular.
               </p>
               <ul class="hero-points">
-                <li>✓ 3 jogos completos e jogáveis</li>
+                <li>✓ Biblioteca em expansão — novos jogos a caminho</li>
                 <li>✓ Teclado, mouse e toque</li>
                 <li>✓ Recordes salvos no seu navegador</li>
               </ul>
@@ -173,7 +179,7 @@
               <dl class="card-meta">
                 <div><dt>Objetivo</dt><dd>Limpar linhas e bater recorde</dd></div>
                 <div><dt>Dificuldade</dt><dd>Média · estratégia</dd></div>
-                <div><dt>Recorde</dt><dd><span data-recorde="block-wood">0</span> pts</dd></div>
+                <div><dt>Recorde</dt><dd><span data-recorde-texto="block-wood">Ainda não jogado</span></dd></div>
               </dl>
 
               <button type="button" class="primary-button" data-open-game="block-wood" aria-label="Jogar Block Wood Puzzle">
@@ -202,7 +208,7 @@
               <dl class="card-meta">
                 <div><dt>Objetivo</dt><dd>Limpar a fase com 3 vidas</dd></div>
                 <div><dt>Dificuldade</dt><dd>Fácil de aprender</dd></div>
-                <div><dt>Recorde</dt><dd><span data-recorde="pacman">0</span> pts</dd></div>
+                <div><dt>Recorde</dt><dd><span data-recorde-texto="pacman">Ainda não jogado</span></dd></div>
               </dl>
 
               <button type="button" class="primary-button" data-open-game="pacman" aria-label="Jogar Pac-Man">
@@ -230,7 +236,7 @@
               <dl class="card-meta">
                 <div><dt>Objetivo</dt><dd>Acertar a palavra com dicas</dd></div>
                 <div><dt>Dificuldade</dt><dd>Fácil · Médio · Difícil</dd></div>
-                <div><dt>Recorde</dt><dd><span data-recorde="hangman">0</span> pts</dd></div>
+                <div><dt>Recorde</dt><dd><span data-recorde-texto="hangman">Ainda não jogado</span></dd></div>
               </dl>
 
               <button type="button" class="primary-button" data-open-game="hangman" aria-label="Jogar Jogo da Forca">
@@ -247,6 +253,12 @@
                 Recordes e conquistas salvos só neste navegador, sem cadastro.
               </p>
               <p id="conquistas-contagem" class="progress-count" role="status">0 de 10 desbloqueadas</p>
+              <dl class="perfil-stats" aria-label="Suas partidas neste navegador">
+                <div><dt>Block Wood</dt><dd><span data-partidas="block-wood">0</span> partidas</dd></div>
+                <div><dt>Pac-Man</dt><dd><span data-partidas="pacman">0</span> partidas</dd></div>
+                <div><dt>Forca</dt><dd><span data-partidas="hangman">0</span> partidas</dd></div>
+                <div class="total"><dt>Total</dt><dd><span id="total-partidas">0</span> partidas</dd></div>
+              </dl>
             </div>
             <ul class="conquistas" id="conquistas-lista" aria-label="Lista de conquistas"></ul>
           </section>

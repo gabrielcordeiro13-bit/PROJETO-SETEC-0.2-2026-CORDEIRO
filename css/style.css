@@ -2012,7 +2012,9 @@ body.reduzir-movimento *, body.reduzir-movimento *::before, body.reduzir-movimen
 /* Responsivo real: sem overflow, alvos grandes */
 img, canvas, .block-board, .game-stage { max-width: 100%; }
 .game-stage { overflow-x: hidden; }
-/* Marca d'água 2° D.S ao fundo de cada jogo: deitada, suave e discreta */
+/* Marca d'água 2° D.S ao fundo de cada jogo: mesma posição central,
+   levemente inclinada, fonte Impact igual aos títulos do portal,
+   bem apagada para não atrapalhar a visão */
 .game-stage { position: relative; overflow: hidden; }
 .game-stage::before {
   content: "2° D.S";
@@ -2021,9 +2023,10 @@ img, canvas, .block-board, .game-stage { max-width: 100%; }
   display: grid;
   place-items: center;
   font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-  font-size: clamp(6rem, 20vw, 15rem);
-  letter-spacing: .04em;
-  color: rgba(33, 212, 255, .055);
+  font-size: clamp(4rem, 11vw, 9rem);
+  letter-spacing: .06em;
+  white-space: nowrap;
+  color: rgba(33, 212, 255, .06);
   transform: rotate(-12deg);
   pointer-events: none;
   user-select: none;
@@ -2044,4 +2047,105 @@ img, canvas, .block-board, .game-stage { max-width: 100%; }
   .modal-actions .modal-button { width: 100%; }
   .topbar .brand-bar { gap: 12px; }
   .a11y-toggle { width: 100%; }
+}
+
+/* ===== SETEC 2026 (2ª leva): hierarquia, leitura, feedback e pausa ===== */
+
+/* Segurança contra rolagem horizontal em qualquer tela */
+html, body { overflow-x: hidden; }
+main, .page-shell, .screen { min-width: 0; }
+
+/* Tipografia: títulos/botões/números mantêm o arcade;
+   textos corridos usam fonte do sistema para leitura confortável */
+.subtitle, .hero-points, .card-desc, .card-meta dd,
+.game-intro ol, .tech-list, .progress-panel p, .about-panel p,
+.pacman-status, .hangman-msg, .hangman-meta, .block-tips,
+.hint-box, .tray-label, .modal-card p, .a11y-note, .block-piece-name {
+  font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  line-height: 1.65;
+  letter-spacing: 0;
+}
+.subtitle { font-size: 1.05rem; }
+.card-desc { font-size: .95rem; }
+
+/* Respiro entre seções + neon com função (menos brilho decorativo) */
+.hero-panel, .spotlight-panel, .catalog-header,
+.progress-panel, .about-panel { margin-bottom: 30px; }
+.catalog-header { margin-bottom: 22px; }
+.preview-dot { box-shadow: none; }
+.maze-dot { box-shadow: none; }
+.game-card { box-shadow: var(--shadow-soft); }
+.spotlight-preview { box-shadow: none; }
+
+/* Perfil local do jogador */
+.perfil-stats { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; }
+.perfil-stats div { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid #24405f; padding-top: 8px; }
+.perfil-stats dt { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; }
+.perfil-stats dd { margin: 0; font-weight: 700; }
+.perfil-stats .total dd, .perfil-stats .total dt { color: var(--warning); }
+
+/* Conquistas: desbloqueada = rosa (recompensa), bloqueada = discreta */
+.conquista { opacity: .55; }
+.conquista.desbloqueada { opacity: 1; border-color: var(--accent); box-shadow: 3px 3px 0 #020307; }
+.conquista.desbloqueada strong { color: #ff80b6; }
+
+/* Toast de conquista: rosa de recompensa, animação curta */
+.toast-item { border-color: var(--accent); animation: toast-entrada .25s ease-out; }
+.toast-item strong { color: #ff80b6; }
+@keyframes toast-entrada {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* Pulso rápido no placar ao pontuar */
+.stat-box.pulso { animation: placar-pulso .3s ease-out; border-color: var(--warning); }
+@keyframes placar-pulso {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Selo de recorde novo */
+.recorde-selo {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border: 1px solid var(--warning);
+  color: var(--warning);
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* Overlay de pausa (Pac-Man): continuar, reiniciar, biblioteca */
+.pausa-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(2, 6, 12, .82);
+}
+.pausa-overlay.hidden { display: none; }
+.pausa-card {
+  width: min(360px, 100%);
+  padding: 22px 20px;
+  border: 3px solid var(--primary);
+  background: #0b111d;
+  box-shadow: 8px 8px 0 #020307;
+  text-align: center;
+  display: grid;
+  gap: 10px;
+}
+.pausa-card h3 { margin: 0; color: var(--warning); }
+.pausa-card p { margin: 0; color: var(--muted); font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; }
+.pausa-card .primary-button, .pausa-card .secondary-button { width: 100%; }
+
+/* Movimento reduzido: sem pulso/toast animado */
+body.reduzir-movimento .stat-box.pulso,
+body.reduzir-movimento .toast-item { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .stat-box.pulso, .toast-item { animation-duration: .01ms !important; }
 }

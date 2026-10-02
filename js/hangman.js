@@ -235,6 +235,7 @@
         var ganho = ocorrencias * 20;
         pontos += ganho;
         renderPalavra(); renderTeclado(); hud();
+        if (c) c.tocarSom('acerto');
         var venceu = item.palavra.split('').every(function (k) { return k === ' ' || tentadas.indexOf(k) >= 0; });
         if (venceu) { vencer(); return; }
         setMsg('Boa! A letra ' + letra + ' aparece ' + ocorrencias + (ocorrencias === 1 ? ' vez' : ' vezes') + ' (+' + ganho + ' pontos).');
@@ -243,6 +244,7 @@
         erros += 1;
         pontos = Math.max(0, pontos - 5);
         desenharForca(); renderTeclado(); hud();
+        if (c) c.tocarSom('erro');
         if (erros >= MAX_ERROS) { perder(); return; }
         setMsg('A letra ' + letra + ' não está na palavra. Restam ' + (MAX_ERROS - erros) + ' tentativas.');
         announce('Errou a letra ' + letra + '. Restam ' + (MAX_ERROS - erros) + ' tentativas.');
@@ -254,21 +256,24 @@
       var bonus = erros === 0 ? 100 : 50;
       pontos += bonus;
       sequencia += 1;
+      var recorde = false;
       if (c) {
         c.getState().vitoriasForcaSeq = sequencia;
         c.save();
-        c.setBest('hangman', pontos);
+        recorde = c.setBest('hangman', pontos);
         c.unlock('forca-vitoria');
         if (erros === 0) c.unlock('forca-perfeita');
         if (sequencia >= 3) c.unlock('forca-sequencia-3');
+        c.tocarSom('vitoria');
+        if (recorde) c.tocarSom('recorde');
       }
       renderTeclado(); hud();
       renderPalavra();
-      var texto = 'Você acertou: ' + item.palavra + '. Bônus de +' + bonus + ' pontos. Total: ' + pontos + ' pontos. Sequência: ' + sequencia + '.';
+      var texto = 'Você acertou: ' + item.palavra + '. Bônus de +' + bonus + ' pontos. Total: ' + pontos + ' pontos. Sequência: ' + sequencia + '.' + (recorde ? ' ★ Novo recorde! ★' : '');
       setMsg('Parabéns! ' + texto);
       announce('Vitória! ' + texto);
       if (window.portalModal && typeof window.portalModal.open === 'function') {
-        window.portalModal.open('Parabéns, você venceu!', texto + ' Categoria: ' + item.categoria + '.', 'Próxima palavra',
+        window.portalModal.open(recorde ? '★ Novo recorde! ★' : 'Parabéns, você venceu!', texto + ' Categoria: ' + item.categoria + '.', 'Próxima palavra',
           function () { fim = false; novaRodada(true); },
           function () {});
       }
@@ -281,6 +286,7 @@
         c.getState().vitoriasForcaSeq = 0;
         c.save();
         c.setBest('hangman', pontos);
+        c.tocarSom('derrota');
       }
       // Revela a palavra
       item.palavra.split('').forEach(function (k) {
