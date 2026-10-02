@@ -122,10 +122,9 @@
     intro.innerHTML =
       '<h3>Como jogar</h3>' +
       '<ol>' +
-      '<li><strong>Objetivo:</strong> encaixe as 3 peças no tabuleiro 9x9 e complete linhas ou colunas inteiras para removê-las e somar pontos.</li>' +
-      '<li><strong>Mouse/toque:</strong> arraste uma peça até o tabuleiro ou toque na peça e depois toque na casa de destino.</li>' +
-      '<li><strong>Teclado:</strong> pressione <kbd>1</kbd>, <kbd>2</kbd> ou <kbd>3</kbd> para escolher a peça, use as <kbd>setas</kbd> para mover o cursor e <kbd>Enter</kbd> para posicionar.</li>' +
-      '<li><strong>Fim de jogo:</strong> se nenhuma peça couber, a partida termina. Tente bater seu recorde!</li>' +
+      '<li><strong>Objetivo:</strong> complete linhas ou colunas no tabuleiro 9x9 para somar pontos.</li>' +
+      '<li><strong>Controles:</strong> arraste a peça, ou toque na peça e depois na casa. No teclado: <kbd>1</kbd>–<kbd>3</kbd>, <kbd>setas</kbd> e <kbd>Enter</kbd>.</li>' +
+      '<li><strong>Fim:</strong> se nenhuma peça couber, a partida termina. Bata seu recorde!</li>' +
       '</ol>';
     var startBtn = el('button', 'primary-button', 'Começar a jogar');
     startBtn.type = 'button';

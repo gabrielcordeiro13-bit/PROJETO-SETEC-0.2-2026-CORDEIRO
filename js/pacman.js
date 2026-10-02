@@ -74,11 +74,9 @@
       '<section class="game-intro" aria-label="Como jogar Pac-Man">' +
       '<h3>Como jogar</h3>' +
       '<ol>' +
-      '<li><strong>Objetivo:</strong> coma todos os pontos do labirinto sem ser capturado pelos fantasmas.</li>' +
-      '<li><strong>Teclado:</strong> setas ou WASD para mover. <kbd>P</kbd> pausa, <kbd>R</kbd> reinicia.</li>' +
-      '<li><strong>Toque:</strong> use o direcional abaixo ou deslize o dedo sobre o labirinto.</li>' +
-      '<li><strong>Túnel:</strong> as laterais do meio se conectam: entre de um lado e saia do outro!</li>' +
-      '<li><strong>Energia e fruta:</strong> os 4 pontos grandes deixam os fantasmas vulneráveis. Coma a fruta bônus quando ela aparecer!</li>' +
+      '<li><strong>Objetivo:</strong> coma todos os pontos; os 4 grandes dão energia para capturar fantasmas.</li>' +
+      '<li><strong>Controles:</strong> setas ou WASD (<kbd>P</kbd> pausa, <kbd>R</kbd> reinicia). No toque: direcional ou deslize.</li>' +
+      '<li><strong>Extras:</strong> o túnel do meio liga os dois lados. A fruta bônus vale +100.</li>' +
       '</ol>' +
       '<button type="button" class="primary-button" id="pacman-start">Começar a jogar</button>' +
       '</section>' +

@@ -2012,6 +2012,24 @@ body.reduzir-movimento *, body.reduzir-movimento *::before, body.reduzir-movimen
 /* Responsivo real: sem overflow, alvos grandes */
 img, canvas, .block-board, .game-stage { max-width: 100%; }
 .game-stage { overflow-x: hidden; }
+/* Marca d'água 2° D.S ao fundo de cada jogo: deitada, suave e discreta */
+.game-stage { position: relative; overflow: hidden; }
+.game-stage::before {
+  content: "2° D.S";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(6rem, 20vw, 15rem);
+  letter-spacing: .04em;
+  color: rgba(33, 212, 255, .055);
+  transform: rotate(-12deg);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+.game-stage > * { position: relative; z-index: 1; }
 .block-board { width: min(100%, 480px); margin: 0 auto; }
 @media (max-width: 920px) {
   .conquistas { grid-template-columns: 1fr; }

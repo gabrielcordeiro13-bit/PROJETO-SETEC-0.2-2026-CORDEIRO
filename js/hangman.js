@@ -65,10 +65,9 @@
       '<section class="game-intro" aria-label="Como jogar o Jogo da Forca">' +
       '<h3>Como jogar</h3>' +
       '<ol>' +
-      '<li><strong>Objetivo:</strong> descubra a palavra secreta antes de completar o desenho (6 erros).</li>' +
-      '<li><strong>Como tentar:</strong> toque nas letras na tela ou digite no teclado. Letras repetidas não contam.</li>' +
-      '<li><strong>Dicas:</strong> cada palavra mostra a categoria e uma dica educativa.</li>' +
-      '<li><strong>Pontos:</strong> acertos valem pontos, vitória sem erros vale bônus. Vitórias seguidas aumentam a sequência!</li>' +
+      '<li><strong>Objetivo:</strong> descubra a palavra com as dicas antes de errar 6 letras.</li>' +
+      '<li><strong>Como jogar:</strong> toque nas letras ou digite no teclado. Repetidas não contam.</li>' +
+      '<li><strong>Pontos:</strong> acertos valem pontos; vencer sem erros dá bônus.</li>' +
       '</ol>' +
       '<button type="button" class="primary-button" id="hangman-start">Começar a jogar</button>' +
       '</section>' +
