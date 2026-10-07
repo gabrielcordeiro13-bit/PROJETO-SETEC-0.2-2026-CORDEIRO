@@ -9,7 +9,7 @@
       content="SETEC 2026: portal educacional de jogos em HTML, CSS e JavaScript puro. Jogue Block Wood Puzzle, Pac-Man e Forca. Responsivo, acessível e com recordes locais."
     />
     <meta name="theme-color" content="#050609" />
-    <link rel="stylesheet" href="css/style.css?v=6" />
+    <link rel="stylesheet" href="css/style.css?v=7" />
   </head>
   <body>
     <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -160,12 +160,7 @@
           <div class="game-grid" aria-label="Lista de jogos disponíveis">
             <article class="game-card" data-game-card="block-wood">
               <div class="card-surface wood-surface" aria-hidden="true">
-                <div class="cover cover-blocks">
-                  <span></span><span class="on"></span><span></span><span></span>
-                  <span class="on"></span><span class="on"></span><span></span><span class="on"></span>
-                  <span></span><span></span><span class="on"></span><span></span>
-                  <span class="on"></span><span></span><span></span><span class="on"></span>
-                </div>
+                <img class="card-cover" src="img/bloco.jpg" alt="" loading="lazy" decoding="async" />
               </div>
 
               <div class="card-header">
@@ -189,13 +184,7 @@
 
             <article class="game-card" data-game-card="pacman">
               <div class="card-surface pacman-surface" aria-hidden="true">
-                <div class="cover cover-pac">
-                  <span class="pac"></span>
-                  <span class="dot"></span>
-                  <span class="dot"></span>
-                  <span class="dot"></span>
-                  <span class="ghost"><i></i><i></i></span>
-                </div>
+                <img class="card-cover" src="img/pacman.png" alt="" loading="lazy" decoding="async" />
               </div>
 
               <div class="card-header">
@@ -219,12 +208,7 @@
 
             <article class="game-card" data-game-card="hangman">
               <div class="card-surface hangman-surface" aria-hidden="true">
-                <div class="cover cover-forca">
-                  <span class="poste"></span>
-                  <span class="trave"></span>
-                  <span class="corda"></span>
-                  <span class="letras"><i>_</i><i>_</i><i>_</i></span>
-                </div>
+                <img class="card-cover" src="img/forca.jpg" alt="" loading="lazy" decoding="async" />
               </div>
 
               <div class="card-header">
@@ -359,10 +343,10 @@
     <div class="sr-only" id="setec-live" role="status" aria-live="polite"></div>
     <div class="setec-toast" id="setec-toast" role="status" aria-live="polite"></div>
 
-    <script src="js/setec-core.js?v=6"></script>
-    <script src="js/block-wood.js?v=6"></script>
-    <script src="js/pacman.js?v=6"></script>
-    <script src="js/hangman.js?v=6"></script>
-    <script src="js/main.js?v=6"></script>
+    <script src="js/setec-core.js?v=7"></script>
+    <script src="js/block-wood.js?v=7"></script>
+    <script src="js/pacman.js?v=7"></script>
+    <script src="js/hangman.js?v=7"></script>
+    <script src="js/main.js?v=7"></script>
   </body>
 </html>

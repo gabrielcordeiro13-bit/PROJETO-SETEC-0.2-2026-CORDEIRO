@@ -2186,27 +2186,12 @@ body.reduzir-movimento .toast-item { animation: none; }
 .intro-card kbd { border: 1px solid var(--primary); padding: 1px 6px; color: var(--primary); font-family: inherit; }
 .intro-card .primary-button { width: 100%; }
 
-/* ===== Capas originais dos cards (CSS puro, nítidas em qualquer tela) ===== */
-.cover { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 110px; }
-/* Blocos de madeira */
-.cover-blocks { display: grid; grid-template-columns: repeat(4, 34px); grid-auto-rows: 34px; gap: 6px; align-content: center; justify-content: center; }
-.cover-blocks span { border-radius: 6px; background: #3a2415; border: 1px solid rgba(255,255,255,.08); }
-.cover-blocks span.on { background: linear-gradient(135deg, #ffd166, #e09b2d); box-shadow: 3px 3px 0 rgba(0,0,0,.45), inset 0 0 0 2px rgba(255,255,255,.25); }
-/* Pac e fantasma */
-.cover-pac .pac { width: 52px; height: 52px; background: var(--warning); border-radius: 50%; clip-path: polygon(0 0, 100% 0, 100% 32%, 50% 50%, 100% 68%, 100% 100%, 0 100%); }
-.cover-pac .dot { width: 9px; height: 9px; background: var(--primary); }
-.cover-pac .ghost { position: relative; width: 36px; height: 42px; background: #ff6b6b; border-radius: 18px 18px 5px 5px; clip-path: polygon(0 0, 100% 0, 100% 100%, 75% 86%, 50% 100%, 25% 86%, 0 100%); }
-.cover-pac .ghost i { position: absolute; top: 12px; width: 7px; height: 9px; background: #fff; border-radius: 50%; }
-.cover-pac .ghost i:first-child { left: 8px; }
-.cover-pac .ghost i:last-child { right: 8px; }
-/* Forca */
-.cover-forca { position: relative; width: 150px; height: 110px; }
-.cover-forca .poste { position: absolute; left: 26px; top: 8px; width: 10px; height: 78px; background: linear-gradient(90deg, #8a5a33, #5b3a1e); }
-.cover-forca .trave { position: absolute; left: 26px; top: 8px; width: 66px; height: 10px; background: linear-gradient(180deg, #8a5a33, #5b3a1e); }
-.cover-forca .corda { position: absolute; left: 82px; top: 18px; width: 3px; height: 26px; background: var(--warning); }
-.cover-forca .corda::after { content: ""; position: absolute; left: -6px; bottom: -12px; width: 13px; height: 13px; border: 3px solid var(--warning); border-radius: 50%; }
-.cover-forca .letras { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 8px; justify-content: center; color: var(--accent); font-weight: 900; font-size: 1.1rem; }
-@media (max-width: 560px) {
-  .cover-blocks { grid-template-columns: repeat(4, 28px); grid-auto-rows: 28px; }
-  .cover-pac .pac { width: 44px; height: 44px; }
+/* ===== Capas dos cards (imagens do projeto, nítidas e responsivas) ===== */
+.card-surface { padding: 0; }
+.card-cover {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
