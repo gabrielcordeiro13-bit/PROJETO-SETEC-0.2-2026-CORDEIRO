@@ -5,38 +5,67 @@
 (function () {
   'use strict';
 
-  /* Labirinto 19x15, simétrico. '#' parede, '.' ponto, 'o' energia,
-   * ' ' interior da casinha (só fantasmas), '-' porta (só fantasmas). */
-  var MAPA = [
-    '###################',
-    '#........#........#',
-    '#o##.###.#.###.##o#',
-    '#.................#',
-    '#.#..#.......#..#.#',
-    '#....#.......#....#',
-    '#......##-##......#',
-    '.......#   #.......',
-    '#......#####......#',
-    '#....#.......#....#',
-    '#.#..#.......#..#.#',
-    '#o..#.........#..o#',
-    '#.##.#.......#.##.#',
-    '#........#........#',
-    '###################'
-  ];
-  var ROWS = MAPA.length;          // 15
-  var COLS = MAPA[0].length;       // 19
-  var TILE = 24;
-  var LARG = COLS * TILE;          // 456
-  var ALT = ROWS * TILE;           // 360
+  /* Labirinto clássico 28x31. '#': parede, '.': ponto, 'o': energia,
+   * ' ' interior da casinha e '-': porta exclusiva dos fantasmas. */
+  var ROWS = 31;
+  var COLS = 28;
+  var TILE = 20;
+  var PORTA = { l: 12, c: 13 };
+  var FRENTE_PORTA = { l: 11, c: 13 };
+  var INTERIOR = { l: 14, c: 13 };
+  var JOGADOR_INI = { l: 25, c: 13 };
+  var LINHA_TUNEL = 14;
+  var FRUTA_POS = { l: 21, c: 13 };
+  var MAPA = construirMapa();
+  var LARG = COLS * TILE;
+  var ALT = ROWS * TILE;
   var TURMA = '2° D.S';
 
-  var PORTA = { l: 6, c: 9 };      // porta da casinha
-  var FRENTE_PORTA = { l: 5, c: 9 };
-  var INTERIOR = { l: 7, c: 9 };
-  var JOGADOR_INI = { l: 11, c: 9 };
-  var LINHA_TUNEL = 7;
-  var FRUTA_POS = { l: 9, c: 9 };
+  function construirMapa() {
+    var mapa = [];
+    for (var l = 0; l < ROWS; l += 1) mapa.push(new Array(COLS).fill('#'));
+
+    function abrir(l, c, ch) {
+      if (l >= 0 && l < ROWS && c >= 0 && c < COLS) mapa[l][c] = ch || '.';
+    }
+    [1, 5, 9, 11, 17, 21, 25, 29].forEach(function (l) {
+      for (var c = 1; c < COLS - 1; c += 1) abrir(l, c);
+    });
+    [1, 4, 7, 10, 17, 20, 23, 26].forEach(function (c) {
+      for (var r = 1; r < ROWS - 1; r += 1) abrir(r, c);
+    });
+    [13, 14].forEach(function (c) {
+      for (var r = 1; r <= 11; r += 1) abrir(r, c);
+      for (var r2 = 17; r2 < ROWS - 1; r2 += 1) abrir(r2, c);
+    });
+
+    // O túnel liga os dois lados sem atravessar a casinha central.
+    for (var tc = 0; tc <= 10; tc += 1) abrir(LINHA_TUNEL, tc);
+    for (var tc2 = 17; tc2 < COLS; tc2 += 1) abrir(LINHA_TUNEL, tc2);
+
+    // A casinha tem uma única porta e não oferece pontos inalcançáveis.
+    for (var hr = 12; hr <= 16; hr += 1) {
+      for (var hc = 11; hc <= 16; hc += 1) abrir(hr, hc, '#');
+    }
+    for (var ir = 13; ir <= 15; ir += 1) {
+      for (var ic = 12; ic <= 15; ic += 1) abrir(ir, ic, ' ');
+    }
+    abrir(PORTA.l, PORTA.c, '-');
+
+    [[3, 1], [3, 26], [27, 1], [27, 26]].forEach(function (pos) {
+      abrir(pos[0], pos[1], 'o');
+    });
+    return mapa;
+  }
+
+  window.PacmanMazeData = {
+    rows: ROWS,
+    columns: COLS,
+    map: MAPA.map(function (row) { return row.join(''); }),
+    playerStart: { l: JOGADOR_INI.l, c: JOGADOR_INI.c },
+    ghostHouse: { door: PORTA, front: FRENTE_PORTA, interior: INTERIOR },
+    tunnelRow: LINHA_TUNEL
+  };
 
   function core() { return window.SetecCore || null; }
   function announce(m) { var c = core(); if (c) c.announce(m); }
@@ -181,10 +210,10 @@
     var jogador = { x: 0, y: 0, dir: { l: 0, c: -1 }, prox: { l: 0, c: -1 }, movendo: false };
 
     var fantasmas = [
-      { cor: '#ff3b3b', canto: { l: 1, c: 17 }, soltaEm: 0.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
-      { cor: '#ffb8de', canto: { l: 1, c: 1 }, soltaEm: 3.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: 1 }, vuln: false, pontos: null, espera: 0 },
-      { cor: '#00e8ff', canto: { l: 13, c: 17 }, soltaEm: 7, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
-      { cor: '#ffb847', canto: { l: 13, c: 1 }, soltaEm: 10.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: 1 }, vuln: false, pontos: null, espera: 0 }
+      { cor: '#ff3b3b', canto: { l: 1, c: 26 }, soltaEm: 0.5, atrasoCasa: 0.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
+      { cor: '#ffb8de', canto: { l: 1, c: 1 }, soltaEm: 3.5, atrasoCasa: 3.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: 1 }, vuln: false, pontos: null, espera: 0 },
+      { cor: '#00e8ff', canto: { l: 29, c: 26 }, soltaEm: 7, atrasoCasa: 7, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
+      { cor: '#ffb847', canto: { l: 29, c: 1 }, soltaEm: 10.5, atrasoCasa: 10.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: 1 }, vuln: false, pontos: null, espera: 0 }
     ];
 
     var pontos = 0, vidas = 3, fase = 1;
@@ -209,7 +238,7 @@
     }
 
     function flutuar(x, y, texto) {
-      flutuantes.push({ x: x, y: y, texto: texto, ate: performance.now() + 900 });
+      flutuantes.push({ x: x, y: y, texto: texto, ate: tempoJogo + 0.9 });
       if (flutuantes.length > 12) flutuantes.shift();
     }
 
@@ -241,7 +270,7 @@
       livesEl.textContent = String(vidas);
       levelEl.textContent = String(fase);
       bestEl.textContent = String(c ? c.getBest('pacman') : 0);
-      powerEl.hidden = !(performance.now() < energiaAte);
+      powerEl.hidden = !(tempoJogo < energiaAte);
     }
     function setStatus(m) { statusEl.textContent = m; }
 
@@ -266,11 +295,12 @@
       MODO_INI();
     }
     function MODO_INI() {
+      tempoJogo = 0;
       modoFantasmas = 'dispersar';
       trocaModoEm = 5;
       energiaAte = 0;
       cadeiaFantasmas = 0;
-      tempoJogo = 0;
+      fantasmas.forEach(function (f) { f.soltaEm = f.atrasoCasa; });
     }
 
     function tileDe(x, y) {
@@ -291,7 +321,7 @@
       comidosFase += 1;
       if (ehPower) {
         pontos += 25;
-        energiaAte = performance.now() + duracaoEnergia() * 1000;
+        energiaAte = tempoJogo + duracaoEnergia();
         cadeiaFantasmas = 0;
         fantasmas.forEach(function (f) { if (f.modo === 'ativo') f.vuln = true; });
         setStatus('Energia! Fantasmas vulneráveis — coma-os!');
@@ -302,10 +332,10 @@
         if (c) c.tocarSom('ponto');
       }
       pulsoPlacar();
-      if (!frutaGerada && comidosFase >= 30) {
+      if (!frutaGerada && comidosFase >= Math.ceil(totalDaFase * 0.25)) {
         frutaGerada = true;
         var fp = centroDe(FRUTA_POS.l, FRUTA_POS.c);
-        fruta = { x: fp.x, y: fp.y, someEm: performance.now() + 9000 };
+        fruta = { x: fp.x, y: fp.y, someEm: tempoJogo + 9 };
         setStatus('Uma fruta bônus apareceu no centro!');
         announce('Fruta bônus no centro do labirinto.');
       }
@@ -321,7 +351,7 @@
 
     function comerFrutaSeHouver() {
       if (!fruta) return;
-      if (performance.now() > fruta.someEm) { fruta = null; return; }
+      if (tempoJogo > fruta.someEm) { fruta = null; return; }
       var dx = jogador.x - fruta.x, dy = jogador.y - fruta.y;
       if (dx * dx + dy * dy < (TILE * 0.7) * (TILE * 0.7)) {
         pontos += 100;
@@ -368,7 +398,7 @@
     }
 
     function perderVida() {
-      if (performance.now() < invencivelAte) return;
+      if (tempoJogo < invencivelAte) return;
       vidas -= 1;
       hud();
       announce('Vida perdida. Restam ' + vidas + ' vidas.');
@@ -615,10 +645,11 @@
         if (f.modo === 'casa' || f.modo === 'saindo' || f.modo === 'entrando') continue;
         var ft = tileDe(f.x, f.y);
         var mesmaCasa = (ft.l === jt.l && ft.c === jt.c);
-        var dx = f.x - jogador.x, dy = f.y - jogador.y;
+        var dx = Math.abs(f.x - jogador.x), dy = Math.abs(f.y - jogador.y);
+        dx = Math.min(dx, LARG - dx);
         if (!mesmaCasa && dx * dx + dy * dy > (TILE * 0.6) * (TILE * 0.6)) continue;
         if (f.modo === 'olhos') continue;
-        if (f.vuln || performance.now() < energiaAte) {
+        if (f.vuln || tempoJogo < energiaAte) {
           var ganho = 200 * Math.pow(2, cadeiaFantasmas);
           cadeiaFantasmas = Math.min(3, cadeiaFantasmas + 1);
           pontos += ganho;
@@ -637,7 +668,7 @@
           return;
         }
       }
-      if (performance.now() >= energiaAte) {
+      if (tempoJogo >= energiaAte) {
         fantasmas.forEach(function (f) { f.vuln = false; });
         cadeiaFantasmas = 0;
       }
@@ -691,10 +722,10 @@
     }
 
     function desenharFlutuantes() {
-      var agoraMs = performance.now();
+      var agoraMs = tempoJogo;
       flutuantes = flutuantes.filter(function (fl) { return agoraMs < fl.ate; });
       flutuantes.forEach(function (fl) {
-        var resto = (fl.ate - agoraMs) / 900; // 1 -> 0
+        var resto = (fl.ate - agoraMs) / 0.9; // 1 -> 0
         ctx.save();
         ctx.globalAlpha = Math.min(1, resto * 1.5);
         ctx.fillStyle = '#ffd429';
@@ -760,8 +791,8 @@
         ctx.fill();
         return;
       }
-      var vulneravel = f.vuln || performance.now() < energiaAte;
-      var piscando = vulneravel && (energiaAte - performance.now() < 1500) && Math.floor(performance.now() / 250) % 2 === 0;
+      var vulneravel = f.vuln || tempoJogo < energiaAte;
+      var piscando = vulneravel && (energiaAte - tempoJogo < 1.5) && Math.floor(tempoJogo / 0.25) % 2 === 0;
       ctx.fillStyle = vulneravel ? (piscando ? '#ffffff' : '#2e5dff') : f.cor;
       ctx.beginPath();
       ctx.arc(gx, gy - cima * 0.4, w, Math.PI, 0);
@@ -803,8 +834,8 @@
     }
 
     function desenharFruta() {
-      if (!fruta || performance.now() > fruta.someEm) return;
-      var pisca = (fruta.someEm - performance.now() < 2000) && Math.floor(performance.now() / 200) % 2 === 0;
+      if (!fruta || tempoJogo > fruta.someEm) return;
+      var pisca = (fruta.someEm - tempoJogo < 2) && Math.floor(tempoJogo / 0.2) % 2 === 0;
       if (pisca) return;
       var x = fruta.x, y = fruta.y, r = TILE * 0.22;
       ctx.strokeStyle = '#4ade80';
@@ -857,7 +888,7 @@
     function reiniciarTudo() {
       var intro = stage.querySelector('.game-intro');
       if (intro) intro.style.display = 'none';
-      pontos = 0; vidas = 3; fase = 1;
+      pontos = 0; vidas = 3; fase = 1; flutuantes = [];
       invencivelAte = 0;
       montarPellets(); posarEntidades();
       estado = 'jogando';
