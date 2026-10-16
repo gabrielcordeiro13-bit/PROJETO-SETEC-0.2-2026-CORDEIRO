@@ -26,8 +26,6 @@ function loadBlockWoodModule() {
     console,
     setTimeout,
     clearTimeout,
-    requestAnimationFrame: (cb) => setTimeout(cb, 0),
-    cancelAnimationFrame: clearTimeout,
     performance: { now: () => Date.now() }
   };
   context.window = context;
@@ -185,12 +183,7 @@ function createBlockWoodRuntime() {
     stage,
     elements,
     init() { window.initBlockWoodGame(); },
-    frame(timestamp) {
-      const entry = animationFrames.entries().next().value;
-      assert.ok(entry, 'o laço de animação deveria estar ativo');
-      animationFrames.delete(entry[0]);
-      entry[1](timestamp);
-    },
+    pendingAnimationFrames() { return animationFrames.size; },
     key(type, key, repeat = false) {
       document.dispatch(type, { key, repeat, preventDefault() {} });
     },
@@ -210,6 +203,25 @@ function createBlockWoodRuntime() {
         row: Math.min(...positions.map((index) => Math.floor(index / 10))),
         column: Math.min(...positions.map((index) => index % 10))
       };
+    },
+    ghostPositions() {
+      const board = elements.get('block-board');
+      return board.children
+        .map((cell, index) => cell.classList.contains('ghost') ? {
+          row: Math.floor(index / 10),
+          column: index % 10,
+          transform: cell.style.transform
+        } : null)
+        .filter(Boolean);
+    },
+    filledPositions() {
+      const board = elements.get('block-board');
+      return board.children
+        .map((cell, index) => cell.classList.contains('filled') ? {
+          row: Math.floor(index / 10),
+          column: index % 10
+        } : null)
+        .filter(Boolean);
     }
   };
 }
@@ -250,6 +262,16 @@ test('deve permitir peça encaixar perto da borda quando há espaço', () => {
   assert.equal(api.BlockWoodTetris.isValidPosition(board, piece, 1, 0), false);
 });
 
+test('deve impedir que uma peça atravesse um obstáculo', () => {
+  const api = loadBlockWoodModule();
+  const board = api.BlockWoodTetris.createEmptyBoard(10, 20);
+  const piece = { matrix: [[1]], x: 4, y: 3 };
+  board[4][4] = '#obstaculo';
+
+  assert.equal(api.BlockWoodTetris.isValidPosition(board, piece, 0, 1), false);
+  assert.equal(api.BlockWoodTetris.isValidPosition(board, piece, 1, 0), true);
+});
+
 test('deve limpar linhas completas e empurrar as demais para baixo', () => {
   const api = loadBlockWoodModule();
   const board = api.BlockWoodTetris.createEmptyBoard(10, 20);
@@ -264,24 +286,23 @@ test('deve limpar linhas completas e empurrar as demais para baixo', () => {
   assert.equal(board[18][0], 0);
 });
 
-test('a queda usa intervalos lentos e acelera de forma gradual por nível', () => {
-  const api = loadBlockWoodModule();
-  const getDropInterval = api.BlockWoodTetris.getDropInterval;
-
-  assert.equal(getDropInterval(1), 1200);
-  assert.equal(getDropInterval(2), 1150);
-  assert.equal(getDropInterval(10), 750);
-  assert.equal(getDropInterval(20), 600);
-});
-
 test('cada seta desloca uma célula e a repetição ao segurar é controlada', () => {
   const game = createBlockWoodRuntime();
   game.init();
   game.elements.get('block-start').dispatch('click');
 
+  const ghostBeforeMove = game.ghostPositions();
+  assert.ok(ghostBeforeMove.length, 'a sombra deveria estar visível');
+  assert.ok(ghostBeforeMove.every((cell) => cell.transform === 'translateY(calc(0% + 0px))'));
+
   const start = game.minActivePosition();
   game.key('keydown', 'ArrowRight');
   assert.equal(game.minActivePosition().column, start.column + 1);
+  const ghostAfterMove = game.ghostPositions();
+  assert.equal(
+    Math.min(...ghostAfterMove.map((cell) => cell.column)),
+    Math.min(...ghostBeforeMove.map((cell) => cell.column)) + 1
+  );
 
   game.key('keydown', 'ArrowRight', true);
   assert.equal(game.minActivePosition().column, start.column + 1);
@@ -291,32 +312,60 @@ test('cada seta desloca uma célula e a repetição ao segurar é controlada', (
   assert.equal(game.minActivePosition().column, start.column + 3);
   game.key('keyup', 'ArrowRight');
 
+  game.key('keydown', 'ArrowUp');
+  const ghostAfterRotation = game.ghostPositions();
+  assert.ok(ghostAfterRotation.length, 'a sombra deveria continuar visível após a rotação');
+  assert.ok(ghostAfterRotation.every((cell) => cell.transform === 'translateY(calc(0% + 0px))'));
+
   const afterKeyboard = game.minActivePosition();
   game.stage.querySelector('.block-touch-controls').querySelector('.right').dispatch('click');
   assert.equal(game.minActivePosition().column, afterKeyboard.column + 1);
 });
 
-test('a queda interpolada é pausável e retoma sem avançar células durante a pausa', () => {
+test('as peças ficam paradas sem comandos e descem somente por ação manual', () => {
   const game = createBlockWoodRuntime();
   game.init();
   game.elements.get('block-start').dispatch('click');
-  game.frame(16);
   const start = game.minActivePosition();
-  for (let timestamp = 116; timestamp <= 616; timestamp += 100) game.frame(timestamp);
+  assert.equal(game.minActivePosition().row, start.row);
+  assert.equal(game.pendingAnimationFrames(), 0, 'o jogo não deve iniciar uma queda temporizada');
 
-  const board = game.elements.get('block-board');
-  assert.ok(board.children.some((cell) => cell.style.transform === 'translateY(calc(50% + 1.5px))'));
-  assert.equal(game.minActivePosition().row, start.row);
-
-  game.elements.get('block-pause').dispatch('click');
-  game.frame(716);
-  assert.equal(game.minActivePosition().row, start.row);
-  game.elements.get('block-pause').dispatch('click');
-  game.frame(816);
-  assert.equal(game.minActivePosition().row, start.row);
-  for (let timestamp = 916; timestamp <= 1316; timestamp += 100) game.frame(timestamp);
+  game.key('keydown', 'ArrowDown');
   assert.equal(game.minActivePosition().row, start.row + 1);
+
+  game.elements.get('block-pause').dispatch('click');
+  game.key('keydown', 'ArrowDown');
+  assert.equal(game.minActivePosition().row, start.row + 1, 'a peça não deve se mover durante a pausa');
+  game.elements.get('block-pause').dispatch('click');
+
+  game.stage.querySelector('.block-touch-controls').querySelector('.down').dispatch('click');
+  assert.equal(game.minActivePosition().row, start.row + 2);
+});
+
+test('a peça fixa ao receber comando de descida bloqueado e fica dentro do tabuleiro', () => {
+  const game = createBlockWoodRuntime();
+  game.init();
+  game.elements.get('block-start').dispatch('click');
+
+  let fixedCells = game.filledPositions();
+  let steps = 0;
+  while (fixedCells.length === 0 && steps < 21) {
+    const rowBefore = game.minActivePosition().row;
+    game.key('keydown', 'ArrowDown');
+    fixedCells = game.filledPositions();
+    steps += 1;
+
+    if (fixedCells.length === 0) {
+      assert.equal(game.minActivePosition().row, rowBefore + 1);
+    }
+  }
+
+  assert.ok(fixedCells.length > 0, 'a peça deveria fixar ao encontrar o limite inferior');
+  assert.ok(fixedCells.every((cell) => cell.row >= 0 && cell.row < 20 && cell.column >= 0 && cell.column < 10));
+  assert.equal(game.minActivePosition().row, 0, 'a próxima peça deve surgir no topo após o travamento');
+  assert.equal(game.pendingAnimationFrames(), 0);
 
   game.elements.get('block-reset').dispatch('click');
   assert.equal(game.minActivePosition().row, 0);
+  assert.equal(game.filledPositions().length, 0);
 });

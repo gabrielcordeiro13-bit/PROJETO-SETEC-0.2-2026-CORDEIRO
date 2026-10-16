@@ -1,14 +1,11 @@
 /* SETEC 2026 - Block Wood Puzzle / Tetris clássico.
- * Queda automática, rotação, linhas, nível, recorde e renderização responsiva.
+ * Movimentação manual, rotação, linhas, nível, recorde e renderização responsiva.
  * Sem dependências externas. */
 (function () {
   'use strict';
 
   var BOARD_WIDTH = 10;
   var BOARD_HEIGHT = 20;
-  var BASE_DROP_MS = 1200;
-  var MIN_DROP_MS = 600;
-  var DROP_STEP_MS = 50;
   var HORIZONTAL_REPEAT_DELAY_MS = 240;
   var HORIZONTAL_REPEAT_INTERVAL_MS = 130;
   var LINE_SCORES = [0, 100, 300, 500, 800];
@@ -135,9 +132,6 @@
 
     return { cleared: cleared, board: board };
   }
-  function getDropInterval(level) {
-    return Math.max(MIN_DROP_MS, BASE_DROP_MS - (level - 1) * DROP_STEP_MS);
-  }
   function getLineScore(count) {
     return LINE_SCORES[count] || 0;
   }
@@ -190,7 +184,7 @@
       '<h3>Como jogar</h3>' +
       '<ol>' +
       '<li><strong>Objetivo:</strong> organize as peças e complete linhas para ganhar pontos.</li>' +
-      '<li><strong>Controles:</strong> use as setas ou os botões de toque para mover, <kbd>↑</kbd> ou <kbd>X</kbd> para girar, <kbd>Z</kbd> para girar no sentido contrário, <kbd>↓</kbd> para cair mais rápido e <kbd>Espaço</kbd> para queda imediata.</li>' +
+      '<li><strong>Controles:</strong> use as setas ou os botões de toque para posicionar cada peça; <kbd>↓</kbd> move uma posição para baixo e fixa a peça ao encontrar um obstáculo. Use <kbd>↑</kbd> ou <kbd>X</kbd> para girar, <kbd>Z</kbd> para girar no sentido contrário e <kbd>Espaço</kbd> para queda imediata.</li>' +
       '<li><strong>Extras:</strong> <kbd>P</kbd> pausa, <kbd>R</kbd> reinicia e o jogo termina quando não houver espaço para a próxima peça.</li>' +
       '</ol>' +
       '<button type="button" class="primary-button" id="block-start">Começar a jogar</button>' +
@@ -246,7 +240,7 @@
     var panelInfo = el('div', 'tetris-panel');
     var infoTitle = el('p', 'tetris-panel-label', 'Controles');
     var controls = el('ul', 'tetris-controls');
-    controls.innerHTML = '<li>← / →: mover</li><li>↓: descer</li><li>↑ / X: girar</li><li>Z: girar para trás</li><li>Espaço: queda rápida</li><li>P: pausar</li><li>R: reiniciar</li>';
+    controls.innerHTML = '<li>← / →: mover</li><li>↓: avançar uma posição e fixar ao bloquear</li><li>↑ / X: girar</li><li>Z: girar para trás</li><li>Espaço: queda imediata</li><li>P: pausar</li><li>R: reiniciar</li>';
     panelInfo.appendChild(infoTitle);
     panelInfo.appendChild(controls);
 
@@ -300,11 +294,6 @@
       started: false,
       paused: false,
       gameOver: false,
-      dropInterval: getDropInterval(1),
-      lastFrameTime: 0,
-      dropElapsed: 0,
-      dropProgress: 0,
-      animationId: null,
       best: c ? c.getBest('block-wood') : 0,
       boardCells: boardCells,
       nextPreview: nextPreview,
@@ -386,7 +375,7 @@
           for (var ghostRow = 0; ghostRow < ghost.matrix.length; ghostRow += 1) {
             for (var ghostCol = 0; ghostCol < ghost.matrix[ghostRow].length; ghostCol += 1) {
               if (!ghost.matrix[ghostRow][ghostCol]) continue;
-              var ghostY = ghost.y + ghostRow + state.dropProgress;
+              var ghostY = ghost.y + ghostRow;
               var ghostX = ghost.x + ghostCol;
               var ghostDisplayRow = Math.floor(ghostY);
               if (ghostDisplayRow >= 0 && ghostDisplayRow < BOARD_HEIGHT && ghostX >= 0 && ghostX < BOARD_WIDTH) {
@@ -400,7 +389,7 @@
         for (var pieceRow = 0; pieceRow < state.currentPiece.matrix.length; pieceRow += 1) {
           for (var pieceCol = 0; pieceCol < state.currentPiece.matrix[pieceRow].length; pieceCol += 1) {
             if (!state.currentPiece.matrix[pieceRow][pieceCol]) continue;
-            var currentY = state.currentPiece.y + pieceRow + state.dropProgress;
+            var currentY = state.currentPiece.y + pieceRow;
             var currentX = state.currentPiece.x + pieceCol;
             var currentDisplayRow = Math.floor(currentY);
             if (currentDisplayRow >= 0 && currentDisplayRow < BOARD_HEIGHT && currentX >= 0 && currentX < BOARD_WIDTH) {
@@ -434,8 +423,6 @@
       var nextType = state.nextPiece ? state.nextPiece.type : pullNextType();
       state.currentPiece = createPiece(nextType, Math.floor((BOARD_WIDTH - 4) / 2), 0);
       state.nextPiece = createPiece(pullNextType(), 0, 0);
-      state.dropElapsed = 0;
-      state.dropProgress = 0;
 
       if (!isValidPosition(state.board, state.currentPiece, 0, 0)) {
         endGame();
@@ -460,7 +447,6 @@
         c.tocarSom('colocar');
       }
       state.level = 1 + Math.floor(state.lines / 10);
-      state.dropInterval = getDropInterval(state.level);
       state.currentPiece = null;
       spawnPiece();
       updateHud();
@@ -529,10 +515,6 @@
       clearHorizontalRepeat();
       state.gameOver = true;
       state.started = false;
-      if (state.animationId) {
-        window.cancelAnimationFrame(state.animationId);
-        state.animationId = null;
-      }
       var previousBest = c ? c.getBest('block-wood') : state.best;
       var isNewBest = false;
       if (c) {
@@ -565,19 +547,14 @@
       state.paused = false;
       state.gameOver = false;
       state.started = true;
-      state.dropInterval = getDropInterval(state.level);
-      state.lastFrameTime = 0;
-      state.dropElapsed = 0;
-      state.dropProgress = 0;
       state.currentPiece = null;
       state.nextPiece = createPiece(pullNextType(), 0, 0);
       state.pauseBtn.textContent = 'Pausar';
       spawnPiece();
       updateHud();
-      setStatus('Jogo iniciado. Use as setas ou os botões de toque para jogar.');
+      setStatus('Jogo iniciado. Posicione cada peça com as setas ou os botões de toque.');
       announce('Novo jogo do Block Wood Puzzle iniciado.');
       state.boardEl.focus();
-      startLoop();
     }
     function togglePause() {
       if (state.gameOver) return;
@@ -587,41 +564,9 @@
       if (state.paused) {
         setStatus('Jogo pausado. Pressione P para continuar.');
       } else {
-        setStatus('Jogo retomado. Aproveite a queda.');
+        setStatus('Jogo retomado. Continue posicionando as peças.');
       }
       renderBoard();
-    }
-    function startLoop() {
-      if (!state.animationId && state.started && !state.gameOver) {
-        state.animationId = window.requestAnimationFrame(tick);
-      }
-    }
-    function tick(timestamp) {
-      state.animationId = null;
-      if (!state.started || state.gameOver) {
-        return;
-      }
-
-      if (state.paused) {
-        state.lastFrameTime = timestamp;
-        startLoop();
-        return;
-      }
-
-      if (!state.lastFrameTime) state.lastFrameTime = timestamp;
-      var elapsed = Math.min(timestamp - state.lastFrameTime, 100);
-      state.lastFrameTime = timestamp;
-      state.dropElapsed += elapsed;
-
-      while (state.dropElapsed >= state.dropInterval && state.started && !state.gameOver) {
-        state.dropElapsed -= state.dropInterval;
-        state.dropProgress = state.dropElapsed / state.dropInterval;
-        movePiece(0, 1);
-      }
-
-      state.dropProgress = state.dropElapsed / state.dropInterval;
-      renderBoard();
-      startLoop();
     }
     function clearHorizontalRepeat() {
       if (horizontalRepeatTimer !== null) {
@@ -692,10 +637,6 @@
     }
 
     function cleanup() {
-      if (state.animationId) {
-        window.cancelAnimationFrame(state.animationId);
-        state.animationId = null;
-      }
       clearHorizontalRepeat();
       state.started = false;
       state.paused = false;
@@ -716,13 +657,9 @@
     function handleStart() {
       intro.classList.add('concluida');
       state.started = true;
-      state.lastFrameTime = 0;
-      state.dropElapsed = 0;
-      state.dropProgress = 0;
-      setStatus('Jogo iniciado. Use as setas ou os botões de toque para jogar.');
+      setStatus('Jogo iniciado. Posicione cada peça com as setas ou os botões de toque.');
       announce('Jogo iniciado.');
       state.boardEl.focus();
-      startLoop();
     }
 
     document.addEventListener('keydown', onKeyDown);
@@ -748,7 +685,6 @@
     updateHud();
     renderBoard();
     setStatus('Pressione "Começar a jogar" para iniciar a partida.');
-    startLoop();
   }
 
   window.BlockWoodTetris = {
@@ -758,7 +694,6 @@
     rotateMatrix: rotateMatrix,
     isValidPosition: isValidPosition,
     clearCompleteLines: clearCompleteLines,
-    getDropInterval: getDropInterval,
     createPiece: createPiece
   };
 
