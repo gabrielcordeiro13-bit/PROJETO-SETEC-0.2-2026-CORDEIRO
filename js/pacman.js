@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  /* Labirinto clássico 28x31. '#': parede, '.': ponto, 'o': energia,
+  /* Labirinto 28x31. '#': parede, '.': ponto, 'o': energia,
    * ' ' interior da casinha e '-': porta exclusiva dos fantasmas. */
   var ROWS = 31;
   var COLS = 28;
@@ -28,22 +28,49 @@
     function abrir(l, c, ch) {
       if (l >= 0 && l < ROWS && c >= 0 && c < COLS) mapa[l][c] = ch || '.';
     }
-    [1, 5, 9, 11, 17, 21, 25, 29].forEach(function (l) {
-      for (var c = 1; c < COLS - 1; c += 1) abrir(l, c);
-    });
-    [1, 4, 7, 10, 17, 20, 23, 26].forEach(function (c) {
-      for (var r = 1; r < ROWS - 1; r += 1) abrir(r, c);
-    });
-    [13, 14].forEach(function (c) {
-      for (var r = 1; r <= 11; r += 1) abrir(r, c);
-      for (var r2 = 17; r2 < ROWS - 1; r2 += 1) abrir(r2, c);
+    var horizontais = {
+      1: [[1, 10], [17, 26]],
+      3: [[1, 10], [17, 26]],
+      5: [[1, 26]],
+      7: [[1, 6], [8, 10], [17, 19], [21, 26]],
+      9: [[1, 26]],
+      11: [[1, 10], [13, 13], [17, 26]],
+      13: [[1, 10], [17, 26]],
+      15: [[1, 10], [17, 26]],
+      17: [[1, 10], [17, 26]],
+      19: [[1, 26]],
+      21: [[1, 26]],
+      23: [[1, 6], [8, 10], [17, 19], [21, 26]],
+      25: [[1, 10], [17, 26]],
+      27: [[1, 10], [17, 26]],
+      29: [[1, 26]]
+    };
+    Object.keys(horizontais).forEach(function (linha) {
+      horizontais[linha].forEach(function (trecho) {
+        for (var c = trecho[0]; c <= trecho[1]; c += 1) abrir(Number(linha), c);
+      });
     });
 
-    // O túnel liga os dois lados sem atravessar a casinha central.
+    // Corredores verticais intercalados com as paredes reproduzem as câmaras do labirinto.
+    [1, 26].forEach(function (coluna) {
+      for (var r = 1; r < ROWS - 1; r += 1) abrir(r, coluna);
+    });
+    [10, 17].forEach(function (coluna) {
+      for (var r = 1; r <= 11; r += 1) abrir(r, coluna);
+      for (var r2 = 17; r2 < ROWS - 1; r2 += 1) abrir(r2, coluna);
+    });
+    abrir(9, 13);
+    abrir(10, 13);
+    abrir(11, 13);
+    [13, 14].forEach(function (coluna) {
+      for (var r = 17; r < ROWS - 1; r += 1) abrir(r, coluna);
+    });
+
+    // O túnel lateral contorna a casinha central e conecta os dois extremos.
     for (var tc = 0; tc <= 10; tc += 1) abrir(LINHA_TUNEL, tc);
     for (var tc2 = 17; tc2 < COLS; tc2 += 1) abrir(LINHA_TUNEL, tc2);
 
-    // A casinha tem uma única porta e não oferece pontos inalcançáveis.
+    // A casinha permanece inacessível ao jogador e só pode ser atravessada pela porta.
     for (var hr = 12; hr <= 16; hr += 1) {
       for (var hc = 11; hc <= 16; hc += 1) abrir(hr, hc, '#');
     }
@@ -52,16 +79,20 @@
     }
     abrir(PORTA.l, PORTA.c, '-');
 
-    [[3, 1], [3, 26], [27, 1], [27, 26]].forEach(function (pos) {
-      abrir(pos[0], pos[1], 'o');
+    [[3, 1], [3, 26], [5, 4], [5, 23], [14, 1], [14, 26], [27, 1], [27, 26]]
+      .forEach(function (pos) {
+        if (mapa[pos[0]][pos[1]] !== '.') {
+          throw new Error('Ponto de energia fora de um corredor: ' + pos.join(','));
+        }
+        abrir(pos[0], pos[1], 'o');
     });
-    return mapa;
+    return mapa.map(function (row) { return row.join(''); });
   }
 
   window.PacmanMazeData = {
     rows: ROWS,
     columns: COLS,
-    map: MAPA.map(function (row) { return row.join(''); }),
+    map: MAPA.slice(),
     playerStart: { l: JOGADOR_INI.l, c: JOGADOR_INI.c },
     ghostHouse: { door: PORTA, front: FRENTE_PORTA, interior: INTERIOR },
     tunnelRow: LINHA_TUNEL
@@ -104,7 +135,7 @@
       '<div class="intro-card">' +
       '<h3>Como jogar</h3>' +
       '<ol>' +
-      '<li><strong>Objetivo:</strong> coma todos os pontos; os 4 grandes dão energia para capturar fantasmas.</li>' +
+      '<li><strong>Objetivo:</strong> coma todos os pontos; os 8 grandes dão energia para capturar fantasmas.</li>' +
       '<li><strong>Controles:</strong> setas ou WASD (<kbd>P</kbd> pausa, <kbd>R</kbd> reinicia). No toque: direcional ou deslize.</li>' +
       '<li><strong>Extras:</strong> o túnel do meio liga os dois lados. A fruta bônus vale +100.</li>' +
       '</ol>' +
@@ -117,6 +148,7 @@
       '<div class="stat-box">Fase: <span id="pacman-level">1</span></div>' +
       '<div class="stat-box">Recorde: <span id="pacman-best">0</span></div>' +
       '<div class="stat-box" id="pacman-power" hidden>ENERGIA!</div>' +
+      '<button type="button" class="secondary-button" id="pacman-sound" aria-pressed="true">♪ Som ligado</button>' +
       '<button type="button" class="secondary-button" id="pacman-pause">Pausar</button>' +
       '<button type="button" class="primary-button" id="pacman-reset">Reiniciar</button>' +
       '</div>' +
@@ -200,6 +232,7 @@
     var levelEl = document.getElementById('pacman-level');
     var bestEl = document.getElementById('pacman-best');
     var powerEl = document.getElementById('pacman-power');
+    var soundEl = document.getElementById('pacman-sound');
     var statusEl = document.getElementById('pacman-status');
 
     var pellets = new Set();
@@ -228,6 +261,9 @@
     var flutuantes = []; // textos "+200" desenhados no canvas
     var rafId = null, ultimoTs = 0;
     var invencivelAte = 0;
+    var morteInicio = 0;
+    var morteProgresso = 0;
+    var duracaoMorte = 0.95;
 
     function pulsoPlacar() {
       var box = scoreEl && scoreEl.parentElement;
@@ -271,8 +307,20 @@
       levelEl.textContent = String(fase);
       bestEl.textContent = String(c ? c.getBest('pacman') : 0);
       powerEl.hidden = !(tempoJogo < energiaAte);
+      var somLigado = !c || !c.getState || c.getState().prefs.som;
+      soundEl.textContent = somLigado ? '♪ Som ligado' : '♪ Som desligado';
+      soundEl.setAttribute('aria-pressed', String(somLigado));
     }
     function setStatus(m) { statusEl.textContent = m; }
+    function iniciarMusica() {
+      if (c && typeof c.iniciarMusicaPacman === 'function') c.iniciarMusicaPacman();
+    }
+    function pausarMusica() {
+      if (c && typeof c.pausarMusicaPacman === 'function') c.pausarMusicaPacman();
+    }
+    function pararMusica() {
+      if (c && typeof c.pararMusicaPacman === 'function') c.pararMusicaPacman();
+    }
 
     function posarEntidades() {
       var pj = centroDe(JOGADOR_INI.l, JOGADOR_INI.c);
@@ -291,7 +339,9 @@
         f.alvo = null;
         f.dir = { l: 0, c: i % 2 === 0 ? -1 : 1 };
         f.modo = 'casa'; f.vuln = false; f.pontos = null; f.espera = 0;
+        f.reverter = false;
       });
+      morteProgresso = 0;
       MODO_INI();
     }
     function MODO_INI() {
@@ -323,7 +373,11 @@
         pontos += 25;
         energiaAte = tempoJogo + duracaoEnergia();
         cadeiaFantasmas = 0;
-        fantasmas.forEach(function (f) { if (f.modo === 'ativo') f.vuln = true; });
+        fantasmas.forEach(function (f) {
+          if (f.modo !== 'ativo') return;
+          f.vuln = true;
+          f.reverter = true;
+        });
         setStatus('Energia! Fantasmas vulneráveis — coma-os!');
         announce('Modo energia ativado. Fantasmas vulneráveis.');
         if (c) c.tocarSom('energia');
@@ -368,6 +422,7 @@
 
     function concluirFase() {
       estado = 'fim';
+      pausarMusica();
       var recorde = false;
       if (c) {
         c.unlock('pacman-fase');
@@ -388,30 +443,36 @@
             montarPellets(); posarEntidades();
             estado = 'jogando';
             setStatus('Fase ' + fase + '. Boa sorte!');
+            iniciarMusica();
             hud();
             ultimoTs = 0;
             if (!rafId) rafId = window.requestAnimationFrame(laco);
           },
-          function () { estado = 'pronto'; setStatus('Fase concluída. Pressione Reiniciar para jogar de novo.'); }
+          function () {
+            estado = 'pronto';
+            pararMusica();
+            setStatus('Fase concluída. Pressione Reiniciar para jogar de novo.');
+          }
         );
       }
     }
 
-    function perderVida() {
+    function perderVida(agora) {
       if (tempoJogo < invencivelAte) return;
       vidas -= 1;
       hud();
       announce('Vida perdida. Restam ' + vidas + ' vidas.');
       if (c) c.tocarSom('erro');
-      if (vidas <= 0) { encerrar(); return; }
-      posarEntidades();
-      invencivelAte = performance.now() + 1200;
-      setStatus('Cuidado! Restam ' + vidas + ' vidas.');
-      hud();
+      estado = 'morte';
+      morteInicio = agora;
+      morteProgresso = 0;
+      pausarMusica();
+      setStatus(vidas > 0 ? 'Vida perdida. Preparando para continuar...' : 'Fim de jogo...');
     }
 
     function encerrar() {
       estado = 'fim';
+      pararMusica();
       var recorde = false;
       if (c) {
         recorde = c.setBest('pacman', pontos);
@@ -601,6 +662,16 @@
         guard += 1;
         if (!f.alvo) {
           var tt = tileDe(f.x, f.y);
+          if (f.reverter) {
+            var volta = { l: -f.dir.l, c: -f.dir.c };
+            var chVolta = charDe(tt.l + volta.l, tt.c + volta.c);
+            if (andaFantasma(tt.l + volta.l, tt.c + volta.c) && chVolta !== '-' && chVolta !== ' ') {
+              f.dir = volta;
+              f.alvo = proximoCentro(f.x, f.y, f.dir);
+            }
+            f.reverter = false;
+          }
+          if (f.alvo) continue;
           var ops = opcoesEm(tt.l, tt.c, f.dir, f);
           if (!ops.length) {
             f.dir = { l: -f.dir.l, c: -f.dir.c }; // beco: reverte
@@ -638,7 +709,7 @@
 
     function voltarParaCasa(f) { f.modo = 'entrando'; f.pontos = null; }
 
-    function checarColisoes() {
+    function checarColisoes(agora) {
       var jt = tileDe(jogador.x, jogador.y);
       for (var i = 0; i < fantasmas.length; i += 1) {
         var f = fantasmas[i];
@@ -654,6 +725,7 @@
           cadeiaFantasmas = Math.min(3, cadeiaFantasmas + 1);
           pontos += ganho;
           f.vuln = false;
+          f.reverter = false;
           f.alvo = null;
           f.modo = 'olhos'; f.pontos = null;
           flutuar(f.x, f.y - TILE, '+' + ganho);
@@ -664,7 +736,7 @@
           hud();
           pulsoPlacar();
         } else {
-          perderVida();
+          perderVida(agora);
           return;
         }
       }
@@ -751,17 +823,20 @@
     }
 
     function desenharJogador(agora) {
+      var morrendo = estado === 'morte';
       var boca = (c && c.prefersReducedMotion()) ? 0.25 : 0.15 + Math.abs(Math.sin(agora / 120)) * 0.5;
       var ang = Math.atan2(jogador.dir.l, jogador.dir.c);
-      var raio = TILE * 0.46;
+      var progressoBoca = morrendo ? Math.min(1, morteProgresso / 0.4) : 0;
+      var escala = !morrendo || morteProgresso <= 0.4 ? 1 : (1 - morteProgresso) / 0.6;
+      if (morrendo) boca *= 1 - progressoBoca;
+      var raio = TILE * 0.46 * Math.max(0, escala);
       var xs = xsDesenho(jogador.x);
       for (var k = 0; k < xs.length; k += 1) {
         (function (px) {
           ctx.fillStyle = '#ffe135';
           ctx.beginPath();
           ctx.moveTo(px, jogador.y);
-          if (estado === 'fim' && vidas <= 0) ctx.arc(px, jogador.y, raio, 0, Math.PI * 2);
-          else ctx.arc(px, jogador.y, raio, ang + boca, ang - boca + Math.PI * 2);
+          ctx.arc(px, jogador.y, raio, ang + boca, ang - boca + Math.PI * 2);
           ctx.closePath();
           ctx.fill();
         })(xs[k]);
@@ -866,8 +941,26 @@
         passoJogador(dt);
         if (estado === 'jogando') {
           for (var i = 0; i < fantasmas.length; i += 1) passoFantasma(fantasmas[i], i, dt);
-          checarColisoes();
+          checarColisoes(ts);
         }
+      }
+      if (estado === 'morte') {
+        morteProgresso = Math.min(1, (ts - morteInicio) / (duracaoMorte * 1000));
+        desenhar(ts || 0);
+        hud();
+        if (morteProgresso >= 1) {
+          if (vidas <= 0) {
+            encerrar();
+          } else {
+            posarEntidades();
+            estado = 'jogando';
+            invencivelAte = tempoJogo + 1.2;
+            setStatus('Cuidado! Restam ' + vidas + ' vidas.');
+            iniciarMusica();
+          }
+        }
+        rafId = window.requestAnimationFrame(laco);
+        return;
       }
       desenhar(ts || 0);
       hud();
@@ -879,10 +972,25 @@
       if (intro) intro.style.display = 'none';
       estado = 'jogando';
       setStatus('Coma todos os pontos! Fase ' + fase + '.');
+      iniciarMusica();
       announce('Pac-Man iniciado. Coma todos os pontos e desvie dos fantasmas.');
       ultimoTs = 0;
       if (!rafId) rafId = window.requestAnimationFrame(laco);
       try { canvas.focus({ preventScroll: true }); } catch (err) { try { canvas.focus(); } catch (e2) {} }
+    }
+
+    function onSoundToggle() {
+      if (!c || typeof c.setPref !== 'function' || typeof c.getState !== 'function') return;
+      c.setPref('som', !c.getState().prefs.som);
+      hud();
+    }
+
+    function onVisibilityChange() {
+      if (document.hidden || (estado !== 'jogando' && estado !== 'morte')) {
+        pausarMusica();
+      } else if (estado === 'jogando') {
+        iniciarMusica();
+      }
     }
 
     function reiniciarTudo() {
@@ -893,6 +1001,7 @@
       montarPellets(); posarEntidades();
       estado = 'jogando';
       setStatus('Novo jogo! Coma todos os pontos.');
+      iniciarMusica();
       hud(); ultimoTs = 0;
       mostrarPausa(false);
       var pauseBtn = document.getElementById('pacman-pause');
@@ -910,6 +1019,7 @@
       if (!stage.closest('.screen.active')) return;
       var nome = mapaTeclas[e.key];
       if (nome) {
+        if (estado === 'morte' || estado === 'fim') return;
         e.preventDefault();
         var d = dirPorNome(nome);
         if (d) {
@@ -944,12 +1054,14 @@
       var btn = document.getElementById('pacman-pause');
       if (estado === 'jogando') {
         estado = 'pausa';
+        pausarMusica();
         setStatus('Jogo pausado. Continue, reinicie ou volte à biblioteca.');
         if (btn) btn.textContent = 'Continuar';
         mostrarPausa(true);
         announce('Jogo pausado.');
       } else if (estado === 'pausa') {
         estado = 'jogando';
+        iniciarMusica();
         setStatus('Jogo retomado!');
         if (btn) btn.textContent = 'Pausar';
         mostrarPausa(false);
@@ -965,6 +1077,7 @@
     }
 
     function definirDir(nome) {
+      if (estado === 'morte' || estado === 'fim') return;
       var d = dirPorNome(nome);
       if (d) {
         jogador.prox = d;
@@ -1022,18 +1135,23 @@
       iniciar();
     });
     document.getElementById('pacman-reset').addEventListener('click', reiniciarTudo);
+    soundEl.addEventListener('click', onSoundToggle);
     document.getElementById('pacman-pause').addEventListener('click', alternarPausa);
     document.getElementById('pacman-continuar').addEventListener('click', alternarPausa);
     document.getElementById('pacman-reiniciar2').addEventListener('click', reiniciarTudo);
     document.getElementById('pacman-biblioteca').addEventListener('click', irParaBiblioteca);
     document.addEventListener('keydown', onKey);
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     reg.pacman = {
       stage: stage, ativo: true,
       cleanup: function () {
         this.ativo = false;
         if (rafId) { window.cancelAnimationFrame(rafId); rafId = null; }
+        pararMusica();
         document.removeEventListener('keydown', onKey);
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+        soundEl.removeEventListener('click', onSoundToggle);
         botoes.forEach(function (b) {
           b.removeEventListener('pointerdown', onBtn);
           b.removeEventListener('click', onBtn);

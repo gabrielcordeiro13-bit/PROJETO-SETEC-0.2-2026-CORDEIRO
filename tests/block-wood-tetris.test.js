@@ -36,6 +36,184 @@ function loadBlockWoodModule() {
   return context.window;
 }
 
+function createBlockWoodRuntime() {
+  const elements = new Map();
+  const documentListeners = new Map();
+  const windowListeners = new Map();
+  const animationFrames = new Map();
+  const timers = new Map();
+  let nextFrameId = 0;
+  let nextTimerId = 0;
+
+  function createElement(tagName) {
+    const classes = new Set();
+    const listeners = new Map();
+    const element = {
+      tagName: tagName.toUpperCase(),
+      children: [],
+      attributes: {},
+      style: {},
+      textContent: '',
+      classList: {
+        add(name) { classes.add(name); },
+        remove(...names) { names.forEach((name) => classes.delete(name)); },
+        toggle(name, force) {
+          const enabled = force === undefined ? !classes.has(name) : force;
+          if (enabled) classes.add(name);
+          else classes.delete(name);
+          return enabled;
+        },
+        contains(name) { return classes.has(name); }
+      },
+      appendChild(child) {
+        this.children.push(child);
+        return child;
+      },
+      setAttribute(name, value) { this.attributes[name] = String(value); },
+      getAttribute(name) { return this.attributes[name] || ''; },
+      addEventListener(type, listener) {
+        const items = listeners.get(type) || [];
+        items.push(listener);
+        listeners.set(type, items);
+      },
+      removeEventListener(type, listener) {
+        listeners.set(type, (listeners.get(type) || []).filter((item) => item !== listener));
+      },
+      dispatch(type, event = {}) {
+        event.currentTarget = this;
+        event.preventDefault ||= () => {};
+        for (const listener of listeners.get(type) || []) listener(event);
+      },
+      focus() {},
+      closest(selector) { return selector === '.screen.active' ? screen : null; },
+      querySelector(selector) {
+        const matches = (child) => selector[0] === '#'
+          ? child.id === selector.slice(1)
+          : selector[0] === '.' && child.classList.contains(selector.slice(1));
+        const pending = this.children.slice();
+        while (pending.length) {
+          const child = pending.shift();
+          if (matches(child)) return child;
+          pending.push(...child.children);
+        }
+        return null;
+      }
+    };
+
+    Object.defineProperty(element, 'id', {
+      get() { return element._id || ''; },
+      set(value) {
+        element._id = value;
+        if (value) elements.set(value, element);
+      }
+    });
+    Object.defineProperty(element, 'className', {
+      get() { return Array.from(classes).join(' '); },
+      set(value) {
+        classes.clear();
+        String(value || '').split(/\s+/).filter(Boolean).forEach((name) => classes.add(name));
+      }
+    });
+    Object.defineProperty(element, 'innerHTML', {
+      set(value) {
+        element._html = value;
+        element.children = [];
+        for (const [, id] of value.matchAll(/\bid="([^"]+)"/g)) {
+          const child = createElement(id === 'block-start' ? 'button' : 'span');
+          child.id = id;
+          element.appendChild(child);
+        }
+      },
+      get() { return element._html || ''; }
+    });
+    return element;
+  }
+
+  const screen = createElement('section');
+  screen.classList.add('active');
+  const stage = createElement('div');
+  const document = {
+    createElement,
+    querySelector(selector) {
+      return selector === '[data-screen="block-wood"] .game-stage' ? stage : null;
+    },
+    getElementById(id) { return elements.get(id) || null; },
+    addEventListener(type, listener) {
+      const items = documentListeners.get(type) || [];
+      items.push(listener);
+      documentListeners.set(type, items);
+    },
+    removeEventListener(type, listener) {
+      documentListeners.set(type, (documentListeners.get(type) || []).filter((item) => item !== listener));
+    },
+    dispatch(type, event) {
+      for (const listener of documentListeners.get(type) || []) listener(event);
+    }
+  };
+  const window = {
+    __gameRuntimeRegistry: {},
+    requestAnimationFrame(callback) {
+      const id = ++nextFrameId;
+      animationFrames.set(id, callback);
+      return id;
+    },
+    cancelAnimationFrame(id) { animationFrames.delete(id); },
+    setTimeout(callback, delay) {
+      const id = ++nextTimerId;
+      timers.set(id, { callback, delay });
+      return id;
+    },
+    clearTimeout(id) { timers.delete(id); },
+    addEventListener(type, listener) {
+      const items = windowListeners.get(type) || [];
+      items.push(listener);
+      windowListeners.set(type, items);
+    },
+    removeEventListener(type, listener) {
+      windowListeners.set(type, (windowListeners.get(type) || []).filter((item) => item !== listener));
+    }
+  };
+
+  vm.runInNewContext(
+    fs.readFileSync(path.join(__dirname, '../js/block-wood.js'), 'utf8'),
+    { window, document, console, Math, Array, Number, String, Object, setTimeout, clearTimeout }
+  );
+
+  return {
+    window,
+    document,
+    stage,
+    elements,
+    init() { window.initBlockWoodGame(); },
+    frame(timestamp) {
+      const entry = animationFrames.entries().next().value;
+      assert.ok(entry, 'o laço de animação deveria estar ativo');
+      animationFrames.delete(entry[0]);
+      entry[1](timestamp);
+    },
+    key(type, key, repeat = false) {
+      document.dispatch(type, { key, repeat, preventDefault() {} });
+    },
+    runTimer(delay) {
+      const entry = Array.from(timers.entries()).find(([, timer]) => timer.delay === delay);
+      assert.ok(entry, 'deveria existir um temporizador de repetição de ' + delay + ' ms');
+      timers.delete(entry[0]);
+      entry[1].callback();
+    },
+    minActivePosition() {
+      const board = elements.get('block-board');
+      const positions = board.children
+        .map((cell, index) => cell.classList.contains('active') ? index : -1)
+        .filter((index) => index >= 0);
+      assert.ok(positions.length, 'a peça atual deveria estar visível (células: ' + board.children.length + ')');
+      return {
+        row: Math.min(...positions.map((index) => Math.floor(index / 10))),
+        column: Math.min(...positions.map((index) => index % 10))
+      };
+    }
+  };
+}
+
 test('deve criar tabuleiro vazio com dimensões 10x20', () => {
   const api = loadBlockWoodModule();
   const board = api.BlockWoodTetris.createEmptyBoard(10, 20);
@@ -84,4 +262,61 @@ test('deve limpar linhas completas e empurrar as demais para baixo', () => {
   assert.equal(result.cleared, 2);
   assert.equal(board[19].every((cell) => cell === 0), true);
   assert.equal(board[18][0], 0);
+});
+
+test('a queda usa intervalos lentos e acelera de forma gradual por nível', () => {
+  const api = loadBlockWoodModule();
+  const getDropInterval = api.BlockWoodTetris.getDropInterval;
+
+  assert.equal(getDropInterval(1), 1200);
+  assert.equal(getDropInterval(2), 1150);
+  assert.equal(getDropInterval(10), 750);
+  assert.equal(getDropInterval(20), 600);
+});
+
+test('cada seta desloca uma célula e a repetição ao segurar é controlada', () => {
+  const game = createBlockWoodRuntime();
+  game.init();
+  game.elements.get('block-start').dispatch('click');
+
+  const start = game.minActivePosition();
+  game.key('keydown', 'ArrowRight');
+  assert.equal(game.minActivePosition().column, start.column + 1);
+
+  game.key('keydown', 'ArrowRight', true);
+  assert.equal(game.minActivePosition().column, start.column + 1);
+  game.runTimer(240);
+  assert.equal(game.minActivePosition().column, start.column + 2);
+  game.runTimer(130);
+  assert.equal(game.minActivePosition().column, start.column + 3);
+  game.key('keyup', 'ArrowRight');
+
+  const afterKeyboard = game.minActivePosition();
+  game.stage.querySelector('.block-touch-controls').querySelector('.right').dispatch('click');
+  assert.equal(game.minActivePosition().column, afterKeyboard.column + 1);
+});
+
+test('a queda interpolada é pausável e retoma sem avançar células durante a pausa', () => {
+  const game = createBlockWoodRuntime();
+  game.init();
+  game.elements.get('block-start').dispatch('click');
+  game.frame(16);
+  const start = game.minActivePosition();
+  for (let timestamp = 116; timestamp <= 616; timestamp += 100) game.frame(timestamp);
+
+  const board = game.elements.get('block-board');
+  assert.ok(board.children.some((cell) => cell.style.transform === 'translateY(calc(50% + 1.5px))'));
+  assert.equal(game.minActivePosition().row, start.row);
+
+  game.elements.get('block-pause').dispatch('click');
+  game.frame(716);
+  assert.equal(game.minActivePosition().row, start.row);
+  game.elements.get('block-pause').dispatch('click');
+  game.frame(816);
+  assert.equal(game.minActivePosition().row, start.row);
+  for (let timestamp = 916; timestamp <= 1316; timestamp += 100) game.frame(timestamp);
+  assert.equal(game.minActivePosition().row, start.row + 1);
+
+  game.elements.get('block-reset').dispatch('click');
+  assert.equal(game.minActivePosition().row, 0);
 });

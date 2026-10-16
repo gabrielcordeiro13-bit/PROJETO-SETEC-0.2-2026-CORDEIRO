@@ -28,6 +28,7 @@ html {
 }
 
 body {
+  isolation: isolate;
   margin: 0;
   min-height: 100vh;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -35,6 +36,16 @@ body {
     radial-gradient(circle at top, rgba(103, 208, 255, 0.18), transparent 28%),
     linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-mid) 42%, #102e53 100%);
   color: var(--text);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: url("../img/logoBarbosa.png") center / min(80vw, 620px, 80vh) auto no-repeat;
+  opacity: 0.24;
+  pointer-events: none;
 }
 
 img,
@@ -654,9 +665,19 @@ main {
   padding: 22px 24px;
 }
 
-.about-copy h3 {
-  margin-bottom: 0;
-  font-size: clamp(1.25rem, 2vw, 1.8rem);
+.about-copy {
+  width: 100%;
+  max-width: 900px;
+}
+
+.about-copy h2 {
+  margin-bottom: 14px;
+  color: var(--warning);
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+}
+
+.about-copy > p:not(.label) {
+  margin-bottom: 12px;
 }
 
 .about-panel p:last-child {
@@ -876,7 +897,7 @@ main {
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 22px;
-  background: linear-gradient(150deg, rgba(13, 25, 38, 0.96), rgba(9, 17, 28, 0.96));
+  background: linear-gradient(150deg, rgba(13, 25, 38, 0.78), rgba(9, 17, 28, 0.8));
   box-shadow: inset 0 0 20px rgba(7, 12, 20, 0.6);
 }
 
@@ -888,7 +909,7 @@ main {
   aspect-ratio: 1 / 2;
   padding: 8px;
   border-radius: 18px;
-  background: linear-gradient(180deg, #09161f, #142838 30%, #0d1d2d 100%);
+  background: linear-gradient(180deg, rgba(9, 22, 31, 0.82), rgba(20, 40, 56, 0.78) 30%, rgba(13, 29, 45, 0.82) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.42);
 }
@@ -897,7 +918,7 @@ main {
   border-radius: 6px;
   background: rgba(107, 129, 149, 0.08);
   border: 1px solid rgba(146, 174, 200, 0.08);
-  transition: background 0.12s ease, transform 0.12s ease;
+  transition: background 0.12s ease;
 }
 
 .tetris-cell.filled {
@@ -1036,9 +1057,8 @@ main {
 }
 
 #pacman-canvas {
-  width: min(100%, 560px, calc(100svh - 390px));
+  width: min(100%, 560px);
   height: auto;
-  max-height: calc(100svh - 250px);
   border: 1px solid var(--line);
   border-radius: 18px;
   background: #07131f;
@@ -1369,7 +1389,7 @@ a:focus-visible {
 .hero-panel {
   grid-template-columns: 1.1fr 0.9fr;
   gap: 34px;
-  min-height: 390px;
+  min-height: 0;
   padding: clamp(26px, 5vw, 58px);
   border-color: var(--primary);
   background:
@@ -1546,9 +1566,19 @@ h1 {
 .card-bottom { transform: rotate(-3deg); }
 
 .spotlight-panel {
-  grid-template-columns: 1.15fr 0.85fr;
-  padding: 28px 26px;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(20px, 2.5vw, 30px);
+  align-items: stretch;
+  padding: 26px clamp(20px, 2.5vw, 30px);
   border-color: var(--warning);
+}
+
+.spotlight-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(12px, 1.5vw, 18px);
+  min-width: 0;
 }
 
 .spotlight-copy h2,
@@ -1574,9 +1604,69 @@ h1 {
 .badge-wood { background: #51420b; color: var(--warning); }
 
 .spotlight-preview {
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 1;
+  justify-self: end;
+  align-self: center;
+  min-width: 0;
   min-height: 230px;
   background: #03060b;
   border: 2px solid var(--primary);
+  overflow: hidden;
+}
+
+.spotlight-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spotlight-copy > .label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 2px solid var(--primary);
+  background: rgba(33, 212, 255, 0.1);
+  color: var(--primary);
+  font-size: clamp(1em, 1.4vw, 1.2em);
+  letter-spacing: 0.14em;
+  line-height: 1.3;
+  text-shadow: 0 0 10px rgba(33, 212, 255, 0.45);
+}
+
+.spotlight-copy h2 {
+  margin: 0;
+  font-size: clamp(1.8em, 4vw, 2.7em);
+  line-height: 1.05;
+}
+
+.spotlight-copy > p:not(.label) {
+  margin: 0;
+  font-size: 1.1em;
+  line-height: 1.7;
+  text-align: justify;
+}
+
+.spotlight-meta {
+  margin: 0;
+}
+
+.spotlight-copy > .primary-button {
+  margin-top: 2px;
+  align-self: flex-start;
+}
+
+@media (max-width: 920px) {
+  .spotlight-preview {
+    justify-self: center;
+  }
+}
+
+.spotlight-meta .chip {
+  font-size: 0.85em;
 }
 
 .preview-grid {
@@ -2034,27 +2124,12 @@ body.reduzir-movimento *, body.reduzir-movimento *::before, body.reduzir-movimen
 
 /* Responsivo real: sem overflow, alvos grandes */
 img, canvas, .block-board, .game-stage { max-width: 100%; }
-.game-stage { overflow-x: hidden; }
-/* Marca d'água 2° D.S ao fundo de cada jogo: mesma posição central,
-   levemente inclinada, fonte Impact igual aos títulos do portal,
-   bem apagada para não atrapalhar a visão */
-.game-stage { position: relative; overflow: hidden; }
-.game-stage::before {
-  content: "2° D.S";
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-  font-size: clamp(4rem, 11vw, 9rem);
-  letter-spacing: .06em;
-  white-space: nowrap;
-  color: rgba(33, 212, 255, .06);
-  transform: rotate(-12deg);
-  pointer-events: none;
-  user-select: none;
-  z-index: 0;
+.game-stage {
+  overflow-x: hidden;
+  background: rgba(8, 13, 22, 0.82);
 }
+/* Keep game content above the fixed school watermark. */
+.game-stage { position: relative; overflow: hidden; }
 .game-stage > * { position: relative; z-index: 1; }
 .block-board { width: min(100%, 480px); margin: 0 auto; }
 @media (max-width: 920px) {
@@ -2064,6 +2139,11 @@ img, canvas, .block-board, .game-stage { max-width: 100%; }
   .brand-bar { flex-wrap: wrap; }
 }
 @media (max-width: 560px) {
+  body::after {
+    background-size: min(82vw, 380px, 75vh);
+    opacity: 0.2;
+  }
+
   .block-tray { grid-template-columns: 1fr; }
   .block-piece-grid { transform: scale(.9); }
   .modal-actions { flex-direction: column; }
@@ -2217,4 +2297,255 @@ body.reduzir-movimento .toast-item { animation: none; }
   object-fit: cover;
   object-position: center;
   display: block;
+}
+
+/* Let the fixed school watermark show through large surfaces without fading text. */
+.brand-bar {
+  background: linear-gradient(135deg, rgba(8, 17, 30, 0.82), rgba(8, 17, 30, 0.86));
+}
+
+.hero-panel {
+  background: linear-gradient(90deg, rgba(8, 25, 51, 0.76), rgba(7, 10, 16, 0.84));
+}
+
+.spotlight-panel,
+.catalog-header,
+.about-panel,
+.progress-panel,
+.game-card,
+.game-placeholder {
+  background: rgba(9, 21, 36, 0.76);
+}
+
+.game-stage {
+  background: rgba(8, 13, 22, 0.66);
+}
+
+/* Responsive refinements for the portal and its existing game layouts. */
+.game-stage,
+.block-game,
+.tetris-shell,
+.tetris-board-wrap,
+.tetris-side,
+.hangman-game,
+.hangman-area,
+.hangman-panel {
+  min-width: 0;
+}
+
+.tetris-shell {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
+}
+
+.tetris-board-wrap {
+  width: 100%;
+  padding: clamp(8px, 2vw, 14px);
+}
+
+.tetris-board {
+  width: min(100%, 420px, max(150px, 46vh));
+}
+
+.tetris-topbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+  align-items: stretch;
+}
+
+.tetris-topbar .stat-box {
+  justify-content: center;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.block-touch-controls {
+  display: none;
+  grid-template-columns: repeat(3, 52px);
+  grid-template-areas:
+    ". rotate ."
+    "left down right"
+    "drop drop drop";
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: rgba(10, 20, 33, 0.78);
+}
+
+.block-touch-button {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 8px;
+  border: 2px solid var(--primary);
+  background: #0c1a2d;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 900;
+  touch-action: manipulation;
+}
+
+.block-touch-button:active {
+  background: var(--primary);
+  color: #03070e;
+}
+
+.block-touch-button.rotate { grid-area: rotate; }
+.block-touch-button.left { grid-area: left; }
+.block-touch-button.down { grid-area: down; }
+.block-touch-button.right { grid-area: right; }
+.block-touch-button.drop { grid-area: drop; }
+
+@media (max-width: 780px) {
+  .tetris-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 230px);
+  }
+
+  .tetris-board {
+    width: min(100%, 380px, max(150px, 46vh));
+  }
+}
+
+@media (max-width: 680px) {
+  .tetris-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tetris-side {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tetris-side > #block-pause,
+  .tetris-side > .tetris-status,
+  .block-touch-controls {
+    grid-column: 1 / -1;
+  }
+
+  .block-touch-controls {
+    display: grid;
+  }
+
+  .tetris-board {
+    width: min(100%, 360px, max(150px, 46vh));
+  }
+}
+
+@media (max-width: 420px) {
+  .page-shell {
+    width: calc(100% - 20px);
+  }
+
+  .game-stage {
+    padding: 12px;
+  }
+
+  .tetris-topbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .tetris-topbar > #block-reset {
+    grid-column: 1 / -1;
+  }
+
+  .tetris-side {
+    gap: 10px;
+  }
+
+  .tetris-panel {
+    padding: 12px 10px;
+  }
+
+  .tetris-controls {
+    padding-left: 16px;
+    font-size: 0.88rem;
+  }
+
+  .tetris-board {
+    width: min(100%, 320px, max(150px, 46vh));
+  }
+
+  .card-meta div {
+    flex-wrap: wrap;
+  }
+
+  .card-meta dd {
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .game-header h2 {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .tetris-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, min(30vw, 220px));
+  }
+
+  .tetris-side {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tetris-side > #block-pause,
+  .tetris-side > .tetris-status,
+  .block-touch-controls {
+    grid-column: 1 / -1;
+  }
+
+  .block-touch-controls {
+    display: grid;
+  }
+
+  .tetris-board {
+    width: min(100%, 360px, max(140px, 48vh));
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .block-touch-controls {
+    display: grid;
+  }
+}
+
+[data-screen="block-wood"] .game-stage {
+  background: rgba(8, 13, 22, 0.46);
+}
+
+[data-screen="block-wood"] .tetris-board-wrap {
+  background: linear-gradient(150deg, rgba(13, 25, 38, 0.48), rgba(9, 17, 28, 0.5));
+}
+
+[data-screen="block-wood"] .tetris-board {
+  background: linear-gradient(180deg, rgba(9, 22, 31, 0.5), rgba(20, 40, 56, 0.56) 30%, rgba(13, 29, 45, 0.52) 100%);
+}
+
+@supports (height: 100svh) {
+  .tetris-board {
+    width: min(100%, 420px, max(150px, 46svh));
+  }
+
+  @media (max-width: 780px) {
+    .tetris-board {
+      width: min(100%, 380px, max(150px, 46svh));
+    }
+  }
+
+  @media (max-width: 680px) {
+    .tetris-board {
+      width: min(100%, 360px, max(150px, 46svh));
+    }
+  }
+
+  @media (max-width: 420px) {
+    .tetris-board {
+      width: min(100%, 320px, max(150px, 46svh));
+    }
+  }
+
+  @media (max-width: 900px) and (orientation: landscape) {
+    .tetris-board {
+      width: min(100%, 360px, max(140px, 48svh));
+    }
+  }
 }

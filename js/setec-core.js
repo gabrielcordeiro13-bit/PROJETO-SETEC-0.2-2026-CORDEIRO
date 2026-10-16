@@ -176,6 +176,13 @@
   /* ---- efeitos sonoros discretos (WebAudio, sem arquivos) ---- */
   var audioCtx = null;
   var ultimoBipPonto = 0;
+  var musicaPacman = null;
+  var ganhoMusicaPacman = null;
+  var bufferMusicaPacman = null;
+  var musicaPacmanSolicitada = false;
+  var musicaPacmanOffset = 0;
+  var inicioMusicaPacman = 0;
+  var avisoMusicaIndisponivel = false;
 
   function garantirAudio() {
     try {
@@ -234,6 +241,109 @@
     } catch (e) { /* nunca quebra o jogo por causa de som */ }
   }
 
+  function criarBufferMusicaPacman(ctx) {
+    if (bufferMusicaPacman) return bufferMusicaPacman;
+
+    var notas = [
+      69, 0, 72, 76, 0, 79, 76, 72,
+      67, 0, 69, 72, 76, 0, 72, 67,
+      64, 0, 67, 69, 72, 0, 76, 72,
+      69, 0, 72, 76, 72, 67, 64, 0
+    ];
+    var batida = 60 / 132 / 2;
+    var duracao = notas.length * batida;
+    var total = Math.ceil(duracao * ctx.sampleRate);
+    bufferMusicaPacman = ctx.createBuffer(1, total, ctx.sampleRate);
+    var amostras = bufferMusicaPacman.getChannelData(0);
+    var baseBass = [45, 45, 48, 43];
+
+    for (var i = 0; i < total; i += 1) {
+      var tempo = i / ctx.sampleRate;
+      var passo = Math.floor(tempo / batida);
+      var dentroDoPasso = tempo - passo * batida;
+      var nota = notas[passo % notas.length];
+      var valor = 0;
+
+      if (nota) {
+        var freq = 440 * Math.pow(2, (nota - 69) / 12);
+        var envelope = Math.min(1, dentroDoPasso / 0.008) *
+          Math.min(1, (batida - dentroDoPasso) / 0.035);
+        valor += (Math.sin(2 * Math.PI * freq * tempo) >= 0 ? 1 : -1) * envelope * 0.42;
+      }
+
+      var notaBass = baseBass[Math.floor(passo / 8) % baseBass.length];
+      if (passo % 4 === 0 && dentroDoPasso < 0.11) {
+        var freqBass = 440 * Math.pow(2, (notaBass - 69) / 12);
+        var envelopeBass = Math.min(1, dentroDoPasso / 0.01) *
+          Math.min(1, (0.11 - dentroDoPasso) / 0.04);
+        valor += (Math.sin(2 * Math.PI * freqBass * tempo) >= 0 ? 1 : -1) *
+          envelopeBass * 0.2;
+      }
+      amostras[i] = valor;
+    }
+    return bufferMusicaPacman;
+  }
+
+  function descartarMusicaPacman(limparSolicitacao) {
+    if (limparSolicitacao !== false) musicaPacmanSolicitada = false;
+    var fonte = musicaPacman;
+    var ganho = ganhoMusicaPacman;
+    if (fonte && audioCtx && bufferMusicaPacman && bufferMusicaPacman.duration > 0) {
+      musicaPacmanOffset = (musicaPacmanOffset + audioCtx.currentTime - inicioMusicaPacman) %
+        bufferMusicaPacman.duration;
+    }
+    musicaPacman = null;
+    ganhoMusicaPacman = null;
+    if (fonte) {
+      try { fonte.stop(); } catch (e) { /* fonte já encerrada */ }
+      fonte.disconnect();
+    }
+    if (ganho) ganho.disconnect();
+  }
+
+  function iniciarMusicaPacman() {
+    musicaPacmanSolicitada = true;
+    if (!state.prefs.som || musicaPacman) return;
+
+    var ctx = garantirAudio();
+    if (!ctx) {
+      if (!avisoMusicaIndisponivel) {
+        console.warn('A música do Pac-Man não está disponível neste navegador.');
+        avisoMusicaIndisponivel = true;
+      }
+      return;
+    }
+
+    try {
+      var fonte = ctx.createBufferSource();
+      var ganho = ctx.createGain();
+      fonte.buffer = criarBufferMusicaPacman(ctx);
+      fonte.loop = true;
+      ganho.gain.value = 0.18;
+      fonte.connect(ganho);
+      ganho.connect(ctx.destination);
+      var duracao = fonte.buffer.duration;
+      var inicio = duracao > 0 ? musicaPacmanOffset % duracao : 0;
+      fonte.start(0, inicio);
+      musicaPacmanOffset = inicio;
+      inicioMusicaPacman = ctx.currentTime;
+      musicaPacman = fonte;
+      ganhoMusicaPacman = ganho;
+    } catch (e) {
+      descartarMusicaPacman(false);
+      console.warn('Não foi possível iniciar a música do Pac-Man.', e);
+    }
+  }
+
+  function pausarMusicaPacman() {
+    descartarMusicaPacman(true);
+  }
+
+  function pararMusicaPacman() {
+    descartarMusicaPacman(true);
+    musicaPacmanOffset = 0;
+  }
+
   function applyPrefs() {
     var body = document.body;
     body.classList.remove('font-pequena', 'font-media', 'font-grande', 'font-extra');
@@ -242,6 +352,8 @@
     body.classList.toggle('foco-forte', state.prefs.foco === true);
     body.classList.toggle('reduzir-movimento', state.prefs.movimento === 'reduzido');
     body.classList.toggle('movimento-completo', state.prefs.movimento === 'completo');
+    if (!state.prefs.som) descartarMusicaPacman(false);
+    else if (musicaPacmanSolicitada) iniciarMusicaPacman();
     try {
       var fontBtns = document.querySelectorAll('[data-a11y-fonte]');
       fontBtns.forEach(function (b) {
@@ -325,6 +437,9 @@
     unlock: unlock,
     announce: announce,
     tocarSom: tocarSom,
+    iniciarMusicaPacman: iniciarMusicaPacman,
+    pausarMusicaPacman: pausarMusicaPacman,
+    pararMusicaPacman: pararMusicaPacman,
     applyPrefs: applyPrefs,
     setPref: setPref,
     renderRecords: renderRecords,

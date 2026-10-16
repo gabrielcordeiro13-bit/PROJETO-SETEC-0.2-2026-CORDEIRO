@@ -6,8 +6,11 @@
 
   var BOARD_WIDTH = 10;
   var BOARD_HEIGHT = 20;
-  var BASE_DROP_MS = 800;
-  var MIN_DROP_MS = 110;
+  var BASE_DROP_MS = 1200;
+  var MIN_DROP_MS = 600;
+  var DROP_STEP_MS = 50;
+  var HORIZONTAL_REPEAT_DELAY_MS = 240;
+  var HORIZONTAL_REPEAT_INTERVAL_MS = 130;
   var LINE_SCORES = [0, 100, 300, 500, 800];
 
   var SHAPES = {
@@ -133,7 +136,7 @@
     return { cleared: cleared, board: board };
   }
   function getDropInterval(level) {
-    return Math.max(MIN_DROP_MS, BASE_DROP_MS - (level - 1) * 65);
+    return Math.max(MIN_DROP_MS, BASE_DROP_MS - (level - 1) * DROP_STEP_MS);
   }
   function getLineScore(count) {
     return LINE_SCORES[count] || 0;
@@ -187,7 +190,7 @@
       '<h3>Como jogar</h3>' +
       '<ol>' +
       '<li><strong>Objetivo:</strong> organize as peças e complete linhas para ganhar pontos.</li>' +
-      '<li><strong>Controles:</strong> use as setas para mover, <kbd>↑</kbd> ou <kbd>X</kbd> para girar, <kbd>Z</kbd> para girar no sentido contrário, <kbd>↓</kbd> para cair mais rápido e <kbd>Espaço</kbd> para queda imediata.</li>' +
+      '<li><strong>Controles:</strong> use as setas ou os botões de toque para mover, <kbd>↑</kbd> ou <kbd>X</kbd> para girar, <kbd>Z</kbd> para girar no sentido contrário, <kbd>↓</kbd> para cair mais rápido e <kbd>Espaço</kbd> para queda imediata.</li>' +
       '<li><strong>Extras:</strong> <kbd>P</kbd> pausa, <kbd>R</kbd> reinicia e o jogo termina quando não houver espaço para a próxima peça.</li>' +
       '</ol>' +
       '<button type="button" class="primary-button" id="block-start">Começar a jogar</button>' +
@@ -247,6 +250,24 @@
     panelInfo.appendChild(infoTitle);
     panelInfo.appendChild(controls);
 
+    var touchControls = el('div', 'block-touch-controls');
+    touchControls.setAttribute('aria-label', 'Controles por toque do Tetris');
+    var touchActions = [
+      { key: 'ArrowUp', label: 'Girar peça', text: 'Girar', cls: 'rotate' },
+      { key: 'ArrowLeft', label: 'Mover para a esquerda', text: '←', cls: 'left' },
+      { key: 'ArrowDown', label: 'Descer peça', text: '↓', cls: 'down' },
+      { key: 'ArrowRight', label: 'Mover para a direita', text: '→', cls: 'right' },
+      { key: ' ', label: 'Queda rápida', text: 'Queda rápida', cls: 'drop' }
+    ];
+    var touchButtons = touchActions.map(function (action) {
+      var button = el('button', 'block-touch-button ' + action.cls, action.text);
+      button.type = 'button';
+      button.setAttribute('aria-label', action.label);
+      button.setAttribute('data-action-key', action.key);
+      touchControls.appendChild(button);
+      return button;
+    });
+
     var pauseBtn = el('button', 'secondary-button', 'Pausar');
     pauseBtn.type = 'button';
     pauseBtn.id = 'block-pause';
@@ -258,6 +279,7 @@
 
     side.appendChild(panelNext);
     side.appendChild(panelInfo);
+    side.appendChild(touchControls);
     side.appendChild(pauseBtn);
     side.appendChild(statusBox);
 
@@ -280,6 +302,8 @@
       gameOver: false,
       dropInterval: getDropInterval(1),
       lastFrameTime: 0,
+      dropElapsed: 0,
+      dropProgress: 0,
       animationId: null,
       best: c ? c.getBest('block-wood') : 0,
       boardCells: boardCells,
@@ -331,12 +355,16 @@
         }
       }
     }
+    function fallTransform(progress) {
+      return 'translateY(calc(' + (progress * 100) + '% + ' + (progress * 3) + 'px))';
+    }
     function renderBoard() {
       for (var i = 0; i < state.boardCells.length; i += 1) {
         var cell = state.boardCells[i];
         cell.classList.remove('filled', 'ghost', 'active');
         cell.style.background = '';
         cell.style.boxShadow = '';
+        cell.style.transform = '';
       }
 
       for (var row = 0; row < BOARD_HEIGHT; row += 1) {
@@ -358,10 +386,11 @@
           for (var ghostRow = 0; ghostRow < ghost.matrix.length; ghostRow += 1) {
             for (var ghostCol = 0; ghostCol < ghost.matrix[ghostRow].length; ghostCol += 1) {
               if (!ghost.matrix[ghostRow][ghostCol]) continue;
-              var ghostY = ghost.y + ghostRow;
+              var ghostY = ghost.y + ghostRow + state.dropProgress;
               var ghostX = ghost.x + ghostCol;
-              if (ghostY >= 0 && ghostY < BOARD_HEIGHT && ghostX >= 0 && ghostX < BOARD_WIDTH) {
-                ghostMap[ghostY + ':' + ghostX] = true;
+              var ghostDisplayRow = Math.floor(ghostY);
+              if (ghostDisplayRow >= 0 && ghostDisplayRow < BOARD_HEIGHT && ghostX >= 0 && ghostX < BOARD_WIDTH) {
+                ghostMap[ghostDisplayRow + ':' + ghostX] = ghostY - ghostDisplayRow;
               }
             }
           }
@@ -371,10 +400,11 @@
         for (var pieceRow = 0; pieceRow < state.currentPiece.matrix.length; pieceRow += 1) {
           for (var pieceCol = 0; pieceCol < state.currentPiece.matrix[pieceRow].length; pieceCol += 1) {
             if (!state.currentPiece.matrix[pieceRow][pieceCol]) continue;
-            var currentY = state.currentPiece.y + pieceRow;
+            var currentY = state.currentPiece.y + pieceRow + state.dropProgress;
             var currentX = state.currentPiece.x + pieceCol;
-            if (currentY >= 0 && currentY < BOARD_HEIGHT && currentX >= 0 && currentX < BOARD_WIDTH) {
-              currentMap[currentY + ':' + currentX] = true;
+            var currentDisplayRow = Math.floor(currentY);
+            if (currentDisplayRow >= 0 && currentDisplayRow < BOARD_HEIGHT && currentX >= 0 && currentX < BOARD_WIDTH) {
+              currentMap[currentDisplayRow + ':' + currentX] = currentY - currentDisplayRow;
             }
           }
         }
@@ -382,17 +412,19 @@
         for (var ghostRow2 = 0; ghostRow2 < BOARD_HEIGHT; ghostRow2 += 1) {
           for (var ghostCol2 = 0; ghostCol2 < BOARD_WIDTH; ghostCol2 += 1) {
             var ghostKey = ghostRow2 + ':' + ghostCol2;
-            if (ghostMap[ghostKey] && state.board[ghostRow2][ghostCol2] === 0) {
+            if (Object.prototype.hasOwnProperty.call(ghostMap, ghostKey) && state.board[ghostRow2][ghostCol2] === 0) {
               var ghostCell = state.boardCells[ghostRow2 * BOARD_WIDTH + ghostCol2];
               ghostCell.classList.add('ghost');
               ghostCell.style.background = 'rgba(91, 209, 255, 0.28)';
               ghostCell.style.boxShadow = 'inset 0 0 0 1px rgba(91, 209, 255, 0.65)';
+              ghostCell.style.transform = fallTransform(ghostMap[ghostKey]);
             }
-            if (currentMap[ghostKey] && state.board[ghostRow2][ghostCol2] === 0) {
+            if (Object.prototype.hasOwnProperty.call(currentMap, ghostKey) && state.board[ghostRow2][ghostCol2] === 0) {
               var activeCell = state.boardCells[ghostRow2 * BOARD_WIDTH + ghostCol2];
               activeCell.classList.add('active');
               activeCell.style.background = state.currentPiece.color;
               activeCell.style.boxShadow = 'inset 0 0 0 2px rgba(255,255,255,0.18), 0 10px 18px rgba(6, 15, 25, 0.28)';
+              activeCell.style.transform = fallTransform(currentMap[ghostKey]);
             }
           }
         }
@@ -402,6 +434,8 @@
       var nextType = state.nextPiece ? state.nextPiece.type : pullNextType();
       state.currentPiece = createPiece(nextType, Math.floor((BOARD_WIDTH - 4) / 2), 0);
       state.nextPiece = createPiece(pullNextType(), 0, 0);
+      state.dropElapsed = 0;
+      state.dropProgress = 0;
 
       if (!isValidPosition(state.board, state.currentPiece, 0, 0)) {
         endGame();
@@ -439,7 +473,8 @@
     }
     function movePiece(dx, dy) {
       if (!state.currentPiece || state.gameOver || state.paused || !state.started) return false;
-      if (isValidPosition(state.board, state.currentPiece, dx, dy)) {
+      var validMove = isValidPosition(state.board, state.currentPiece, dx, dy);
+      if (validMove) {
         state.currentPiece.x += dx;
         state.currentPiece.y += dy;
         if (dy > 0 && dx === 0) {
@@ -491,6 +526,7 @@
       announce('Queda rápida ativada.');
     }
     function endGame() {
+      clearHorizontalRepeat();
       state.gameOver = true;
       state.started = false;
       if (state.animationId) {
@@ -521,6 +557,7 @@
       }
     }
     function resetGame() {
+      clearHorizontalRepeat();
       state.board = createEmptyBoard(BOARD_WIDTH, BOARD_HEIGHT);
       state.score = 0;
       state.lines = 0;
@@ -529,17 +566,22 @@
       state.gameOver = false;
       state.started = true;
       state.dropInterval = getDropInterval(state.level);
+      state.lastFrameTime = 0;
+      state.dropElapsed = 0;
+      state.dropProgress = 0;
       state.currentPiece = null;
       state.nextPiece = createPiece(pullNextType(), 0, 0);
       state.pauseBtn.textContent = 'Pausar';
       spawnPiece();
       updateHud();
-      setStatus('Jogo iniciado. Use as setas e a barra de espaço para jogar.');
+      setStatus('Jogo iniciado. Use as setas ou os botões de toque para jogar.');
       announce('Novo jogo do Block Wood Puzzle iniciado.');
       state.boardEl.focus();
+      startLoop();
     }
     function togglePause() {
       if (state.gameOver) return;
+      clearHorizontalRepeat();
       state.paused = !state.paused;
       state.pauseBtn.textContent = state.paused ? 'Continuar' : 'Pausar';
       if (state.paused) {
@@ -549,28 +591,57 @@
       }
       renderBoard();
     }
+    function startLoop() {
+      if (!state.animationId && state.started && !state.gameOver) {
+        state.animationId = window.requestAnimationFrame(tick);
+      }
+    }
     function tick(timestamp) {
+      state.animationId = null;
       if (!state.started || state.gameOver) {
-        state.animationId = null;
         return;
       }
 
       if (state.paused) {
-        state.animationId = window.requestAnimationFrame(tick);
+        state.lastFrameTime = timestamp;
+        startLoop();
         return;
       }
 
-      if (!state.lastFrameTime) {
-        state.lastFrameTime = timestamp;
-      }
+      if (!state.lastFrameTime) state.lastFrameTime = timestamp;
+      var elapsed = Math.min(timestamp - state.lastFrameTime, 100);
+      state.lastFrameTime = timestamp;
+      state.dropElapsed += elapsed;
 
-      if (timestamp - state.lastFrameTime >= state.dropInterval) {
-        state.lastFrameTime = timestamp;
+      while (state.dropElapsed >= state.dropInterval && state.started && !state.gameOver) {
+        state.dropElapsed -= state.dropInterval;
+        state.dropProgress = state.dropElapsed / state.dropInterval;
         movePiece(0, 1);
       }
 
-      state.animationId = window.requestAnimationFrame(tick);
+      state.dropProgress = state.dropElapsed / state.dropInterval;
+      renderBoard();
+      startLoop();
     }
+    function clearHorizontalRepeat() {
+      if (horizontalRepeatTimer !== null) {
+        window.clearTimeout(horizontalRepeatTimer);
+        horizontalRepeatTimer = null;
+      }
+      heldHorizontalKey = null;
+    }
+    function repeatHorizontal() {
+      horizontalRepeatTimer = null;
+      if (!heldHorizontalKey || !stage.closest('.screen.active') ||
+          !state.started || state.paused || state.gameOver) {
+        clearHorizontalRepeat();
+        return;
+      }
+      handleKey(heldHorizontalKey);
+      horizontalRepeatTimer = window.setTimeout(repeatHorizontal, HORIZONTAL_REPEAT_INTERVAL_MS);
+    }
+    var heldHorizontalKey = null;
+    var horizontalRepeatTimer = null;
     function onKeyDown(event) {
       if (!stage.closest('.screen.active')) return;
       var key = event.key;
@@ -579,6 +650,24 @@
         event.preventDefault();
       }
 
+      if (key === 'ArrowLeft' || key === 'ArrowRight') {
+        if (event.repeat) return;
+        clearHorizontalRepeat();
+        handleKey(key);
+        heldHorizontalKey = key;
+        horizontalRepeatTimer = window.setTimeout(repeatHorizontal, HORIZONTAL_REPEAT_DELAY_MS);
+        return;
+      }
+      if (event.repeat) return;
+      handleKey(key);
+    }
+    function onKeyUp(event) {
+      if (event.key === heldHorizontalKey) clearHorizontalRepeat();
+    }
+    function onWindowBlur() {
+      clearHorizontalRepeat();
+    }
+    function handleKey(key) {
       if (key === 'p' || key === 'P') {
         togglePause();
         return;
@@ -598,19 +687,27 @@
       else if (key === 'z' || key === 'Z') rotateCurrentPiece(-1);
       else if (key === ' ') hardDrop();
     }
+    function onTouchControl(event) {
+      handleKey(event.currentTarget.getAttribute('data-action-key'));
+    }
 
     function cleanup() {
       if (state.animationId) {
         window.cancelAnimationFrame(state.animationId);
         state.animationId = null;
       }
+      clearHorizontalRepeat();
       state.started = false;
       state.paused = false;
       state.gameOver = true;
-      state.boardEl.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onWindowBlur);
       resetBtn.removeEventListener('click', resetGame);
       pauseBtn.removeEventListener('click', togglePause);
+      touchButtons.forEach(function (button) {
+        button.removeEventListener('click', onTouchControl);
+      });
       if (startBtn) {
         startBtn.removeEventListener('click', handleStart);
       }
@@ -619,15 +716,23 @@
     function handleStart() {
       intro.classList.add('concluida');
       state.started = true;
-      setStatus('Jogo iniciado. Use as setas e a barra de espaço para jogar.');
+      state.lastFrameTime = 0;
+      state.dropElapsed = 0;
+      state.dropProgress = 0;
+      setStatus('Jogo iniciado. Use as setas ou os botões de toque para jogar.');
       announce('Jogo iniciado.');
       state.boardEl.focus();
+      startLoop();
     }
 
     document.addEventListener('keydown', onKeyDown);
-    state.boardEl.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onWindowBlur);
     resetBtn.addEventListener('click', resetGame);
     pauseBtn.addEventListener('click', togglePause);
+    touchButtons.forEach(function (button) {
+      button.addEventListener('click', onTouchControl);
+    });
     if (startBtn) {
       startBtn.addEventListener('click', handleStart);
     }
@@ -643,7 +748,7 @@
     updateHud();
     renderBoard();
     setStatus('Pressione "Começar a jogar" para iniciar a partida.');
-    state.animationId = window.requestAnimationFrame(tick);
+    startLoop();
   }
 
   window.BlockWoodTetris = {
@@ -659,4 +764,3 @@
 
   window.initBlockWoodGame = initBlockWoodGame;
 })();
-

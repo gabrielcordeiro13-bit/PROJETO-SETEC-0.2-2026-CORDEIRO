@@ -5,13 +5,15 @@ Projeto educacional do 2º ano de Desenvolvimento de Sistemas (Colégio Estadual
 ## O que é
 Portal de jogos em **HTML, CSS e JavaScript puro** (sem frameworks, sem backend, sem build):
 - **Block Wood Puzzle** — encaixe de peças em tabuleiro 9×9 (mouse, toque e teclado)
-- **Pac-Man do laboratório** — labirinto em Canvas com pellets, energia, 3 fantasmas, vidas e fases
+- **Pac-Man do laboratório** — labirinto original em Canvas com túneis laterais, oito pontos de energia, quatro fantasmas, animação de morte e fases
 - **Jogo da Forca** — palavras de tecnologia/educação com dicas, teclado físico e virtual
 
 ## Tecnologias e conceitos realmente usados
 - HTML semântico (`header`, `main`, `section`, `nav`, `footer`), Canvas 2D
 - CSS responsivo (mobile, tablet, desktop), animações com respeito a `prefers-reduced-motion`
 - JavaScript: DOM, eventos (teclado/mouse/toque/pointer), `requestAnimationFrame`, estado de jogo, Canvas
+- Logo original do Colégio Barbosa Ferraz como marca-d'água fixa e decorativa, servida localmente em `img/logoBarbosa.png`
+- Áudio do Pac-Man: efeitos e música retrô original sintetizados localmente com Web Audio, sem gravações ou arquivos externos
 - `localStorage` apenas no navegador: recordes, conquistas e preferências de acessibilidade (sem cadastro, sem dados pessoais)
 - Acessibilidade: skip link, foco visível, `aria-live` para placar/resultado, alvos de toque ≥ 44px, painel com tamanho de texto, alto contraste, destaque de foco e redução de movimento
 

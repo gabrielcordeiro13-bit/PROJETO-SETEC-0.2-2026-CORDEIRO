@@ -9,7 +9,8 @@
       content="SETEC 2026: portal educacional de jogos em HTML, CSS e JavaScript puro. Jogue Block Wood Puzzle, Pac-Man e Forca. Responsivo, acessível e com recordes locais."
     />
     <meta name="theme-color" content="#050609" />
-    <link rel="stylesheet" href="css/style.css?v=7" />
+    <link rel="icon" type="image/png" href="img/logoBarbosa.png" />
+    <link rel="stylesheet" href="css/style.css?v=16" />
   </head>
   <body>
     <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -82,16 +83,6 @@
             <div class="hero-copy">
               <p class="eyebrow">Portal de experiências tecnológicas · Colégio Estadual Barbosa Ferraz</p>
               <h1>SETEC 2026</h1>
-              <p class="subtitle">
-                Jogos educativos em HTML, CSS e JavaScript puro.
-                Jogue no computador, tablet ou celular.
-              </p>
-              <ul class="hero-points">
-                <li>✓ Biblioteca em expansão — novos jogos a caminho</li>
-                <li>✓ Teclado, mouse e toque</li>
-                <li>✓ Recordes salvos no seu navegador</li>
-              </ul>
-
               <div class="hero-actions">
                 <a class="primary-button hero-button" href="#jogos" data-nav-menu>Explorar jogos</a>
                 <a class="secondary-button" href="#sobre" data-nav-menu>Conhecer o projeto</a>
@@ -132,18 +123,8 @@
               </button>
             </div>
 
-            <div class="spotlight-preview" aria-hidden="true">
-              <div class="preview-grid">
-                <span class="preview-dot"></span>
-                <span class="preview-dot"></span>
-                <span class="preview-dot"></span>
-                <span class="preview-dot"></span>
-                <span class="preview-dot"></span>
-                <span class="preview-dot"></span>
-                <span class="preview-dot"></span>
-                <span class="preview-dot"></span>
-              </div>
-              <div class="preview-character"></div>
+            <div class="spotlight-preview">
+              <img class="spotlight-cover" src="img/pacman.png" alt="" loading="lazy" decoding="async" />
             </div>
           </section>
 
@@ -254,8 +235,15 @@
               <p class="label">Sobre o projeto</p>
               <h2>Um portal para aprender jogando</h2>
               <p>
-                Trabalho do 2º ano de Desenvolvimento de Sistemas, feito com
-                <strong>HTML, CSS e JavaScript puro</strong> — sem frameworks, sem backend.
+                Meu nome é Gabriel dos Santos Cordeiro e sou estudante do 2º ano do curso
+                de Desenvolvimento de Sistemas do Colégio Estadual Barbosa Ferraz. Este
+                portal foi desenvolvido como um projeto para a SETEC 2026.
+              </p>
+              <p>
+                O objetivo é apresentar experiências tecnológicas interativas por meio de
+                jogos criados com <strong>HTML, CSS e JavaScript puro</strong>. O projeto
+                busca unir programação, criatividade, aprendizado e entretenimento,
+                demonstrando na prática os conhecimentos adquiridos durante a formação técnica.
               </p>
               <ul class="tech-list">
                 <li>Jogos em Canvas e DOM com teclado, mouse e toque</li>
@@ -343,10 +331,10 @@
     <div class="sr-only" id="setec-live" role="status" aria-live="polite"></div>
     <div class="setec-toast" id="setec-toast" role="status" aria-live="polite"></div>
 
-    <script src="js/setec-core.js?v=7"></script>
+    <script src="js/setec-core.js?v=8"></script>
     <script src="js/block-wood.js?v=7"></script>
-    <script src="js/pacman.js?v=7"></script>
+    <script src="js/pacman.js?v=8"></script>
     <script src="js/hangman.js?v=7"></script>
-    <script src="js/main.js?v=7"></script>
+    <script src="js/main.js?v=8"></script>
   </body>
 </html>

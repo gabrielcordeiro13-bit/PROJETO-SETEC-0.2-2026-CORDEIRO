@@ -70,7 +70,9 @@
         if (gameDefinitions[i].key === name) { def = gameDefinitions[i]; break; }
       }
       if (def && typeof window[def.init] === 'function') {
-        try { window[def.init](); } catch (e) { /* não quebra a navegação */ }
+        try { window[def.init](); } catch (e) {
+          console.error('Falha ao inicializar o jogo "' + name + '".', e);
+        }
       }
       window.requestAnimationFrame(function () { hideLoading(); });
       var heading = document.querySelector('[data-screen="' + name + '"] h2');
