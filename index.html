@@ -13,6 +13,36 @@
     <link rel="stylesheet" href="css/style.css?v=16" />
   </head>
   <body>
+    <div class="intro-overlay" id="intro-overlay" role="dialog" aria-modal="true" aria-label="Tela de entrada SETEC 2026">
+      <div class="intro-layer halo" data-parallax="10" aria-hidden="true"></div>
+      <div class="intro-layer grade" data-parallax="22" aria-hidden="true"></div>
+      <canvas class="intro-canvas" id="intro-canvas" aria-hidden="true"></canvas>
+      <span class="intro-ghost g1" data-parallax="34" aria-hidden="true"></span>
+      <span class="intro-ghost g2" data-parallax="-26" aria-hidden="true"></span>
+      <span class="intro-ghost g3" data-parallax="40" aria-hidden="true"></span>
+      <span class="intro-pill p1" data-parallax="-18" aria-hidden="true"></span>
+      <span class="intro-pill p2" data-parallax="28" aria-hidden="true"></span>
+      <span class="intro-peca q1" data-parallax="30" aria-hidden="true"></span>
+      <span class="intro-peca q2" data-parallax="-34" aria-hidden="true"></span>
+
+      <div class="intro-content">
+        <p class="intro-kicker">Portal de experiências tecnológicas · Colégio Estadual Barbosa Ferraz</p>
+        <h1 class="intro-title">SETEC<span class="intro-ano">2026</span></h1>
+        <p class="intro-tagline">Três mundos para explorar: labirintos, peças e palavras. Insira a ficha e comece a jogar.</p>
+        <div class="intro-jogos" aria-label="Jogos disponíveis">
+          <span class="chip chip-arcade">Arcade · Pac-Man</span>
+          <span class="chip chip-accent">Puzzle · Block Wood</span>
+          <span class="badge badge-hangman">Palavras · Forca</span>
+        </div>
+        <div class="intro-acoes">
+          <button type="button" class="primary-button" id="intro-entrar">Entrar no portal</button>
+          <button type="button" class="secondary-button" id="intro-jogar-agora">Jogar Pac-Man agora</button>
+        </div>
+      </div>
+
+      <button type="button" class="intro-pular" id="intro-pular">Pular introdução</button>
+    </div>
+
     <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
     <div class="page-shell">
@@ -332,6 +362,7 @@
     <div class="setec-toast" id="setec-toast" role="status" aria-live="polite"></div>
 
     <script src="js/setec-core.js?v=8"></script>
+    <script src="js/intro.js?v=1"></script>
     <script src="js/block-wood.js?v=7"></script>
     <script src="js/pacman.js?v=8"></script>
     <script src="js/hangman.js?v=7"></script>

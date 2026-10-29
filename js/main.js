@@ -206,6 +206,7 @@
   }
 
   window.portalModal = { open: openModal, close: function () { closeModal(false); } };
+  window.showScreen = showScreen;
 
   document.addEventListener('DOMContentLoaded', function () {
     screens = document.querySelectorAll('[data-screen]');

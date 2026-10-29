@@ -26,3 +26,4 @@ Abra `index.html` no navegador ou publique a pasta no GitHub Pages (caminhos rel
 - `js/setec-core.js` — armazenamento local, conquistas, preferências, live region
 - `js/block-wood.js`, `js/pacman.js`, `js/hangman.js` — um arquivo por jogo
 - `js/main.js` — navegação entre telas e modal acessível
+- `js/intro.js` — tela de entrada cinematográfica (overlay de intro com partículas em canvas, parallax ao cursor, fantasmas e pílulas dos três jogos; "ENTRAR NO PORTAL" leva ao menu, "PULAR INTRODUÇÃO" disponível e respeita `prefers-reduced-motion`)

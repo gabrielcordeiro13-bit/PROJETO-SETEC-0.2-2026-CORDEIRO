@@ -1915,6 +1915,222 @@ h1 {
 .loading-meter span:nth-child(7) { animation-delay: 0.6s; }
 .loading-meter span:nth-child(8) { animation-delay: 0.7s; }
 
+/* ===== TELA DE ENTRADA (intro cinematográfica SETEC 2026) ===== */
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 30%, rgba(47, 138, 249, 0.18), transparent 55%),
+    linear-gradient(160deg, var(--bg-dark) 0%, var(--bg-mid) 48%, #071021 100%);
+  color: var(--text);
+  text-align: center;
+}
+
+.intro-overlay.saindo {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(1.04);
+  transition: opacity .6s ease, transform .6s ease, visibility 0s linear .6s;
+}
+
+.intro-overlay[hidden] { display: none; }
+
+/* camadas de fundo */
+.intro-layer {
+  position: absolute;
+  inset: -6%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.intro-layer.grade {
+  background-image:
+    linear-gradient(rgba(103, 208, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(103, 208, 255, 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+  transform-origin: center;
+}
+
+.intro-layer.halo {
+  background: radial-gradient(circle at 50% 42%, rgba(103, 208, 255, 0.22), transparent 42%),
+    radial-gradient(circle at 78% 72%, rgba(143, 238, 197, 0.14), transparent 38%),
+    radial-gradient(circle at 18% 76%, rgba(255, 209, 102, 0.12), transparent 40%);
+}
+
+.intro-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* silhuetas decorativas dos jogos */
+.intro-ghost {
+  position: absolute;
+  width: 46px;
+  height: 44px;
+  background: var(--accent);
+  opacity: .18;
+  clip-path: polygon(0 100%, 0 40%, 8% 16%, 25% 0, 75% 0, 92% 16%, 100% 40%, 100% 100%, 83% 84%, 66% 100%, 50% 84%, 33% 100%, 16% 84%);
+  animation: intro-flutuar 7s ease-in-out infinite;
+}
+.intro-ghost.g2 { right: 12%; top: 24%; width: 34px; height: 32px; background: #ff80b6; animation-delay: -2.4s; animation-duration: 8.5s; }
+.intro-ghost.g3 { right: 22%; bottom: 18%; width: 28px; height: 26px; background: var(--warning); animation-delay: -4.8s; }
+.intro-ghost.g1 { left: 10%; top: 30%; }
+
+.intro-pill {
+  position: absolute;
+  background: var(--primary);
+  width: 12px; height: 12px;
+  opacity: .3;
+  clip-path: polygon(0 0, 100% 35%, 50% 50%, 100% 65%, 0 100%);
+  animation: intro-flutuar 6s ease-in-out infinite reverse;
+}
+.intro-pill.p1 { left: 20%; bottom: 26%; }
+.intro-pill.p2 { right: 30%; top: 16%; background: var(--warning); animation-delay: -3s; }
+
+.intro-peca {
+  position: absolute;
+  width: 34px; height: 34px;
+  border: 3px solid var(--warning);
+  opacity: .22;
+  box-shadow: 4px 4px 0 rgba(2, 3, 7, .6);
+  animation: intro-flutuar 9s ease-in-out infinite;
+}
+.intro-peca.q1 { left: 14%; bottom: 20%; transform: rotate(12deg); }
+.intro-peca.q2 { right: 16%; bottom: 34%; border-color: var(--primary); animation-delay: -5s; }
+
+@keyframes intro-flutuar {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -14px; }
+}
+
+/* conteúdo central */
+.intro-content {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+  padding: 24px;
+  max-width: 720px;
+}
+
+.intro-kicker {
+  margin: 0;
+  padding: 8px 14px;
+  border: 2px solid var(--primary);
+  background: rgba(33, 212, 255, 0.1);
+  color: var(--primary);
+  font-weight: 900;
+  font-size: clamp(.68rem, 1.6vw, .82rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.intro-title {
+  margin: 0;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: clamp(3rem, 13vw, 7.5rem);
+  line-height: .88;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  text-shadow: 5px 5px 0 #0753a1, 9px 9px 0 #ec2c69;
+}
+
+.intro-title .intro-ano {
+  display: block;
+  color: var(--warning);
+  font-size: .42em;
+  letter-spacing: .3em;
+}
+
+.intro-tagline {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--muted);
+  font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  line-height: 1.6;
+  font-size: clamp(.95rem, 2vw, 1.1rem);
+}
+
+.intro-jogos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.intro-jogos .chip { font-size: .78rem; }
+
+.intro-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.intro-acoes .primary-button,
+.intro-acoes .secondary-button { min-width: 200px; }
+
+.intro-pular {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  z-index: 3;
+  background: none;
+  border: none;
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 8px 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: .78rem;
+}
+
+.intro-pular:hover { color: var(--primary); }
+
+/* entrada em cascata dos elementos */
+.intro-content > * {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: intro-subir .6s cubic-bezier(.2, .8, .3, 1) forwards;
+}
+.intro-content > *:nth-child(1) { animation-delay: .15s; }
+.intro-content > *:nth-child(2) { animation-delay: .3s; }
+.intro-content > *:nth-child(3) { animation-delay: .45s; }
+.intro-content > *:nth-child(4) { animation-delay: .6s; }
+.intro-content > *:nth-child(5) { animation-delay: .75s; }
+
+@keyframes intro-subir {
+  to { opacity: 1; transform: none; }
+}
+
+/* parallax leve ao cursor (desktop) */
+@media (hover: hover) and (pointer: fine) {
+  .intro-overlay.mouse-ativo .intro-layer.grade { transition: transform .35s ease-out; }
+}
+
+/* movimento reduzido: tudo estático, sem animação nem canvas */
+body.reduzir-movimento .intro-layer,
+body.reduzir-movimento .intro-ghost,
+body.reduzir-movimento .intro-pill,
+body.reduzir-movimento .intro-peca { animation: none !important; }
+
+@media (max-width: 560px) {
+  .intro-ghost, .intro-peca, .intro-pill { opacity: .14; }
+  .intro-acoes .primary-button,
+  .intro-acoes .secondary-button { width: 100%; }
+}
+
 @keyframes loading-fill {
   0%, 20% { background: #101b2b; }
   35%, 100% { background: var(--primary); }
