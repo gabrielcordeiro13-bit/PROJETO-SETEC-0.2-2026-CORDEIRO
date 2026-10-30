@@ -1968,45 +1968,46 @@ h1 {
   pointer-events: none;
 }
 
-/* silhuetas decorativas dos jogos */
+/* silhuetas decorativas dos jogos — sobem de baixo para cima e desaparecem no topo (loop contínuo) */
 .intro-ghost {
   position: absolute;
-  width: 46px;
-  height: 44px;
-  background: var(--accent);
-  opacity: .18;
   clip-path: polygon(0 100%, 0 40%, 8% 16%, 25% 0, 75% 0, 92% 16%, 100% 40%, 100% 100%, 83% 84%, 66% 100%, 50% 84%, 33% 100%, 16% 84%);
-  animation: intro-flutuar 7s ease-in-out infinite;
+  animation: intro-subir-fundo linear infinite;
 }
-.intro-ghost.g2 { right: 12%; top: 24%; width: 34px; height: 32px; background: #ff80b6; animation-delay: -2.4s; animation-duration: 8.5s; }
-.intro-ghost.g3 { right: 22%; bottom: 18%; width: 28px; height: 26px; background: var(--warning); animation-delay: -4.8s; }
-.intro-ghost.g1 { left: 10%; top: 30%; }
 
 .intro-pill {
   position: absolute;
   background: var(--primary);
-  width: 12px; height: 12px;
-  opacity: .3;
   clip-path: polygon(0 0, 100% 35%, 50% 50%, 100% 65%, 0 100%);
-  animation: intro-flutuar 6s ease-in-out infinite reverse;
+  animation: intro-subir-fundo linear infinite;
 }
-.intro-pill.p1 { left: 20%; bottom: 26%; }
-.intro-pill.p2 { right: 30%; top: 16%; background: var(--warning); animation-delay: -3s; }
 
 .intro-peca {
   position: absolute;
-  width: 34px; height: 34px;
   border: 3px solid var(--warning);
-  opacity: .22;
   box-shadow: 4px 4px 0 rgba(2, 3, 7, .6);
-  animation: intro-flutuar 9s ease-in-out infinite;
 }
-.intro-peca.q1 { left: 14%; bottom: 20%; transform: rotate(12deg); }
-.intro-peca.q2 { right: 16%; bottom: 34%; border-color: var(--primary); animation-delay: -5s; }
 
-@keyframes intro-flutuar {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -14px; }
+/* variação individual: posição horizontal, tamanho, velocidade e fase do loop */
+.intro-ghost { width: 54px; height: 52px; background: var(--accent); opacity: .4; bottom: -8%; left: 10%; animation-duration: 16s; }
+.intro-ghost.g2 { right: 12%; width: 40px; height: 38px; background: #ff80b6; animation-delay: -5.5s; animation-duration: 19s; }
+.intro-ghost.g3 { right: 22%; width: 32px; height: 30px; background: var(--warning); animation-delay: -11s; animation-duration: 14s; }
+
+.intro-pill { width: 14px; height: 14px; opacity: .55; }
+.intro-pill.p1 { left: 20%; bottom: -6%; animation-duration: 13s; }
+.intro-pill.p2 { right: 30%; bottom: -10%; background: var(--warning); animation-delay: -7s; animation-duration: 16.5s; }
+
+.intro-peca { width: 38px; height: 38px; opacity: .4; }
+.intro-peca.q1 { left: 14%; bottom: -9%; transform: rotate(12deg); animation-duration: 21s; }
+.intro-peca.q2 { right: 16%; bottom: -7%; border-color: var(--primary); animation-delay: -3.2s; animation-duration: 17.5s; }
+
+@keyframes intro-subir-fundo {
+  0%   { translate: 0 0; opacity: 0; }
+  8%   { opacity: 1; }
+  25%  { translate: 14px -26vh; }
+  50%  { translate: -10px -52vh; }
+  75%  { translate: 12px -76vh; opacity: 1; }
+  100% { translate: 0 -112vh; opacity: 0; }
 }
 
 /* conteúdo central */
@@ -2014,28 +2015,28 @@ h1 {
   position: relative;
   z-index: 2;
   display: grid;
-  gap: 18px;
+  gap: clamp(20px, 3.5vh, 34px);
   justify-items: center;
-  padding: 24px;
-  max-width: 720px;
+  padding: clamp(28px, 6vh, 64px) clamp(20px, 5vw, 48px);
+  max-width: 860px;
 }
 
 .intro-kicker {
   margin: 0;
-  padding: 8px 14px;
+  padding: 10px 18px;
   border: 2px solid var(--primary);
   background: rgba(33, 212, 255, 0.1);
   color: var(--primary);
   font-weight: 900;
-  font-size: clamp(.68rem, 1.6vw, .82rem);
-  letter-spacing: 0.22em;
+  font-size: clamp(.8rem, 1.9vw, 1rem);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
 .intro-title {
   margin: 0;
   font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-  font-size: clamp(3rem, 13vw, 7.5rem);
+  font-size: clamp(3.2rem, 14vw, 8.5rem);
   line-height: .88;
   text-transform: uppercase;
   letter-spacing: .04em;
@@ -2044,59 +2045,44 @@ h1 {
 
 .intro-title .intro-ano {
   display: block;
+  margin-top: .12em;
   color: var(--warning);
-  font-size: .42em;
-  letter-spacing: .3em;
+  font-size: .44em;
+  letter-spacing: .32em;
 }
 
 .intro-tagline {
   margin: 0;
-  max-width: 46ch;
-  color: var(--muted);
+  max-width: 52ch;
+  color: var(--text);
   font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-  line-height: 1.6;
-  font-size: clamp(.95rem, 2vw, 1.1rem);
+  line-height: 1.65;
+  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
 }
 
 .intro-jogos {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
 }
 
-.intro-jogos .chip { font-size: .78rem; }
+.intro-jogos .chip { font-size: clamp(.85rem, 1.8vw, 1rem); }
 
 .intro-acoes {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 16px;
   justify-content: center;
-  margin-top: 6px;
+  margin-top: clamp(6px, 1.5vh, 14px);
 }
 
 .intro-acoes .primary-button,
-.intro-acoes .secondary-button { min-width: 200px; }
-
-.intro-pular {
-  position: absolute;
-  right: 18px;
-  bottom: 16px;
-  z-index: 3;
-  background: none;
-  border: none;
-  color: var(--muted);
-  text-decoration: underline;
-  cursor: pointer;
-  min-height: 44px;
-  padding: 8px 12px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  font-size: .78rem;
+.intro-acoes .secondary-button {
+  min-width: clamp(220px, 26vw, 280px);
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  padding: 14px 22px;
 }
-
-.intro-pular:hover { color: var(--primary); }
 
 /* entrada em cascata dos elementos */
 .intro-content > * {
@@ -2126,9 +2112,42 @@ body.reduzir-movimento .intro-pill,
 body.reduzir-movimento .intro-peca { animation: none !important; }
 
 @media (max-width: 560px) {
-  .intro-ghost, .intro-peca, .intro-pill { opacity: .14; }
+  .intro-ghost, .intro-peca, .intro-pill { opacity: .28; }
+  .intro-title { font-size: clamp(3.4rem, 18vw, 5.2rem); }
   .intro-acoes .primary-button,
   .intro-acoes .secondary-button { width: 100%; }
+}
+
+/* ===== Efeitos de fundo das telas de jogo (mesmo sistema da intro) ===== */
+.setec-efeitos-fundo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.setec-efeitos-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* personagens reusam as classes .intro-* da intro (mesmo visual e animação) */
+.setec-efeitos-fundo .intro-ghost,
+.setec-efeitos-fundo .intro-pill,
+.setec-efeitos-fundo .intro-peca { pointer-events: none; }
+
+/* movimento reduzido: fundo estático nas telas de jogo também */
+body.reduzir-movimento .setec-efeitos-fundo .intro-ghost,
+body.reduzir-movimento .setec-efeitos-fundo .intro-pill,
+body.reduzir-movimento .setec-efeitos-fundo .intro-peca { animation: none !important; }
+
+@media (max-width: 560px) {
+  .setec-efeitos-fundo .intro-ghost,
+  .setec-efeitos-fundo .intro-pill,
+  .setec-efeitos-fundo .intro-peca { opacity: .28; }
 }
 
 @keyframes loading-fill {
@@ -2258,6 +2277,7 @@ body.foco-forte [tabindex]:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  .intro-content > * { opacity: 1 !important; transform: none !important; }
 }
 body.reduzir-movimento *, body.reduzir-movimento *::before, body.reduzir-movimento *::after {
   animation: none !important; transition: none !important;
@@ -2347,6 +2367,9 @@ img, canvas, .block-board, .game-stage { max-width: 100%; }
 /* Keep game content above the fixed school watermark. */
 .game-stage { position: relative; overflow: hidden; }
 .game-stage > * { position: relative; z-index: 1; }
+/* capa de efeitos: fundo absoluto dentro do stage, sem capturar interações */
+.setec-efeitos-fundo { z-index: 0; }
+.game-stage > .setec-efeitos-fundo { position: absolute; }
 .block-board { width: min(100%, 480px); margin: 0 auto; }
 @media (max-width: 920px) {
   .conquistas { grid-template-columns: 1fr; }

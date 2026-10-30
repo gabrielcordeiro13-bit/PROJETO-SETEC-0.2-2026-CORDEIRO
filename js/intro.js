@@ -14,6 +14,7 @@
   var rafId = null;
   var rodando = false;
   var mouse = { x: 0.5, y: 0.5 };
+  var tempoDesenho = 0;
 
   function reduzido() {
     var c = window.SetecCore;
@@ -30,16 +31,21 @@
 
   function criarParticulas() {
     if (!ctx) return;
-    var n = Math.max(28, Math.min(70, Math.round(window.innerWidth / 22)));
+    var n = Math.max(60, Math.min(120, Math.round(window.innerWidth / 12)));
     particulas = [];
     for (var i = 0; i < n; i += 1) {
       particulas.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        r: (Math.random() * 1.8 + 0.7) * dpr,
-        vy: -(Math.random() * 0.25 + 0.06) * dpr,
-        vx: (Math.random() - 0.5) * 0.12 * dpr,
-        a: Math.random() * 0.45 + 0.12,
+        r: (Math.random() * 2.4 + 0.9) * dpr,
+        vy: -(Math.random() * 0.55 + 0.15) * dpr,
+        vx: (Math.random() - 0.5) * 0.14 * dpr,
+        a: Math.random() * 0.5 + 0.25,
+        // variações para um movimento contínuo e natural (oscilação senoidal individual)
+        fase: Math.random() * Math.PI * 2,
+        freq: Math.random() * 0.9 + 0.3,
+        amp: (Math.random() * 0.35 + 0.1) * dpr,
+        pulso: Math.random() * 0.9 + 0.4,
         cor: Math.random() < 0.6 ? '103, 208, 255' : (Math.random() < 0.5 ? '143, 238, 197' : '255, 209, 102')
       });
     }
@@ -48,14 +54,23 @@
   function desenhar() {
     if (!ctx || !rodando) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var t = (tempoDesenho += 1) * 0.016;
     for (var i = 0; i < particulas.length; i += 1) {
       var p = particulas[i];
-      p.x += p.vx; p.y += p.vy;
-      if (p.y < -8 * dpr) { p.y = canvas.height + 8 * dpr; p.x = Math.random() * canvas.width; }
-      if (p.x < -8 * dpr) p.x = canvas.width + 8 * dpr;
-      if (p.x > canvas.width + 8 * dpr) p.x = -8 * dpr;
+      p.y += p.vy; // sobe de baixo para cima
+      // oscilação senoidal suave, individual por partícula (sem repetição aparente)
+      var osc = Math.sin(t * p.freq + p.fase) * p.amp;
+      var raio = p.r * (0.85 + 0.15 * Math.sin(t * p.pulso + p.fase));
+      if (p.y < -10 * dpr) { p.y = canvas.height + 10 * dpr; p.x = Math.random() * canvas.width; }
+      if (p.x < -12 * dpr) p.x = canvas.width + 12 * dpr;
+      if (p.x > canvas.width + 12 * dpr) p.x = -12 * dpr;
+      // brilho suave tipo neon
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.arc(p.x + osc, p.y, raio * 2.4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + p.cor + ',' + (p.a * 0.12).toFixed(3) + ')';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(p.x + osc, p.y, raio, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(' + p.cor + ',' + p.a + ')';
       ctx.fill();
     }
@@ -122,10 +137,9 @@
   document.addEventListener('DOMContentLoaded', function () {
     var entrar = document.getElementById('intro-entrar');
     var jogar = document.getElementById('intro-jogar-agora');
-    var pular = document.getElementById('intro-pular');
+
 
     if (entrar) entrar.addEventListener('click', function () { fechar(); });
-    if (pular) pular.addEventListener('click', function () { fechar(); });
     if (jogar) jogar.addEventListener('click', function () { fechar('pacman'); });
 
     document.addEventListener('keydown', function (e) {
