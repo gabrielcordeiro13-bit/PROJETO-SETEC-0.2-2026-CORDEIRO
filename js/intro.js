@@ -126,7 +126,7 @@
       } else {
         window.scrollTo(0, 0);
       }
-    }, 620);
+    }, 450);
   }
 
   function onResize() {

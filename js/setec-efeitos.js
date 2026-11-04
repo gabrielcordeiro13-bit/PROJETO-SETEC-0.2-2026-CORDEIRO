@@ -3,10 +3,11 @@
 //  - partículas em <canvas> subindo de baixo para cima, com glow neon,
 //    oscilação senoidal individual e pulso de brilho (mesmos parâmetros);
 //  - fantasmas, pastilhas e peças em DOM com a animação CSS "intro-subir-fundo".
-// Camada única por tela de jogo (indicada por data-screen), criada como filho
-// absoluto atrás do conteúdo (z-index 0). Pausa quando a aba fica oculta e
-// quando o usuário prefere movimento reduzido. Sem impacto na jogabilidade:
-// pointer-events: none e desenho leve em rAF compartilhado.
+// Camada ÚNICA fixa (position: fixed) compartilhada por todas as páginas:
+// cobre a viewport inteira em qualquer rolagem/tela — nunca fica presa dentro
+// de tabuleiros, cards ou containers. Pausa quando a aba fica oculta e quando
+// o usuário prefere movimento reduzido. pointer-events: none + z-index atrás
+// do conteúdo: não interfere em leitura, botões, controles ou jogabilidade.
 (function () {
   'use strict';
 
@@ -45,14 +46,15 @@
     if (!cap.canvas) return;
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
     cap.dpr = dpr;
-    cap.canvas.width = Math.round(cap.raiz.clientWidth * dpr);
-    cap.canvas.height = Math.round(cap.raiz.clientHeight * dpr);
+    // capa é fixed na viewport: canvas do tamanho da janela (leve e sempre visível)
+    cap.canvas.width = Math.round(window.innerWidth * dpr);
+    cap.canvas.height = Math.round(window.innerHeight * dpr);
   }
 
   // Mesmos parâmetros de criarParticulas() da intro.
   function criarParticulas(cap) {
     if (!cap.canvas) return;
-    var n = Math.max(60, Math.min(120, Math.round(cap.raiz.clientWidth / 12)));
+    var n = Math.max(60, Math.min(120, Math.round(window.innerWidth / 12)));
     cap.particulas = [];
     for (var i = 0; i < n; i += 1) {
       cap.particulas.push({
@@ -124,22 +126,20 @@
   });
 
   function iniciarCapa(key) {
+    // Toda página do portal é uma .screen[data-screen] — inclusive o menu.
     var tela = document.querySelector('[data-screen="' + key + '"]');
     if (!tela) return null;
     var existente = CAPAS[key];
     if (existente) {
+      // Reaproveita a MESMA capa fixa: só troca o dono (persona/jogo atual).
       existente.ativa = true;
       garantirLaco();
       return existente;
     }
-    var raiz = tela.querySelector('.setec-efeitos-fundo');
-    if (!raiz) {
-      raiz = document.createElement('div');
-      raiz.className = 'setec-efeitos-fundo';
-      raiz.setAttribute('aria-hidden', 'true');
-      // Insere como primeiro filho: o CSS garante conteúdo em z-index 1 acima.
-      tela.insertBefore(raiz, tela.firstChild);
-    }
+    var raiz = document.createElement('div');
+    raiz.className = 'setec-efeitos-fundo';
+    raiz.setAttribute('aria-hidden', 'true');
+    tela.insertBefore(raiz, tela.firstChild);
     var cap = {
       raiz: raiz,
       ativa: true,
@@ -165,7 +165,12 @@
 
   function pararCapa(key) {
     var cap = CAPAS[key];
-    if (cap) cap.ativa = false;
+    if (cap) {
+      cap.ativa = false;
+      // capa fixa não é mais necessária: remove do DOM (era o motivo de “sobras”)
+      if (cap.raiz.parentNode) cap.raiz.parentNode.removeChild(cap.raiz);
+      delete CAPAS[key];
+    }
   }
 
   function redimensionar() {

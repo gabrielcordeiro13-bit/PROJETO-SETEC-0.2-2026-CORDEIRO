@@ -10,7 +10,7 @@
     />
     <meta name="theme-color" content="#050609" />
     <link rel="icon" type="image/png" href="img/logoBarbosa.png" />
-    <link rel="stylesheet" href="css/style.css?v=18" />
+    <link rel="stylesheet" href="css/style.css?v=21" />
   </head>
   <body>
     <div class="intro-overlay" id="intro-overlay" role="dialog" aria-modal="true" aria-label="Tela de entrada SETEC 2026">
@@ -135,7 +135,7 @@
 
           <section class="spotlight-panel" aria-label="Jogo em destaque">
             <div class="spotlight-copy">
-              <p class="label">Em destaque</p>
+              <p class="label">★ Em destaque</p>
               <h2>Pac-Man do laboratório</h2>
               <p>
                 Coma todos os pontos, use a energia contra os fantasmas e avance de fase.
@@ -147,7 +147,7 @@
               </div>
 
               <button type="button" class="primary-button" data-open-game="pacman" aria-label="Jogar Pac-Man agora">
-                Jogar agora
+                ▶ Jogar agora
               </button>
             </div>
 
@@ -159,38 +159,14 @@
           <div class="catalog-header" id="jogos" tabindex="-1">
             <div>
               <p class="label">Biblioteca de jogos</p>
-              <h2>Escolha um jogo</h2>
+              <h2>Escolha sua próxima aventura</h2>
             </div>
             <p>
-              Arcade, Puzzle e Palavras. Escolha e comece em segundos.
+              Arcade, Puzzle e Palavras — escolha e comece em segundos.
             </p>
           </div>
 
           <div class="game-grid" aria-label="Lista de jogos disponíveis">
-            <article class="game-card" data-game-card="block-wood">
-              <div class="card-surface wood-surface" aria-hidden="true">
-                <img class="card-cover" src="img/bloco.jpg" alt="" loading="lazy" decoding="async" />
-              </div>
-
-              <div class="card-header">
-                <span class="badge badge-wood">Puzzle · Lógica</span>
-                <h3>Block Wood Puzzle</h3>
-              </div>
-
-              <p class="card-desc">
-                Encaixe peças no tabuleiro 9×9 e limpe linhas para somar pontos.
-              </p>
-              <dl class="card-meta">
-                <div><dt>Objetivo</dt><dd>Limpar linhas e bater recorde</dd></div>
-                <div><dt>Dificuldade</dt><dd>Média · estratégia</dd></div>
-                <div><dt>Recorde</dt><dd><span data-recorde-texto="block-wood">Ainda não jogado</span></dd></div>
-              </dl>
-
-              <button type="button" class="primary-button" data-open-game="block-wood" aria-label="Jogar Block Wood Puzzle">
-                Jogar
-              </button>
-            </article>
-
             <article class="game-card" data-game-card="pacman">
               <div class="card-surface pacman-surface" aria-hidden="true">
                 <img class="card-cover" src="img/pacman.png" alt="" loading="lazy" decoding="async" />
@@ -202,16 +178,36 @@
               </div>
 
               <p class="card-desc">
-                Coma os pontos, desvie dos fantasmas e use a energia.
+                Corra pelo labirinto, coma os pontos e cace os fantasmas com a energia.
               </p>
               <dl class="card-meta">
-                <div><dt>Objetivo</dt><dd>Limpar a fase com 3 vidas</dd></div>
-                <div><dt>Dificuldade</dt><dd>Fácil de aprender</dd></div>
                 <div><dt>Recorde</dt><dd><span data-recorde-texto="pacman">Ainda não jogado</span></dd></div>
               </dl>
 
-              <button type="button" class="primary-button" data-open-game="pacman" aria-label="Jogar Pac-Man">
-                Jogar
+              <button type="button" class="primary-button" data-open-game="pacman" aria-label="Jogar Pac-Man agora">
+                ▶ Jogar Pac-Man
+              </button>
+            </article>
+
+            <article class="game-card" data-game-card="block-wood">
+              <div class="card-surface wood-surface" aria-hidden="true">
+                <img class="card-cover" src="img/bloco.jpg" alt="" loading="lazy" decoding="async" />
+              </div>
+
+              <div class="card-header">
+                <span class="badge badge-wood">Puzzle · Lógica</span>
+                <h3>Block Wood Puzzle</h3>
+              </div>
+
+              <p class="card-desc">
+                Encaixe peças no tabuleiro 9×9 e complete linhas para somar pontos.
+              </p>
+              <dl class="card-meta">
+                <div><dt>Recorde</dt><dd><span data-recorde-texto="block-wood">Ainda não jogado</span></dd></div>
+              </dl>
+
+              <button type="button" class="primary-button" data-open-game="block-wood" aria-label="Jogar Block Wood Puzzle">
+                ▶ Jogar Block Wood
               </button>
             </article>
 
@@ -226,16 +222,14 @@
               </div>
 
               <p class="card-desc">
-                Adivinhe palavras de tecnologia com dicas. 6 erros e fim.
+                Adivinhe palavras de tecnologia com dicas — 6 erros e fim.
               </p>
               <dl class="card-meta">
-                <div><dt>Objetivo</dt><dd>Acertar a palavra com dicas</dd></div>
-                <div><dt>Dificuldade</dt><dd>Fácil · Médio · Difícil</dd></div>
                 <div><dt>Recorde</dt><dd><span data-recorde-texto="hangman">Ainda não jogado</span></dd></div>
               </dl>
 
               <button type="button" class="primary-button" data-open-game="hangman" aria-label="Jogar Jogo da Forca">
-                Jogar
+                ▶ Jogar Forca
               </button>
             </article>
           </div>
@@ -361,7 +355,7 @@
 
     <script src="js/setec-core.js?v=8"></script>
     <script src="js/setec-efeitos.js?v=1"></script>
-    <script src="js/intro.js?v=2"></script>
+    <script src="js/intro.js?v=4"></script>
     <script src="js/block-wood.js?v=7"></script>
     <script src="js/pacman.js?v=8"></script>
     <script src="js/hangman.js?v=7"></script>

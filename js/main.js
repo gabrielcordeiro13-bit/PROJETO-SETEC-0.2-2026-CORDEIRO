@@ -48,9 +48,12 @@
     if (name === 'menu') {
       cleanupAll();
       hideLoading();
-      // Suspende os fundos animados dos jogos quando estamos no menu.
+      // Fundo animado do menu ativo; fundos dos jogos suspensos.
       var fx = efeitos();
-      if (fx) gameDefinitions.forEach(function (d) { fx.pausar(d.key); });
+      if (fx) {
+        fx.ativar('menu');
+        gameDefinitions.forEach(function (d) { fx.pausar(d.key); });
+      }
       if (opts.anchor) {
         var target = document.querySelector(opts.anchor);
         if (target) {
@@ -88,7 +91,10 @@
       var scr = document.querySelector('[data-screen="' + name + '"]');
       if (scr) scr.scrollIntoView({ behavior: 'auto', block: 'start' });
       var fxAtivar = efeitos();
-      if (fxAtivar) fxAtivar.ativar(name);
+      if (fxAtivar) {
+        fxAtivar.ativar(name);
+        fxAtivar.pausar('menu');
+      }
     });
   }
 

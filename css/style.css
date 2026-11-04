@@ -181,6 +181,18 @@ main {
   display: block;
 }
 
+/* Páginas do portal: âncora de posição para a capa de fundo (.setec-efeitos-fundo),
+   que cobre TODA a extensão da página — não apenas tabuleiros ou containers. */
+.screen { position: relative; }
+
+/* Painéis da página inicial deixam o fundo aparecer (translúcidos, não opacos). */
+.hero-panel, .spotlight-panel, .catalog-header, .about-panel, .progress-panel {
+  position: relative;
+}
+.hero-panel > *, .spotlight-panel > *, .catalog-header > *,
+.about-panel > *, .progress-panel > *,
+.game-grid > *, .topbar { position: relative; z-index: 1; }
+
 .hero-panel,
 .spotlight-panel,
 .catalog-header,
@@ -191,7 +203,7 @@ main {
 .modal-card {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: linear-gradient(180deg, rgba(15, 31, 49, 0.96), rgba(10, 20, 32, 0.96));
+  background: linear-gradient(180deg, rgba(15, 31, 49, 0.82), rgba(10, 20, 32, 0.78));
   box-shadow: var(--shadow-soft);
 }
 
@@ -388,13 +400,15 @@ main {
 }
 
 .spotlight-copy h2 {
-  font-size: clamp(1.8rem, 3vw, 2.7rem);
+  font-size: clamp(2.1rem, 4.4vw, 3.4rem);
   margin-bottom: 10px;
 }
 
 .spotlight-copy p {
   color: var(--muted);
   line-height: 1.7;
+  font-size: 1.08rem;
+  max-width: 52ch;
 }
 
 .spotlight-meta {
@@ -647,7 +661,8 @@ main {
 
 .game-card h3 {
   margin-bottom: 0;
-  font-size: 1.55rem;
+  font-size: clamp(1.6rem, 2.2vw, 2rem);
+  line-height: 1.05;
 }
 
 .game-card p {
@@ -655,6 +670,12 @@ main {
   color: var(--muted);
   line-height: 1.7;
 }
+
+/* Card dos jogos em foco: capa maior, título dominante e call-to-action claro */
+.card-cover { height: 190px; transition: transform .35s ease, filter .35s ease; }
+.game-card:hover .card-cover { transform: scale(1.05); filter: saturate(1.15); }
+.game-card .primary-button { margin-top: auto; }
+.card-header .badge { font-size: .74rem; }
 
 .about-panel {
   display: flex;
@@ -1251,8 +1272,21 @@ html {
   background: #050609;
 }
 
+/* ===== Tipografia padrão do portal =====
+   Dois papéis apenas, usados de forma consistente:
+   - Display (títulos, botões, números): Impact — arcade, impactante.
+   - Leitura (textos corridos): system-ui — confortável em qualquer plataforma.
+   Escala modular: 0.72 / 0.8 / 0.95 / 1.05 / 1.3 / 1.6 / 2+ (clamp por contexto). */
+:root {
+  --fonte-display: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  --fonte-leitura: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
 body {
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--fonte-leitura);
+  font-size: 16px;
+  line-height: 1.65;
+  letter-spacing: 0.01em;
   background-color: var(--bg-dark);
   background-image:
     linear-gradient(rgba(33, 212, 255, 0.035) 1px, transparent 1px),
@@ -1323,7 +1357,7 @@ a:focus-visible {
 
 .brand-mark {
   color: var(--warning);
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: var(--fonte-display);
   font-size: clamp(1.8rem, 4vw, 3rem);
   letter-spacing: 0.06em;
   text-shadow: 3px 3px 0 #b42d4f;
@@ -1429,7 +1463,7 @@ a:focus-visible {
 h1,
 h2,
 h3 {
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: var(--fonte-display);
   font-weight: 900;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1929,11 +1963,15 @@ h1 {
   text-align: center;
 }
 
+/* ===== Transição de entrada no portal: fade suave + leve zoom out =====
+   Simples, rápida (≈500ms) e sem elementos extras: o overlay escurece e
+   diminui enquanto o menu aparece por trás. Nada de véus, fichas ou
+   estrelas — só a passagem limpa de uma cena para outra. */
 .intro-overlay.saindo {
   opacity: 0;
   visibility: hidden;
-  transform: scale(1.04);
-  transition: opacity .6s ease, transform .6s ease, visibility 0s linear .6s;
+  transform: scale(1.03);
+  transition: opacity .45s ease, transform .45s ease, visibility 0s linear .45s;
 }
 
 .intro-overlay[hidden] { display: none; }
@@ -2035,7 +2073,7 @@ h1 {
 
 .intro-title {
   margin: 0;
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: var(--fonte-display);
   font-size: clamp(3.2rem, 14vw, 8.5rem);
   line-height: .88;
   text-transform: uppercase;
@@ -2055,7 +2093,7 @@ h1 {
   margin: 0;
   max-width: 52ch;
   color: var(--text);
-  font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--fonte-leitura);
   line-height: 1.65;
   font-size: clamp(1.05rem, 2.4vw, 1.35rem);
 }
@@ -2120,12 +2158,23 @@ body.reduzir-movimento .intro-peca { animation: none !important; }
 
 /* ===== Efeitos de fundo das telas de jogo (mesmo sistema da intro) ===== */
 .setec-efeitos-fundo {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 0;
-  overflow: hidden;
   pointer-events: none;
 }
+
+/* painéis grandes translúcidos: o fundo animado aparece através deles,
+   distribuído por toda a página — inclusive “dentro” das áreas grandes */
+.screen.active > .hero-panel,
+.screen.active > .spotlight-panel,
+.screen.active > .catalog-header,
+.screen.active > .about-panel,
+.screen.active > .progress-panel {
+  background: rgba(9, 21, 36, 0.42);
+}
+
+[data-screen="menu"] .game-card { background: rgba(11, 17, 29, 0.66); }
 
 .setec-efeitos-canvas {
   position: absolute;
@@ -2362,14 +2411,14 @@ body.reduzir-movimento *, body.reduzir-movimento *::before, body.reduzir-movimen
 img, canvas, .block-board, .game-stage { max-width: 100%; }
 .game-stage {
   overflow-x: hidden;
-  background: rgba(8, 13, 22, 0.82);
+  background: rgba(8, 13, 22, 0.35);
 }
 /* Keep game content above the fixed school watermark. */
 .game-stage { position: relative; overflow: hidden; }
 .game-stage > * { position: relative; z-index: 1; }
-/* capa de efeitos: fundo absoluto dentro do stage, sem capturar interações */
+/* capa de efeitos: fixed cobre a viewport inteira em qualquer scroll
+   (o JS a deixa em cada .screen, o CSS manda onde ela fica) */
 .setec-efeitos-fundo { z-index: 0; }
-.game-stage > .setec-efeitos-fundo { position: absolute; }
 .block-board { width: min(100%, 480px); margin: 0 auto; }
 @media (max-width: 920px) {
   .conquistas { grid-template-columns: 1fr; }
@@ -2403,12 +2452,16 @@ main, .page-shell, .screen { min-width: 0; }
 .game-intro ol, .tech-list, .progress-panel p, .about-panel p,
 .pacman-status, .hangman-msg, .hangman-meta, .block-tips,
 .hint-box, .tray-label, .modal-card p, .a11y-note, .block-piece-name {
-  font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--fonte-leitura);
   line-height: 1.65;
   letter-spacing: 0;
 }
 .subtitle { font-size: 1.05rem; }
-.card-desc { font-size: .95rem; }
+.card-desc { font-size: 1rem; }
+.card-meta dt { color: var(--primary); }
+
+/* Hierarquia da biblioteca: título da seção maior que os cards */
+.catalog-header h2 { font-size: clamp(1.9rem, 3.4vw, 2.8rem); }
 
 /* Respiro entre seções + neon com função (menos brilho decorativo) */
 .hero-panel, .spotlight-panel, .catalog-header,
@@ -2482,7 +2535,7 @@ main, .page-shell, .screen { min-width: 0; }
   gap: 10px;
 }
 .pausa-card h3 { margin: 0; color: var(--warning); }
-.pausa-card p { margin: 0; color: var(--muted); font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif; }
+.pausa-card p { margin: 0; color: var(--muted); font-family: var(--fonte-leitura); }
 .pausa-card .primary-button, .pausa-card .secondary-button { width: 100%; }
 
 /* Movimento reduzido: sem pulso/toast animado */
@@ -2522,7 +2575,7 @@ body.reduzir-movimento .toast-item { animation: none; }
   gap: 8px;
   color: var(--muted);
   line-height: 1.6;
-  font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--fonte-leitura);
 }
 .intro-card strong { color: var(--text); }
 .intro-card kbd { border: 1px solid var(--primary); padding: 1px 6px; color: var(--primary); font-family: inherit; }
@@ -2544,7 +2597,7 @@ body.reduzir-movimento .toast-item { animation: none; }
 }
 
 .hero-panel {
-  background: linear-gradient(90deg, rgba(8, 25, 51, 0.76), rgba(7, 10, 16, 0.84));
+  background: linear-gradient(90deg, rgba(8, 25, 51, 0.45), rgba(7, 10, 16, 0.5));
 }
 
 .spotlight-panel,
@@ -2553,11 +2606,11 @@ body.reduzir-movimento .toast-item { animation: none; }
 .progress-panel,
 .game-card,
 .game-placeholder {
-  background: rgba(9, 21, 36, 0.76);
+  background: rgba(9, 21, 36, 0.45);
 }
 
 .game-stage {
-  background: rgba(8, 13, 22, 0.66);
+  background: rgba(8, 13, 22, 0.35);
 }
 
 /* Responsive refinements for the portal and its existing game layouts. */
@@ -2748,7 +2801,7 @@ body.reduzir-movimento .toast-item { animation: none; }
 }
 
 [data-screen="block-wood"] .game-stage {
-  background: rgba(8, 13, 22, 0.46);
+  background: rgba(8, 13, 22, 0.2);
 }
 
 [data-screen="block-wood"] .tetris-board-wrap {
