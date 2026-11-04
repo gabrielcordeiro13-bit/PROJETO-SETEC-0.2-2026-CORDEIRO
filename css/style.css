@@ -1078,7 +1078,7 @@ main {
 }
 
 #pacman-canvas {
-  width: min(100%, 560px);
+  width: min(100%, 672px);
   height: auto;
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -2091,11 +2091,14 @@ h1 {
 
 .intro-tagline {
   margin: 0;
-  max-width: 52ch;
-  color: var(--text);
-  font-family: var(--fonte-leitura);
-  line-height: 1.65;
-  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+  color: var(--warning);
+  font-family: var(--fonte-display);
+  font-size: clamp(1.25rem, 3.4vw, 2.1rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  line-height: 1.2;
+  text-shadow: 3px 3px 0 #0753a1;
 }
 
 .intro-jogos {
@@ -2105,7 +2108,7 @@ h1 {
   justify-content: center;
 }
 
-.intro-jogos .chip { font-size: clamp(.85rem, 1.8vw, 1rem); }
+.intro-jogos .chip, .intro-jogos .badge { font-size: clamp(.85rem, 1.8vw, 1rem); letter-spacing: .14em; }
 
 .intro-acoes {
   display: flex;
