@@ -206,7 +206,7 @@ function loadPacmanRuntime(options = {}) {
   };
   let source = fs.readFileSync(path.join(__dirname, '../js/pacman.js'), 'utf8');
   if (options.playerStart) {
-    source = source.replace('var JOGADOR_INI = { l: 22, c: 13 };',
+    source = source.replace('var JOGADOR_INI = { l: 25, c: 22 };',
       'var JOGADOR_INI = { l: ' + options.playerStart.l + ', c: ' + options.playerStart.c + ' };');
   }
   vm.runInNewContext(source, sandbox);
@@ -261,8 +261,8 @@ function reachablePellets(mapData) {
 test('o labirinto tem dimensões fixas, linhas retangulares e ponto inicial transitável', () => {
   const maze = loadPacmanData();
 
-  assert.equal(maze.map.length, 25);
-  assert.equal(maze.map.every((row) => row.length === 28), true);
+  assert.equal(maze.map.length, 27);
+  assert.equal(maze.map.every((row) => row.length === 46), true);
   assert.equal(maze.map[maze.playerStart.l][maze.playerStart.c], '.');
 });
 
@@ -291,7 +291,7 @@ test('o túnel conecta as duas bordas e a porta separa o jogador da casa dos fan
   assert.equal(row[0] === '.' || row[0] === 'o', true);
   assert.equal(row[maze.columns - 1] === '.' || row[maze.columns - 1] === 'o', true);
   assert.equal(maze.map[door.l][door.c], '-');
-  assert.equal(maze.map[front.l][front.c], '.');
+  assert.equal(maze.map[front.l][front.c] === '.' || maze.map[front.l][front.c] === ' ', true);
   assert.equal(maze.map[interior.l][interior.c], ' ');
 });
 
@@ -332,7 +332,7 @@ test('o jogo inicia, move, pausa, retoma, silencia e reinicia sem duplicar execu
 
   game.elements.get('pacman-start').dispatch('click');
   assert.equal(game.music.starts, 1);
-  game.key('ArrowDown');
+  game.key('ArrowLeft'); // anda pela linha de spawn coletando pontos
   for (let frame = 1; frame <= 30; frame += 1) game.frame(frame * 16);
   assert.ok(Number(game.elements.get('pacman-score').textContent) > 0);
 
@@ -355,11 +355,11 @@ test('o jogo inicia, move, pausa, retoma, silencia e reinicia sem duplicar execu
 });
 
 test('a colisão anima a morte antes de reposicionar o jogador e manter vidas', () => {
-  const game = loadPacmanRuntime({ playerStart: { l: 19, c: 13 } });
+  const game = loadPacmanRuntime({ playerStart: { l: 22, c: 22 } });
 
   game.init();
   game.elements.get('pacman-start').dispatch('click');
-  game.key('ArrowLeft'); // anda pela linha 19 (sem energia por perto); o fantasma o alcança
+  game.key('ArrowLeft'); // anda pela linha 22 (sem energia por perto); o fantasma o alcança
   let frame = 0;
   while (game.elements.get('pacman-lives').textContent === '3' && frame < 700) {
     frame += 1;

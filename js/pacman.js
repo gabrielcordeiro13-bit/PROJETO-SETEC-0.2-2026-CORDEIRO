@@ -2,59 +2,71 @@
  * movimento suave em pixels, túnel lateral, casinha dos fantasmas com saída
  * programada, fruta bônus, modos perseguir/dispersar/energia.
  * Mapa, desenho e código recriados do zero para o projeto. Sem assets de terceiros.
- * Labirinto retangular horizontal (28 x 19) no estilo do Pac-Man do Google,
- * com a palavra ARCADE formada pelos próprios pontos do mapa. */
+ * Labirinto retangular horizontal (27 x 46) no estilo do Pac-Man do Google,
+ * com a palavra ARCADE (6 letras de 3×5 tiles) formada por blocos sólidos de parede no centro. */
 (function () {
   'use strict';
 
-  /* Labirinto 28x19 horizontal. '#': parede, '.': ponto, 'o': energia,
-   * ' ': interior da casinha e '-': porta exclusiva dos fantasmas. */
-  var ROWS = 25;
-  var COLS = 28;
+  /* Labirinto 27x46 horizontal, largo e reto, no estilo clássico do
+   * Pac-Man do Google (usado apenas como referência de estrutura).
+   * A palavra ARCADE é formada por blocos sólidos de parede no
+   * centro do labirinto e funciona como o principal obstáculo do jogo.
+   * '#': parede, '.': ponto, 'o': energia, '=': miolo fechado das letras
+   * (intransponível como parede), ' ': interior da casinha e
+   * '-': porta exclusiva dos fantasmas. */
+  var ROWS = 27;
+  var COLS = 46;
   var TILE = 24;
-  var PORTA = { l: 12, c: 13 };
-  var FRENTE_PORTA = { l: 11, c: 13 };
-  var INTERIOR = { l: 14, c: 13 };
-  var JOGADOR_INI = { l: 22, c: 13 };
-  var LINHA_TUNEL = 14;
-  var FRUTA_POS = { l: 3, c: 13 };
+  var PORTA = { l: 19, c: 22 };
+  var FRENTE_PORTA = { l: 18, c: 22 };
+  var INTERIOR = { l: 20, c: 22 };
+  var JOGADOR_INI = { l: 25, c: 22 };
+  var LINHA_TUNEL = 20;
+  var FRUTA_POS = { l: 4, c: 22 };
   var MAPA = construirMapa();
   var LARG = COLS * TILE;
   var ALT = ROWS * TILE;
   var TURMA = '2° D.S';
 
   /* Labirinto retangular horizontal no estilo do Pac-Man do Google.
-   * A palavra ARCADE é formada pelos próprios pontos: o contorno de cada
-   * letra é feito de pontos ('.') e o interior é um corredor sem ponto
-   * ('=') — o '=' é andável como '.' mas não conta como pellet, e no
-   * desenho aparece como fundo vazio, destacando o traço luminoso. */
+   * A palavra ARCADE é formada por blocos sólidos de parede ('#') bem no
+   * centro do labirinto: cada letra ocupa 3 colunas × 5 linhas com todos
+   * os segmentos desenhados, e todos respeitam as paredes por cima,
+   * baixo e laterais — fantasmas e jogador são obrigados a contorná-las. */
+  /* Labirinto retangular horizontal largo, organizado e simétrico.
+   * ARCADE é formada por blocos sólidos de parede ('#') bem no meio
+   * do labirinto: cada letra ocupa 3 colunas × 5 linhas, com todos os
+   * segmentos desenhados e os miolos fechados ('=') intransponíveis.
+   * O jogador e os fantasmas percorrem os corredores ao redor das letras. */
   function construirMapa() {
     return [
-      '############################',
-      '#o........................o#',
-      '#.####.####.####.####.####.#',
-      '#..........................#',
-      '#.####.####.####.####.####.#',
-      '#..........................#',
-      '#..===.==...==.===.==..===.#',
-      '#..=.=.=.=.=...=.=.=.=.=...#',
-      '#..===.==..=...===.=.=.==..#',
-      '#..=.=.=.=.=...=.=.=.=.=...#',
-      '#..=.=.=.=..==.=.=.==..===.#',
-      '#..........................#',
-      '#.####.######-#######.####.#',
-      '#..........#    #..........#',
-      '...........#    #...........',
-      '#..........#    #..........#',
-      '#.####.##############.####.#',
-      '#.....o..............o.....#',
-      '#.####.####.####.####.####.#',
-      '#..........................#',
-      '#.####.####.####.####.####.#',
-      '#..........................#',
-      '#o........................o#',
-      '#..........................#',
-      '############################'
+      '##############################################',
+      '#o..........................................o#',
+      '#.########..........................########.#',
+      '#.########..........................########.#',
+      '#............................................#',
+      '#.########..........................########.#',
+      '#.########..........................########.#',
+      '#............................................#',
+      '#............................................#',
+      '#............................................#',
+      '#............................................#',
+      '#....####..####..####..####..####..####......#',
+      '#....#==#..#==#..#.....#==#..#==#..#.........#',
+      '#o...####..####..#.....####..#==#..###......o#',
+      '#....#==#..#.#...#.....#..#..#==#..#.........#',
+      '#....#==#..#..#..####..#..#..####..####......#',
+      '#.########..........................########.#',
+      '#.########..........................########.#',
+      '#............................................#',
+      '#...................##-##....................#',
+      '....................     .....................',
+      '#...................#####....................#',
+      '#............................................#',
+      '#.########..........................########.#',
+      '#.########..........................########.#',
+      '#o..........................................o#',
+      '##############################################'
     ];
   }
 
@@ -77,11 +89,14 @@
   }
   function andaFantasma(l, c) {
     var ch = charDe(l, c);
-    return ch !== '#';
+    /* Só '.' e 'o' são corredores livres. Qualquer outra coisa — '#'
+     * (paredes) ou '=' (miolo fechado das letras de ARCADE) — é obstáculo
+     * físico e NUNCA pode ser atravessado por fantasma ou jogador. */
+    return ch === '.' || ch === 'o';
   }
   function andaJogador(l, c) {
     var ch = charDe(l, c);
-    return ch === '.' || ch === 'o' || ch === '=';
+    return ch === '.' || ch === 'o';
   }
 
   var DIRS = [
@@ -106,7 +121,7 @@
       '<ol>' +
       '<li><strong>Objetivo:</strong> coma todos os pontos; os 8 grandes dão energia para capturar fantasmas.</li>' +
       '<li><strong>Controles:</strong> setas ou WASD (<kbd>P</kbd> pausa, <kbd>R</kbd> reinicia). No toque: direcional ou deslize.</li>' +
-      '<li><strong>Extras:</strong> o túnel do meio liga os dois lados. A fruta bônus vale +100. Coma os pontos que formam a palavra ARCADE no centro do labirinto.</li>' +
+      '<li><strong>Extras:</strong> o túnel do meio liga os dois lados. A fruta bônus vale +100. As letras de ARCADE no centro são paredes: contorne-as!</li>' +
       '</ol>' +
       '<button type="button" class="primary-button" id="pacman-start">Começar a jogar</button>' +
       '</div>' +
@@ -129,7 +144,7 @@
       '<button type="button" class="secondary-button" id="pacman-biblioteca">Voltar à biblioteca</button>' +
       '</div></div>' +
       '<div class="pacman-canvas-wrap">' +
-      '<canvas id="pacman-canvas" tabindex="0" width="' + LARG + '" height="' + ALT + '" role="img" aria-label="Labirinto do Pac-Man da turma 2 D S. Use as setas ou as letras W A S D para mover."></canvas>' +
+      '<canvas id="pacman-canvas" tabindex="0" width="' + LARG + '" height="' + ALT + '" role="img" aria-label="Labirinto do Pac-Man da turma 2 D S. Use as setas ou as letras W A S D para mover. A palavra ARCADE no centro é formada por paredes."></canvas>' +
       '</div>' +
       '<p class="pacman-turma" aria-hidden="true">★ TURMA ' + TURMA + ' ★</p>' +
       '<div class="pacman-controls" aria-label="Controles de toque">' +
@@ -212,10 +227,10 @@
     var jogador = { x: 0, y: 0, dir: { l: 0, c: -1 }, prox: { l: 0, c: -1 }, movendo: false };
 
     var fantasmas = [
-      { cor: '#ff3b3b', canto: { l: 1, c: 26 }, soltaEm: 0.5, atrasoCasa: 0.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
+      { cor: '#ff3b3b', canto: { l: 1, c: 44 }, soltaEm: 0.5, atrasoCasa: 0.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
       { cor: '#ffb8de', canto: { l: 1, c: 1 }, soltaEm: 3.5, atrasoCasa: 3.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: 1 }, vuln: false, pontos: null, espera: 0 },
-      { cor: '#00e8ff', canto: { l: 22, c: 26 }, soltaEm: 7, atrasoCasa: 7, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
-      { cor: '#ffb847', canto: { l: 22, c: 1 }, soltaEm: 10.5, atrasoCasa: 10.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: 1 }, vuln: false, pontos: null, espera: 0 }
+      { cor: '#00e8ff', canto: { l: 25, c: 44 }, soltaEm: 7, atrasoCasa: 7, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
+      { cor: '#ffb847', canto: { l: 25, c: 1 }, soltaEm: 10.5, atrasoCasa: 10.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: 1 }, vuln: false, pontos: null, espera: 0 }
     ];
 
     var pontos = 0, vidas = 3, fase = 1;
@@ -256,7 +271,7 @@
       for (var l = 0; l < ROWS; l += 1) {
         for (var cc = 0; cc < COLS; cc += 1) {
           var ch = MAPA[l].charAt(cc);
-          if (ch !== '.' && ch !== 'o') continue; // '=' é corredor sem ponto
+          if (ch !== '.' && ch !== 'o') continue;
           if (l === LINHA_TUNEL && (cc === 0 || cc === COLS - 1)) continue; // túnel sem pontos
           if (l === JOGADOR_INI.l && cc === JOGADOR_INI.c) continue; // casa inicial vazia
           var k = l + ',' + cc;
@@ -401,28 +416,33 @@
       }
       announce('Fase ' + fase + ' concluída com ' + pontos + ' pontos!' + (recorde ? ' Novo recorde!' : ''));
       hud();
+      setStatus('Fase ' + fase + ' concluída! ' + totalDaFase + ' pontos coletados.');
+      var proxima = function () {
+        fase += 1;
+        montarPellets(); posarEntidades();
+        estado = 'jogando';
+        setStatus('Fase ' + fase + '. Velocidade maior — boa sorte!');
+        iniciarMusica();
+        hud();
+        ultimoTs = 0;
+        if (!rafId) rafId = window.requestAnimationFrame(laco);
+      };
       if (window.portalModal && typeof window.portalModal.open === 'function') {
         window.portalModal.open(
           recorde ? '★ Novo recorde! ★' : 'Fase ' + fase + ' concluída!',
           'Você comeu todos os ' + totalDaFase + ' pontos com ' + pontos + ' pontos totais.' +
           (recorde ? ' ★ Novo recorde! ★' : '') + ' Avançar para a fase ' + (fase + 1) + '?',
           'Próxima fase',
-          function () {
-            fase += 1;
-            montarPellets(); posarEntidades();
-            estado = 'jogando';
-            setStatus('Fase ' + fase + '. Boa sorte!');
-            iniciarMusica();
-            hud();
-            ultimoTs = 0;
-            if (!rafId) rafId = window.requestAnimationFrame(laco);
-          },
+          proxima,
           function () {
             estado = 'pronto';
             pararMusica();
-            setStatus('Fase concluída. Pressione Reiniciar para jogar de novo.');
+            setStatus('Fase concluída (' + fase + '). Pressione Reiniciar para jogar de novo.');
           }
         );
+      } else {
+        // Sem modal do portal: segue automaticamente para a próxima fase.
+        window.setTimeout(proxima, 1200);
       }
     }
 
@@ -450,15 +470,18 @@
       }
       hud();
       announce('Fim de jogo no Pac-Man. Pontuação: ' + pontos + ' pontos na fase ' + fase + '.' + (recorde ? ' Novo recorde!' : ''));
+      var rejogar = function () { reiniciarTudo(); };
       if (window.portalModal && typeof window.portalModal.open === 'function') {
         window.portalModal.open(
           recorde ? '★ Novo recorde! ★' : 'Fim de jogo',
           'O laboratório entrou em modo de segurança na fase ' + fase + ' com ' + pontos + ' pontos.' +
           (recorde ? ' ★ Novo recorde! ★' : ''),
           'Jogar novamente',
-          function () { reiniciarTudo(); },
+          rejogar,
           function () {}
         );
+      } else {
+        window.setTimeout(rejogar, 1500);
       }
     }
 
@@ -737,30 +760,29 @@
             ctx.stroke();
           } else {
             if (ch === '=') {
-              // interior das letras do ARCADE: painel azul-neon contínuo (sem
-              // grid por tile) — o contorno só aparece nas bordas externas,
-              // então cada letra vira uma forma sólida legível de longe.
+              // miolo fechado das letras de ARCADE: painel azul-neon contínuo,
+              // solidário às paredes ao redor (obstáculo como qualquer '#').
               ctx.fillStyle = 'rgba(46, 93, 255, 0.30)';
               ctx.fillRect(x, y, TILE, TILE);
               ctx.strokeStyle = 'rgba(103, 208, 255, 0.55)';
               ctx.lineWidth = 2;
               ctx.beginPath();
-              if (charDe(l - 1, cc) !== '=') { ctx.moveTo(x, y); ctx.lineTo(x + TILE, y); }
-              if (charDe(l + 1, cc) !== '=') { ctx.moveTo(x, y + TILE); ctx.lineTo(x + TILE, y + TILE); }
-              if (charDe(l, cc - 1) !== '=') { ctx.moveTo(x, y); ctx.lineTo(x, y + TILE); }
-              if (charDe(l, cc + 1) !== '=') { ctx.moveTo(x + TILE, y); ctx.lineTo(x + TILE, y + TILE); }
+              if (charDe(l - 1, cc) === '.' || charDe(l - 1, cc) === 'o') { ctx.moveTo(x, y); ctx.lineTo(x + TILE, y); }
+              if (charDe(l + 1, cc) === '.' || charDe(l + 1, cc) === 'o') { ctx.moveTo(x, y + TILE); ctx.lineTo(x + TILE, y + TILE); }
+              if (charDe(l, cc - 1) === '.' || charDe(l, cc - 1) === 'o') { ctx.moveTo(x, y); ctx.lineTo(x, y + TILE); }
+              if (charDe(l, cc + 1) === '.' || charDe(l, cc + 1) === 'o') { ctx.moveTo(x + TILE, y); ctx.lineTo(x + TILE, y + TILE); }
               ctx.stroke();
             } else {
               ctx.fillStyle = '#050b14';
               ctx.fillRect(x, y, TILE, TILE);
-            }
-            if (pellets.has(l + ',' + cc)) {
-              var power = powerSet.has(l + ',' + cc);
-              var pulso = (power && c && !c.prefersReducedMotion()) ? 1 + Math.sin(agora / 220) * 0.25 : 1;
-              ctx.fillStyle = power ? '#ffd429' : '#9fdcff';
-              ctx.beginPath();
-              ctx.arc(x + TILE / 2, y + TILE / 2, (power ? TILE * 0.2 : TILE * 0.11) * pulso, 0, Math.PI * 2);
-              ctx.fill();
+              if (pellets.has(l + ',' + cc)) {
+                var power = powerSet.has(l + ',' + cc);
+                var pulso = (power && c && !c.prefersReducedMotion()) ? 1 + Math.sin(agora / 220) * 0.25 : 1;
+                ctx.fillStyle = power ? '#ffd429' : '#9fdcff';
+                ctx.beginPath();
+                ctx.arc(x + TILE / 2, y + TILE / 2, (power ? TILE * 0.2 : TILE * 0.11) * pulso, 0, Math.PI * 2);
+                ctx.fill();
+              }
             }
           }
         }

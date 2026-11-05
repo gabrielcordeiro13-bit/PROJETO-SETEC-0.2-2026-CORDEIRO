@@ -27,3 +27,22 @@ Abra `index.html` no navegador ou publique a pasta no GitHub Pages (caminhos rel
 - `js/block-wood.js`, `js/pacman.js`, `js/hangman.js` — um arquivo por jogo
 - `js/main.js` — navegação entre telas e modal acessível
 - `js/intro.js` — tela de entrada cinematográfica (overlay de intro com partículas em canvas, parallax ao cursor, fantasmas e pílulas dos três jogos; "ENTRAR NO PORTAL" leva ao menu, "PULAR INTRODUÇÃO" disponível e respeita `prefers-reduced-motion`)
+
+## Diretrizes para manutenção com IA (regras permanentes)
+
+Esta seção registra as regras que qualquer IA de programação deve seguir ao modificar este projeto.
+
+### Antes de alterar
+1. Fazer uma **análise rápida** dos arquivos HTML, CSS e JavaScript, principalmente do `index.html` e dos arquivos diretamente relacionados à solicitação.
+2. **Não** realizar auditorias demoradas ou análises de arquivos sem relação com a tarefa.
+3. Interpretar cuidadosamente o que foi solicitado, respeitar os limites do pedido e **não** implementar funcionalidades adicionais por iniciativa própria.
+
+### Durante a alteração
+4. Preservar a estrutura, a identidade visual, as funcionalidades e os componentes já existentes (fundos animados, neon, acessibilidade, responsividade).
+5. Modificar **somente o necessário** para atender à solicitação — priorizar edições pontuais em vez de reconstruções.
+6. Manter o código organizado, legível, consistente e compatível com HTML/CSS/JS puro já usados no projeto (sem frameworks, sem build).
+7. Ao trabalhar com fontes, cores, espaçamentos e componentes visuais, preservar a harmonia e a identidade arcade do projeto. A fonte pixelada (`--fonte-arcade`, "Press Start 2P") é reservada a títulos de destaque; textos de leitura usam `--fonte-leitura`.
+
+### Ao finalizar
+8. Revisar novamente os arquivos JS, CSS e HTML relacionados às mudanças, procurando erros de sintaxe, conflitos de estilo e bugs.
+9. **Não** considerar a tarefa concluída sem verificar que as alterações foram aplicadas corretamente e que as funcionalidades existentes continuam funcionando.
