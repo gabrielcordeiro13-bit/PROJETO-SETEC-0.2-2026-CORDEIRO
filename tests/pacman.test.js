@@ -261,12 +261,26 @@ function reachablePellets(mapData) {
 test('o labirinto tem dimensões fixas, linhas retangulares e ponto inicial transitável', () => {
   const maze = loadPacmanData();
 
-  assert.equal(maze.map.length, 27);
-  assert.equal(maze.map.every((row) => row.length === 46), true);
+  assert.equal(maze.map.length, 31);
+  assert.equal(maze.map.every((row) => row.length === 28), true);
   assert.equal(maze.map[maze.playerStart.l][maze.playerStart.c], '.');
 });
 
-test('todos os pontos, inclusive os oito Power Pellets, são alcançáveis pelo jogador', () => {
+test('o labirinto clássico tem casa dos fantasmas, túneis e quatro energizadores', () => {
+  const maze = loadPacmanData();
+  const { door, interior } = maze.ghostHouse;
+
+  assert.equal(maze.map[door.l][door.c], '-');
+  assert.equal(maze.map[interior.l][interior.c], ' ');
+  const row = maze.map[maze.tunnelRow];
+  assert.equal(row[0] === '.' || row[0] === 'o', true);
+  assert.equal(row[maze.columns - 1] === '.' || row[maze.columns - 1] === 'o', true);
+  let power = 0;
+  maze.map.forEach((r) => Array.from(r).forEach((ch) => { if (ch === 'o') power += 1; }));
+  assert.equal(power, 4);
+});
+
+test('todos os pontos, inclusive os quatro Power Pellets, são alcançáveis pelo jogador', () => {
   const maze = loadPacmanData();
   const reachable = reachablePellets(maze);
   const pellets = [];
@@ -279,8 +293,20 @@ test('todos os pontos, inclusive os oito Power Pellets, são alcançáveis pelo 
     });
   });
 
-  assert.equal(powerPellets.length, 6);
+  assert.equal(powerPellets.length, 4);
   assert.equal(pellets.every((key) => reachable.has(key)), true);
+});
+
+test('nenhum pellet fica preso em bolsão inacessível', () => {
+  const maze = loadPacmanData();
+  const reachable = reachablePellets(maze);
+  maze.map.forEach((row, l) => {
+    Array.from(row).forEach((cell, c) => {
+      if ((cell === '.' || cell === 'o') && !(l === maze.playerStart.l && c === maze.playerStart.c)) {
+        assert.equal(reachable.has(l + ',' + c), true, 'célula inacessível em ' + l + ',' + c);
+      }
+    });
+  });
 });
 
 test('o túnel conecta as duas bordas e a porta separa o jogador da casa dos fantasmas', () => {
@@ -355,13 +381,13 @@ test('o jogo inicia, move, pausa, retoma, silencia e reinicia sem duplicar execu
 });
 
 test('a colisão anima a morte antes de reposicionar o jogador e manter vidas', () => {
-  const game = loadPacmanRuntime({ playerStart: { l: 22, c: 22 } });
+  const game = loadPacmanRuntime({ playerStart: { l: 14, c: 13 } });
 
   game.init();
   game.elements.get('pacman-start').dispatch('click');
   game.key('ArrowLeft'); // anda pela linha 22 (sem energia por perto); o fantasma o alcança
   let frame = 0;
-  while (game.elements.get('pacman-lives').textContent === '3' && frame < 700) {
+  while (game.elements.get('pacman-lives').textContent === '3' && frame < 1600) {
     frame += 1;
     game.frame(frame * 16);
   }

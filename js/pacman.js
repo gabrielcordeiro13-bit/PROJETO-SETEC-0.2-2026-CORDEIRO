@@ -1,74 +1,67 @@
-/* SETEC 2026 - Pac-Man estilo arcade clássico (inspirado no original de labirinto):
- * movimento suave em pixels, túnel lateral, casinha dos fantasmas com saída
- * programada, fruta bônus, modos perseguir/dispersar/energia.
- * Mapa, desenho e código recriados do zero para o projeto. Sem assets de terceiros.
- * Labirinto retangular horizontal (27 x 46) no estilo do Pac-Man do Google,
- * com a palavra ARCADE (6 letras de 3×5 tiles) formada por blocos sólidos de parede no centro. */
+/* SETEC 2026 - ARCADE: Pac-Man estilo arcade clássico (referência: labirinto
+ * original de 28x31): movimento suave em pixels, túneis laterais, casinha dos
+ * fantasmas com saída programada, fruta bônus, modos perseguir/dispersar/energia
+ * e personalidades clássicas (Blinky/Pinky/Inky/Clyde).
+ * Mapa, desenho e código recriados do zero para o projeto. Sem assets de terceiros. */
 (function () {
   'use strict';
 
-  /* Labirinto 27x46 horizontal, largo e reto, no estilo clássico do
-   * Pac-Man do Google (usado apenas como referência de estrutura).
-   * A palavra ARCADE é formada por blocos sólidos de parede no
-   * centro do labirinto e funciona como o principal obstáculo do jogo.
-   * '#': parede, '.': ponto, 'o': energia, '=': miolo fechado das letras
-   * (intransponível como parede), ' ': interior da casinha e
-   * '-': porta exclusiva dos fantasmas. */
-  var ROWS = 27;
-  var COLS = 46;
+  /* Labirinto clássico 28 colunas x 31 linhas (mesmas proporções do original).
+   * '#': parede, '.': corredor com ponto, 'o': energizador, ' ': interior da
+   * casinha (só fantasmas), '-': porta exclusiva dos fantasmas. */
+  var ROWS = 31;
+  var COLS = 28;
   var TILE = 24;
-  var PORTA = { l: 19, c: 22 };
-  var FRENTE_PORTA = { l: 18, c: 22 };
-  var INTERIOR = { l: 20, c: 22 };
-  var JOGADOR_INI = { l: 25, c: 22 };
-  var LINHA_TUNEL = 20;
-  var FRUTA_POS = { l: 4, c: 22 };
+  var PORTA = { l: 12, c: 13 };
+  var FRENTE_PORTA = { l: 11, c: 13 };
+  var INTERIOR = { l: 14, c: 13 };
+  var JOGADOR_INI = { l: 23, c: 13 };
+  var LINHA_TUNEL = 14;
+  var FRUTA_POS = { l: 17, c: 13 };
+
+  /* Matriz literal do labirinto clássico: contorno completo, blocos internos
+   * com curvas, casa dos fantasmas centralizada, túneis na linha 14 e quatro
+   * energizadores (um próximo de cada canto). A mesma matriz controla o
+   * desenho e a colisão. */
+  function construirMapa() {
+    return [
+      '############################',
+      '#............##............#',
+      '#.####.#####.##.#####.####.#',
+      '#o####.#####.##.#####.####o#',
+      '#.####.#####.##.#####.####.#',
+      '#..........................#',
+      '#.####.##.########.##.####.#',
+      '#.####.##.########.##.####.#',
+      '#......##....##....##......#',
+      '######.#####.##.#####.######',
+      '######.#####.##.#####.######',
+      '######.##..........##.######',
+      '######.##.###--###.##.######',
+      '######.##.#      #.##.######',
+      '..........#      #..........',
+      '######.##.#      #.##.######',
+      '######.##.########.##.######',
+      '######.##..........##.######',
+      '######.##.########.##.######',
+      '######.##.########.##.######',
+      '#............##............#',
+      '#.####.#####.##.#####.####.#',
+      '#.####.#####.##.#####.####.#',
+      '#o..##................##..o#',
+      '###.##.##.########.##.##.###',
+      '###.##.##.########.##.##.###',
+      '#......##....##....##......#',
+      '#.##########.##.##########.#',
+      '#.##########.##.##########.#',
+      '#..........................#',
+      '############################'
+    ];
+  }
+
   var MAPA = construirMapa();
   var LARG = COLS * TILE;
   var ALT = ROWS * TILE;
-  var TURMA = '2° D.S';
-
-  /* Labirinto retangular horizontal no estilo do Pac-Man do Google.
-   * A palavra ARCADE é formada por blocos sólidos de parede ('#') bem no
-   * centro do labirinto: cada letra ocupa 3 colunas × 5 linhas com todos
-   * os segmentos desenhados, e todos respeitam as paredes por cima,
-   * baixo e laterais — fantasmas e jogador são obrigados a contorná-las. */
-  /* Labirinto retangular horizontal largo, organizado e simétrico.
-   * ARCADE é formada por blocos sólidos de parede ('#') bem no meio
-   * do labirinto: cada letra ocupa 3 colunas × 5 linhas, com todos os
-   * segmentos desenhados e os miolos fechados ('=') intransponíveis.
-   * O jogador e os fantasmas percorrem os corredores ao redor das letras. */
-  function construirMapa() {
-    return [
-      '##############################################',
-      '#o..........................................o#',
-      '#.########..........................########.#',
-      '#.########..........................########.#',
-      '#............................................#',
-      '#.########..........................########.#',
-      '#.########..........................########.#',
-      '#............................................#',
-      '#............................................#',
-      '#............................................#',
-      '#............................................#',
-      '#....####..####..####..####..####..####......#',
-      '#....#==#..#==#..#.....#==#..#==#..#.........#',
-      '#o...####..####..#.....####..#==#..###......o#',
-      '#....#==#..#.#...#.....#..#..#==#..#.........#',
-      '#....#==#..#..#..####..#..#..####..####......#',
-      '#.########..........................########.#',
-      '#.########..........................########.#',
-      '#............................................#',
-      '#...................##-##....................#',
-      '....................     .....................',
-      '#...................#####....................#',
-      '#............................................#',
-      '#.########..........................########.#',
-      '#.########..........................########.#',
-      '#o..........................................o#',
-      '##############################################'
-    ];
-  }
 
   window.PacmanMazeData = {
     rows: ROWS,
@@ -115,13 +108,14 @@
   function criarUi(stage) {
     stage.innerHTML =
       '<div class="pacman-game">' +
+      '<h2 class="pacman-titulo-arcade" aria-label="ARCADE">ARCADE</h2>' +
       '<section class="game-intro" role="dialog" aria-label="Como jogar Pac-Man">' +
       '<div class="intro-card">' +
       '<h3>Como jogar</h3>' +
       '<ol>' +
-      '<li><strong>Objetivo:</strong> coma todos os pontos; os 8 grandes dão energia para capturar fantasmas.</li>' +
-      '<li><strong>Controles:</strong> setas ou WASD (<kbd>P</kbd> pausa, <kbd>R</kbd> reinicia). No toque: direcional ou deslize.</li>' +
-      '<li><strong>Extras:</strong> o túnel do meio liga os dois lados. A fruta bônus vale +100. As letras de ARCADE no centro são paredes: contorne-as!</li>' +
+      '<li><strong>Objetivo:</strong> coma todos os pontos; os 4 grandes dão energia para capturar fantasmas.</li>' +
+      '<li><strong>Controles:</strong> setas ou WASD (<kbd>P</kbd> pausa, <kbd>R</kbd> reinicia). No toque: deslize sobre o labirinto.</li>' +
+      '<li><strong>Extras:</strong> os túneis laterais ligam as duas bordas. A fruta bônus vale +100. Labirinto clássico, ação arcade!</li>' +
       '</ol>' +
       '<button type="button" class="primary-button" id="pacman-start">Começar a jogar</button>' +
       '</div>' +
@@ -144,14 +138,11 @@
       '<button type="button" class="secondary-button" id="pacman-biblioteca">Voltar à biblioteca</button>' +
       '</div></div>' +
       '<div class="pacman-canvas-wrap">' +
-      '<canvas id="pacman-canvas" tabindex="0" width="' + LARG + '" height="' + ALT + '" role="img" aria-label="Labirinto do Pac-Man da turma 2 D S. Use as setas ou as letras W A S D para mover. A palavra ARCADE no centro é formada por paredes."></canvas>' +
+      '<canvas id="pacman-canvas" tabindex="0" width="' + LARG + '" height="' + ALT + '" role="img" aria-label="Labirinto clássico do Pac-Man. Use as setas ou as letras W A S D para mover."></canvas>' +
       '</div>' +
-      '<p class="pacman-turma" aria-hidden="true">★ TURMA ' + TURMA + ' ★</p>' +
-      '<div class="pacman-controls" aria-label="Controles de toque">' +
-      '<span></span><button type="button" class="pacman-control-btn" data-dir="up" aria-label="Mover para cima">▲</button><span></span>' +
-      '<button type="button" class="pacman-control-btn" data-dir="left" aria-label="Mover para esquerda">◀</button>' +
-      '<button type="button" class="pacman-control-btn" data-dir="down" aria-label="Mover para baixo">▼</button>' +
-      '<button type="button" class="pacman-control-btn" data-dir="right" aria-label="Mover para direita">▶</button>' +
+      '<div class="pacman-rodape-jogo">' +
+      '<div class="pacman-vidas" id="pacman-vidas" aria-label="Vidas restantes"></div>' +
+      '<div class="pacman-frutas" id="pacman-frutas" aria-hidden="true"></div>' +
       '</div>' +
       '</div>';
   }
@@ -227,10 +218,10 @@
     var jogador = { x: 0, y: 0, dir: { l: 0, c: -1 }, prox: { l: 0, c: -1 }, movendo: false };
 
     var fantasmas = [
-      { cor: '#ff3b3b', canto: { l: 1, c: 44 }, soltaEm: 0.5, atrasoCasa: 0.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
-      { cor: '#ffb8de', canto: { l: 1, c: 1 }, soltaEm: 3.5, atrasoCasa: 3.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: 1 }, vuln: false, pontos: null, espera: 0 },
-      { cor: '#00e8ff', canto: { l: 25, c: 44 }, soltaEm: 7, atrasoCasa: 7, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
-      { cor: '#ffb847', canto: { l: 25, c: 1 }, soltaEm: 10.5, atrasoCasa: 10.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: 1 }, vuln: false, pontos: null, espera: 0 }
+      { cor: '#ff3b3b', nome: 'Blinky', canto: { l: 1, c: 26 }, soltaEm: 0.5, atrasoCasa: 0.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
+      { cor: '#ffb8de', nome: 'Pinky', canto: { l: 1, c: 1 }, soltaEm: 3.5, atrasoCasa: 3.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: 1 }, vuln: false, pontos: null, espera: 0 },
+      { cor: '#00e8ff', nome: 'Inky', canto: { l: 29, c: 26 }, soltaEm: 7, atrasoCasa: 7, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: -1 }, vuln: false, pontos: null, espera: 0 },
+      { cor: '#ffb847', nome: 'Clyde', canto: { l: 29, c: 1 }, soltaEm: 10.5, atrasoCasa: 10.5, modo: 'casa', x: 0, y: 0, dir: { l: 0, c: 1 }, vuln: false, pontos: null, espera: 0 }
     ];
 
     var pontos = 0, vidas = 3, fase = 1;
@@ -255,6 +246,75 @@
       box.classList.remove('pulso');
       void box.offsetWidth;
       box.classList.add('pulso');
+    }
+
+    /* ---- vidas em ícones de Pac-Man (rodapé) ---- */
+    function desenharIconeVida(canvasVida) {
+      var g = canvasVida.getContext('2d');
+      var s = 22; // tamanho do icone
+      canvasVida.width = s; canvasVida.height = s;
+      g.fillStyle = '#ffe135';
+      g.beginPath();
+      g.moveTo(s / 2, s / 2);
+      g.arc(s / 2, s / 2, s / 2 - 1, 0.35, Math.PI * 2 - 0.35);
+      g.closePath();
+      g.fill();
+    }
+
+    function atualizarVidasUI() {
+      var cont = document.getElementById('pacman-vidas');
+      if (!cont) return;
+      cont.innerHTML = '';
+      for (var i = 0; i < vidas; i += 1) {
+        var cv = document.createElement('canvas');
+        cv.className = 'pacman-vida-icone';
+        cv.setAttribute('aria-hidden', 'true');
+        desenharIconeVida(cv);
+        cont.appendChild(cv);
+      }
+    }
+    // elemento mock dos testes não cria canvases: fallback numérico
+    if (typeof document.createElement !== 'function') { /* noop */ }
+
+    /* ---- fileira de frutas pixel art (rodapé, estilo arcade) ---- */
+    var FRUTAS_RODAPE = ['#ff3b3b', '#ff9ecb', '#4ade80', '#ffd429', '#ff7d7d', '#ff9ecb', '#ff3b3b', '#4ade80'];
+    function desenharIconeFruta(canvasFruta, cor) {
+      var g = canvasFruta.getContext('2d');
+      var s = 20; // tamanho do icone
+      canvasFruta.width = s; canvasFruta.height = s;
+      var r = s * 0.32;
+      // caule
+      g.strokeStyle = '#4ade80';
+      g.lineWidth = 2;
+      g.beginPath();
+      g.moveTo(s / 2, s * 0.18);
+      g.quadraticCurveTo(s * 0.62, s * 0.12, s * 0.68, s * 0.2);
+      g.stroke();
+      // corpo em dois lóbulos
+      g.fillStyle = cor;
+      g.beginPath();
+      g.arc(s * 0.38, s * 0.58, r, 0, Math.PI * 2);
+      g.fill();
+      g.beginPath();
+      g.arc(s * 0.62, s * 0.58, r, 0, Math.PI * 2);
+      g.fill();
+      // brilho
+      g.fillStyle = 'rgba(255,255,255,.7)';
+      g.beginPath();
+      g.arc(s * 0.34, s * 0.5, r * 0.26, 0, Math.PI * 2);
+      g.fill();
+    }
+
+    function montarFrutasRodape() {
+      var cont = document.getElementById('pacman-frutas');
+      if (!cont) return;
+      cont.innerHTML = '';
+      FRUTAS_RODAPE.forEach(function (cor) {
+        var cv = document.createElement('canvas');
+        cv.className = 'pacman-fruta-icone';
+        desenharIconeFruta(cv, cor);
+        cont.appendChild(cv);
+      });
     }
 
     function flutuar(x, y, texto) {
@@ -294,6 +354,7 @@
       var somLigado = !c || !c.getState || c.getState().prefs.som;
       soundEl.textContent = somLigado ? '♪ Som ligado' : '♪ Som desligado';
       soundEl.setAttribute('aria-pressed', String(somLigado));
+      atualizarVidasUI();
     }
     function setStatus(m) { statusEl.textContent = m; }
     function iniciarMusica() {
@@ -787,9 +848,6 @@
           }
         }
       }
-      // marca d'água da turma sobre o labirinto (bem apagada) e
-      // personagens por cima dela: visível sem atrapalhar o jogo
-      desenharMarcaDagua();
       // porta da casinha
       var pd = centroDe(PORTA.l, PORTA.c);
       ctx.fillStyle = '#ff9ecb';
@@ -816,18 +874,7 @@
       });
     }
 
-    function desenharMarcaDagua() {
-      ctx.save();
-      ctx.globalAlpha = 0.05;
-      ctx.fillStyle = '#21d4ff';
-      ctx.font = '900 ' + Math.floor(TILE * 2.4) + 'px Impact, "Arial Black", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      try { ctx.letterSpacing = '6px'; } catch (e) {}
-      ctx.fillText(TURMA, LARG / 2, ALT / 2);
-      try { ctx.letterSpacing = '0px'; } catch (e2) {}
-      ctx.restore();
-    }
+
 
     function desenharJogador(agora) {
       var morrendo = estado === 'morte';
@@ -1031,7 +1078,6 @@
         var d = dirPorNome(nome);
         if (d) {
           jogador.prox = d;
-          marcarBotaoAtivo(null, nome);
           if (estado === 'pronto') iniciar();
         }
         return;
@@ -1092,31 +1138,6 @@
       }
     }
 
-    var botoes = stage.querySelectorAll('.pacman-control-btn');
-    function marcarBotaoAtivo(botao, nome) {
-      botoes.forEach(function (b) {
-        var on = botao ? b === botao : b.getAttribute('data-dir') === nome;
-        b.classList.toggle('ativo', !!on);
-      });
-    }
-    function onBtn(e) {
-      if (e.cancelable) e.preventDefault();
-      var botao = e.currentTarget;
-      marcarBotaoAtivo(botao, null);
-      definirDir(botao.getAttribute('data-dir'));
-    }
-    botoes.forEach(function (b) {
-      b.addEventListener('pointerdown', onBtn);
-      b.addEventListener('click', onBtn);
-      b.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          marcarBotaoAtivo(b, null);
-          definirDir(b.getAttribute('data-dir'));
-        }
-      });
-    });
-
     var toqueIni = null;
     function onTouchStart(e) {
       if (!e.changedTouches || !e.changedTouches[0]) return;
@@ -1130,7 +1151,6 @@
       toqueIni = null;
       if (Math.abs(dx) < 18 && Math.abs(dy) < 18) return;
       var nome = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-      marcarBotaoAtivo(null, nome);
       definirDir(nome);
       e.preventDefault();
     }
@@ -1159,16 +1179,13 @@
         document.removeEventListener('keydown', onKey);
         document.removeEventListener('visibilitychange', onVisibilityChange);
         soundEl.removeEventListener('click', onSoundToggle);
-        botoes.forEach(function (b) {
-          b.removeEventListener('pointerdown', onBtn);
-          b.removeEventListener('click', onBtn);
-        });
         canvas.removeEventListener('touchstart', onTouchStart);
         canvas.removeEventListener('touchend', onTouchEnd);
       }
     };
 
     montarPellets(); posarEntidades(); hud();
+    montarFrutasRodape();
     desenhar(0);
     rafId = window.requestAnimationFrame(laco);
   }

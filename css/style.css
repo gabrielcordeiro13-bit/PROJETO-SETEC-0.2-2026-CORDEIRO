@@ -1060,7 +1060,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 1100px;
+  width: min(100%, 680px);
   margin: 0 auto;
 }
 
@@ -1078,7 +1078,7 @@ main {
 }
 
 #pacman-canvas {
-  width: min(100%, 840px);
+  width: min(100%, 620px);
   height: auto;
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -2451,26 +2451,53 @@ body.reduzir-movimento *, body.reduzir-movimento *::before, body.reduzir-movimen
 .block-piece.sem-espaco { opacity: .55; }
 .block-piece:focus-visible { outline: 3px solid var(--warning); outline-offset: 2px; }
 
-/* Pac-Man controles touch */
-.pacman-controls { display: grid; grid-template-columns: repeat(3, 64px); gap: 10px; justify-content: center; margin-top: 6px; }
-.pacman-control-btn {
-  width: 64px; height: 64px; font-size: 1.5rem; cursor: pointer;
-  background: #0c1a2d; color: var(--primary); border: 2px solid var(--primary);
-}
-.pacman-control-btn:hover { background: var(--primary); color: #03070e; }
-.pacman-control-btn:active { transform: translate(2px, 2px); }
-.pacman-control-btn.ativo {
-  background: var(--warning);
-  border-color: var(--warning);
-  color: #080a0f;
-}
-.pacman-turma {
-  margin: 2px 0 0;
+/* Pac-Man: título ARCADE neon acima do labirinto */
+.pacman-titulo-arcade {
+  margin: 0;
   text-align: center;
-  color: var(--warning);
+  font-family: var(--fonte-arcade);
   font-weight: 900;
-  letter-spacing: .2em;
-  font-size: .8rem;
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  letter-spacing: .14em;
+  line-height: 1;
+  background: linear-gradient(180deg, #ffe135 0%, #ffd429 55%, #ff9ecb 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255, 212, 41, 0.55)) drop-shadow(0 0 38px rgba(255, 158, 203, 0.35));
+}
+
+/* Pac-Man: rodapé do jogo (vidas como ícones + fileira de frutas) */
+.pacman-rodape-jogo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 4px;
+  padding: 4px 12px;
+  width: min(100%, 620px);
+  align-self: center;
+}
+
+.pacman-vidas {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+}
+
+.pacman-vida-icone { width: 22px; height: 22px; }
+
+.pacman-frutas {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pacman-fruta-icone { width: 20px; height: 20px; }
+
+@media (max-width: 560px) {
+  .pacman-frutas { display: none; }
 }
 
 /* Forca: acerto/erro não só por cor */
