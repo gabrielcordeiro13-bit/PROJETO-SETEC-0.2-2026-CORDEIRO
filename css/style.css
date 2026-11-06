@@ -31,7 +31,7 @@ body {
   isolation: isolate;
   margin: 0;
   min-height: 100vh;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--fonte-leitura);
   background:
     radial-gradient(circle at top, rgba(103, 208, 255, 0.18), transparent 28%),
     linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-mid) 42%, #102e53 100%);
@@ -1273,19 +1273,21 @@ html {
 }
 
 /* ===== Tipografia padrão do portal =====
-   Dois papéis apenas, usados de forma consistente:
+   Três papéis, usados de forma consistente:
    - Display (títulos, botões, números): Impact — arcade, impactante.
+   - Arcada digital (destaque da intro): Orbitron — geométrica, tecnológica.
    - Leitura (textos corridos): system-ui — confortável em qualquer plataforma.
    Escala modular: 0.72 / 0.8 / 0.95 / 1.05 / 1.3 / 1.6 / 2+ (clamp por contexto). */
 :root {
-  --fonte-display: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-  --fonte-leitura: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  --fonte-display: "Orbitron", "Trebuchet MS", Impact, sans-serif;
+  --fonte-arcade: "Orbitron", "Trebuchet MS", Impact, sans-serif;
+  --fonte-leitura: "Rajdhani", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 body {
   font-family: var(--fonte-leitura);
-  font-size: 16px;
-  line-height: 1.65;
+  font-size: 17px;
+  line-height: 1.55;
   letter-spacing: 0.01em;
   background-color: var(--bg-dark);
   background-image:
@@ -1909,7 +1911,7 @@ h1 {
 
 .loading-screen strong {
   z-index: 1;
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: var(--fonte-display);
   font-size: clamp(1.8rem, 8vw, 3rem);
   letter-spacing: 0.08em;
   animation: loading-flicker 0.8s steps(2) infinite;
@@ -2053,53 +2055,118 @@ h1 {
   position: relative;
   z-index: 2;
   display: grid;
-  gap: clamp(20px, 3.5vh, 34px);
+  gap: clamp(16px, 2.8vh, 28px);
   justify-items: center;
-  padding: clamp(28px, 6vh, 64px) clamp(20px, 5vw, 48px);
+  padding: clamp(24px, 5vh, 56px) clamp(20px, 5vw, 48px);
   max-width: 860px;
 }
 
+/* Várias logos do XI SETEC 2026 flutuando ao fundo, integradas às partículas.
+   Mesma imagem original, tamanhos/posições/velocidades/atrasos diferentes para
+   um movimento orgânico. A animação sobe e desce suavemente no lugar; as
+   logos nunca cobrem o conteúdo central (z-index abaixo de .intro-content). */
+.intro-logos {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.intro-logo-mini {
+  position: absolute;
+  width: clamp(56px, 8vw, 96px);
+  height: auto;
+  opacity: 0;
+  filter: drop-shadow(0 0 12px rgba(103, 208, 255, 0.28)) drop-shadow(0 10px 16px rgba(2, 8, 17, 0.45));
+  animation: intro-logo-flutuar var(--dur, 9s) ease-in-out var(--delay, 0s) infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes intro-logo-flutuar {
+  0%   { opacity: 0; transform: translateY(40px) scale(.92); }
+  12%  { opacity: var(--op, .5); }
+  50%  { transform: translateY(-46px) scale(1.02); }
+  88%  { opacity: var(--op, .5); }
+  100% { opacity: 0; transform: translateY(40px) scale(.92); }
+}
+
+/* variação individual: posição, tamanho, velocidade, fase e opacidade */
+.intro-logo-mini.l1 { left: 6%;  top: 16%; width: clamp(52px, 6.5vw, 84px);  --dur: 8s;   --delay: 0s;    --op: .5; }
+.intro-logo-mini.l2 { left: 82%; top: 12%; width: clamp(60px, 7.5vw, 100px); --dur: 11s;  --delay: -2.5s; --op: .42; }
+.intro-logo-mini.l3 { left: 14%; top: 68%; width: clamp(64px, 8vw, 104px);   --dur: 9.5s; --delay: -5s;   --op: .46; }
+.intro-logo-mini.l4 { left: 76%; top: 64%; width: clamp(52px, 6.5vw, 84px);  --dur: 7.5s; --delay: -3.8s; --op: .38; }
+.intro-logo-mini.l5 { left: 44%; top: 4%;  width: clamp(44px, 5vw, 64px);    --dur: 10s;  --delay: -6.2s; --op: .3; }
+.intro-logo-mini.l6 { left: 30%; top: 30%; width: clamp(40px, 4.5vw, 58px);  --dur: 12s;  --delay: -8s;   --op: .26; }
+.intro-logo-mini.l7 { left: 62%; top: 40%; width: clamp(42px, 5vw, 60px);    --dur: 8.8s; --delay: -1.4s; --op: .3; }
+
+/* mobile: menos logos, menores e mais discretas para não poluir */
+@media (max-width: 560px) {
+  .intro-logo-mini.l5, .intro-logo-mini.l6, .intro-logo-mini.l7 { display: none; }
+  .intro-logo-mini { width: clamp(44px, 14vw, 64px); }
+  .intro-logo-mini.l1 { left: 4%;  top: 12%; }
+  .intro-logo-mini.l2 { left: 78%; top: 10%; }
+  .intro-logo-mini.l3 { left: 10%; top: 62%; }
+  .intro-logo-mini.l4 { left: 74%; top: 66%; }
+}
+
+/* movimento reduzido: logos estáticas e visíveis, sem flutuação */
+body.reduzir-movimento .intro-logo-mini { animation: none; opacity: .35; transform: none; }
+
 .intro-kicker {
   margin: 0;
-  padding: 10px 18px;
-  border: 2px solid var(--primary);
-  background: rgba(33, 212, 255, 0.1);
+  padding: 9px 20px;
+  border: 1px solid rgba(103, 208, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(33, 212, 255, 0.08);
   color: var(--primary);
-  font-weight: 900;
-  font-size: clamp(.8rem, 1.9vw, 1rem);
-  letter-spacing: 0.2em;
+  font-family: var(--fonte-leitura);
+  font-weight: 700;
+  font-size: clamp(.72rem, 1.6vw, .88rem);
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .intro-title {
   margin: 0;
-  font-family: var(--fonte-display);
-  font-size: clamp(3.2rem, 14vw, 8.5rem);
-  line-height: .88;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  text-align: center;
-  text-shadow: 5px 5px 0 #0753a1, 9px 9px 0 #ec2c69;
-}
-
-.intro-subtitle {
-  margin: 0;
-  font-family: var(--fonte-display);
-  font-size: clamp(2rem, 7.5vw, 4.4rem);
-  line-height: 1.08;
+  font-family: var(--fonte-arcade);
+  font-weight: 900;
+  font-size: clamp(2.6rem, 11vw, 7rem);
+  line-height: .95;
   text-transform: uppercase;
   letter-spacing: .06em;
   text-align: center;
-  text-shadow: 4px 4px 0 #0753a1, 7px 7px 0 rgba(236, 44, 105, 0.75);
+  color: #9be8ff;
+  background: linear-gradient(180deg, #e6faff 0%, #7fd6ff 45%, #38b6ff 70%, #2f8af9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 18px rgba(103, 208, 255, 0.45)) drop-shadow(0 0 42px rgba(47, 138, 249, 0.35));
+}
+
+
+
+.intro-subtitle {
+  margin: 0;
+  font-family: var(--fonte-arcade);
+  font-weight: 800;
+  font-size: clamp(1.5rem, 5.5vw, 3rem);
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: .3em;
+  text-indent: .3em; /* compensa o letter-spacing no centrado */
+  text-align: center;
+  color: var(--text);
+  text-shadow: 0 0 16px rgba(236, 44, 105, 0.55), 3px 3px 0 rgba(7, 83, 161, 0.9);
 }
 
 .intro-subtitle .intro-ano {
   display: block;
-  margin-top: .22em;
-  color: var(--primary);
-  font-size: .58em;
-  letter-spacing: .3em;
-  text-shadow: 3px 3px 0 rgba(7, 83, 161, 0.9);
+  margin-top: .3em;
+  color: var(--warning);
+  font-size: .78em;
+  letter-spacing: .42em;
+  text-indent: .42em;
+  text-shadow: 0 0 14px rgba(255, 209, 102, 0.4), 2px 2px 0 rgba(7, 83, 161, 0.9);
 }
 
 /* Responsividade da tipografia arcade: em telas pequenas o título
@@ -2144,17 +2211,18 @@ h1 {
 .intro-content > *:nth-child(3) { animation-delay: .45s; }
 .intro-content > *:nth-child(4) { animation-delay: .6s; }
 .intro-content > *:nth-child(5) { animation-delay: .75s; }
+.intro-content > *:nth-child(6) { animation-delay: .9s; }
+
+/* movimento reduzido: logo estática, sem flutuação */
+
 
 @keyframes intro-subir {
   to { opacity: 1; transform: none; }
 }
 
-/* parallax leve ao cursor (desktop) */
-@media (hover: hover) and (pointer: fine) {
-  .intro-overlay.mouse-ativo .intro-layer.grade { transition: transform .35s ease-out; }
-}
+/* parallax de mouse removido a pedido — animações são totalmente automáticas */
 
-/* movimento reduzido: tudo estático, sem animação nem canvas */
+/* movimento reduzido: fundo estático, logos sem flutuação */
 body.reduzir-movimento .intro-layer,
 body.reduzir-movimento .intro-ghost,
 body.reduzir-movimento .intro-pill,
@@ -2162,9 +2230,10 @@ body.reduzir-movimento .intro-peca { animation: none !important; }
 
 @media (max-width: 560px) {
   .intro-ghost, .intro-peca, .intro-pill { opacity: .28; }
-  .intro-title { font-size: clamp(3.4rem, 18vw, 5.2rem); }
-  .intro-subtitle { font-size: clamp(1.6rem, 9.5vw, 3rem); line-height: 1.3; }
+  .intro-title { font-size: clamp(2.4rem, 12.5vw, 4.2rem); }
+  .intro-subtitle { font-size: clamp(1.15rem, 5.5vw, 1.9rem); letter-spacing: .22em; text-indent: .22em; }
   .intro-subtitle .intro-ano { margin-top: .32em; }
+
   .intro-acoes .primary-button,
   .intro-acoes .secondary-button { width: 100%; }
 }

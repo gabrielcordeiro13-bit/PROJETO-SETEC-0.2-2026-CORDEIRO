@@ -1,5 +1,5 @@
 // SETEC 2026 - Tela de entrada cinematográfica.
-// Partículas em canvas, parallax leve ao cursor e transição suave para o portal.
+// Partículas em canvas e transição suave para o portal (sem parallax de mouse).
 // Não altera os jogos: apenas controla a camada #intro-overlay antes do menu.
 (function () {
   'use strict';
@@ -13,7 +13,6 @@
   var particulas = [];
   var rafId = null;
   var rodando = false;
-  var mouse = { x: 0.5, y: 0.5 };
   var tempoDesenho = 0;
 
   function reduzido() {
@@ -93,29 +92,12 @@
     }
   }
 
-  // Parallax leve: camadas com data-parallax deslocam conforme o cursor.
-  var camadas = Array.prototype.slice.call(overlay.querySelectorAll('[data-parallax]'));
-
-  function aplicarParallax() {
-    for (var i = 0; i < camadas.length; i += 1) {
-      var el = camadas[i];
-      var fator = parseFloat(el.getAttribute('data-parallax')) || 0;
-      var dx = (mouse.x - 0.5) * fator;
-      var dy = (mouse.y - 0.5) * fator;
-      el.style.transform = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px)';
-    }
-  }
-
-  function onMouseMove(e) {
-    mouse.x = e.clientX / window.innerWidth;
-    mouse.y = e.clientY / window.innerHeight;
-    aplicarParallax();
-  }
+  // Sem parallax/mouse-tracking: as camadas decorativas e as logos flutuam
+  // sozinhas via CSS — independem da posição do cursor.
 
   function fechar(acao) {
     if (!overlay || overlay.classList.contains('saindo')) return;
     pararCanvas();
-    window.removeEventListener('mousemove', onMouseMove);
     window.removeEventListener('resize', onResize);
     overlay.classList.add('saindo');
     overlay.setAttribute('aria-hidden', 'true');
@@ -150,10 +132,7 @@
       }
     });
 
-    if (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches && !reduzido()) {
-      overlay.classList.add('mouse-ativo');
-      window.addEventListener('mousemove', onMouseMove, { passive: true });
-    }
+    if (reduzido()) return;
 
     window.addEventListener('resize', onResize);
 
