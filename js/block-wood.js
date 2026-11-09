@@ -8,6 +8,10 @@
   var BOARD_HEIGHT = 20;
   var HORIZONTAL_REPEAT_DELAY_MS = 240;
   var HORIZONTAL_REPEAT_INTERVAL_MS = 130;
+  /* Descida automática: intervalo por nível (ms) — nível 1 é lento, para
+   * pensar; diminui conforme o jogador sobe de nível. */
+  var GRAVIDADE_BASE_MS = 900;
+  var GRAVIDADE_MIN_MS = 140;
   var LINE_SCORES = [0, 100, 300, 500, 800];
 
   var SHAPES = {
@@ -176,6 +180,11 @@
     stage.innerHTML = '';
 
     var root = el('div', 'block-game');
+    var titulo = el('h2', 'titulo-arcade tetris-titulo-arcade');
+    titulo.setAttribute('aria-label', 'ARCADE');
+    titulo.textContent = 'ARCADE';
+    root.appendChild(titulo);
+
     var intro = el('section', 'game-intro');
     intro.setAttribute('role', 'dialog');
     intro.setAttribute('aria-label', 'Como jogar Block Wood Puzzle');
@@ -184,7 +193,7 @@
       '<h3>Como jogar</h3>' +
       '<ol>' +
       '<li><strong>Objetivo:</strong> organize as peças e complete linhas para ganhar pontos.</li>' +
-      '<li><strong>Controles:</strong> use as setas ou os botões de toque para posicionar cada peça; <kbd>↓</kbd> move uma posição para baixo e fixa a peça ao encontrar um obstáculo. Use <kbd>↑</kbd> ou <kbd>X</kbd> para girar, <kbd>Z</kbd> para girar no sentido contrário e <kbd>Espaço</kbd> para queda imediata.</li>' +
+      '<li><strong>Controles:</strong> as peças descem sozinhas em ritmo lento. Use as setas ou os botões de toque para posicionar cada peça enquanto ela desce; <kbd>↓</kbd> acelera a descida e fixa a peça ao encontrar um obstáculo. Use <kbd>↑</kbd> ou <kbd>X</kbd> para girar, <kbd>Z</kbd> para girar no sentido contrário e <kbd>Espaço</kbd> para queda imediata.</li>' +
       '<li><strong>Extras:</strong> <kbd>P</kbd> pausa, <kbd>R</kbd> reinicia e o jogo termina quando não houver espaço para a próxima peça.</li>' +
       '</ol>' +
       '<button type="button" class="primary-button" id="block-start">Começar a jogar</button>' +
@@ -192,6 +201,9 @@
     var startBtn = intro.querySelector('#block-start');
 
     var hud = el('div', 'tetris-topbar');
+    var placarGrupo = el('div', 'placar-grupo');
+    placarGrupo.setAttribute('role', 'group');
+    placarGrupo.setAttribute('aria-label', 'Placar do Block Wood Puzzle');
     var scoreBox = el('div', 'stat-box');
     scoreBox.innerHTML = 'Pontuação: <span id="block-score">0</span>';
     var bestBox = el('div', 'stat-box');
@@ -200,14 +212,17 @@
     linesBox.innerHTML = 'Linhas: <span id="block-lines">0</span>';
     var levelBox = el('div', 'stat-box');
     levelBox.innerHTML = 'Nível: <span id="block-level">1</span>';
+    placarGrupo.appendChild(scoreBox);
+    placarGrupo.appendChild(bestBox);
+    placarGrupo.appendChild(linesBox);
+    placarGrupo.appendChild(levelBox);
+    var acoesGrupo = el('div', 'acoes-grupo');
     var resetBtn = el('button', 'primary-button', 'Reiniciar');
     resetBtn.type = 'button';
     resetBtn.id = 'block-reset';
-    hud.appendChild(scoreBox);
-    hud.appendChild(bestBox);
-    hud.appendChild(linesBox);
-    hud.appendChild(levelBox);
-    hud.appendChild(resetBtn);
+    acoesGrupo.appendChild(resetBtn);
+    hud.appendChild(placarGrupo);
+    hud.appendChild(acoesGrupo);
 
     var shell = el('div', 'tetris-shell');
     var boardWrap = el('div', 'tetris-board-wrap');
@@ -240,7 +255,7 @@
     var panelInfo = el('div', 'tetris-panel');
     var infoTitle = el('p', 'tetris-panel-label', 'Controles');
     var controls = el('ul', 'tetris-controls');
-    controls.innerHTML = '<li>← / →: mover</li><li>↓: avançar uma posição e fixar ao bloquear</li><li>↑ / X: girar</li><li>Z: girar para trás</li><li>Espaço: queda imediata</li><li>P: pausar</li><li>R: reiniciar</li>';
+    controls.innerHTML = '<li>← / →: mover</li><li>A peça desce sozinha em ritmo lento</li><li>↓: acelerar a descida</li><li>↑ / X: girar</li><li>Z: girar para trás</li><li>Espaço: queda imediata</li><li>P: pausar</li><li>R: reiniciar</li>';
     panelInfo.appendChild(infoTitle);
     panelInfo.appendChild(controls);
 
@@ -301,8 +316,37 @@
       pauseBtn: pauseBtn,
       resetBtn: resetBtn,
       boardEl: boardEl,
-      nextCells: []
+      nextCells: [],
+      gravidadeTimer: null
     };
+
+    /* ---- descida automática (gravidade) ----
+     * Um único temporizador para todo o jogo: a peça desce sozinha em ritmo
+     * baixo e constante; ao bater em obstáculo/fim do tabuleiro, fixa e uma
+     * nova peça surge. Comandos de teclado não afetam a gravidade. */
+    function intervaloGravidade() {
+      return Math.max(GRAVIDADE_MIN_MS, GRAVIDADE_BASE_MS - (state.level - 1) * 70);
+    }
+    function pararGravidade() {
+      if (state.gravidadeTimer !== null) {
+        window.clearInterval(state.gravidadeTimer);
+        state.gravidadeTimer = null;
+      }
+    }
+    function reiniciarGravidade() {
+      pararGravidade();
+      if (!state.started || state.paused || state.gameOver) return;
+      state.gravidadeTimer = window.setInterval(function () {
+        if (!state.started || state.paused || state.gameOver ||
+            !stage.closest('.screen.active')) {
+          pararGravidade();
+          return;
+        }
+        movePiece(0, 1, true);
+        /* o nível pode ter mudado: reprograma com o novo ritmo */
+        reiniciarGravidade();
+      }, intervaloGravidade());
+    }
 
     function updateHud() {
       var scoreEl = document.getElementById('block-score');
@@ -449,6 +493,7 @@
       state.level = 1 + Math.floor(state.lines / 10);
       state.currentPiece = null;
       spawnPiece();
+      reiniciarGravidade();
       updateHud();
       renderBoard();
       if (cleared > 0) {
@@ -458,12 +503,15 @@
       }
     }
     function movePiece(dx, dy) {
+      return movePieceAuto(dx, dy, false);
+    }
+    function movePieceAuto(dx, dy, daGravidade) {
       if (!state.currentPiece || state.gameOver || state.paused || !state.started) return false;
       var validMove = isValidPosition(state.board, state.currentPiece, dx, dy);
       if (validMove) {
         state.currentPiece.x += dx;
         state.currentPiece.y += dy;
-        if (dy > 0 && dx === 0) {
+        if (dy > 0 && dx === 0 && !daGravidade) {
           state.score += 1;
           updateHud();
         }
@@ -513,6 +561,7 @@
     }
     function endGame() {
       clearHorizontalRepeat();
+      pararGravidade();
       state.gameOver = true;
       state.started = false;
       var previousBest = c ? c.getBest('block-wood') : state.best;
@@ -551,6 +600,7 @@
       state.nextPiece = createPiece(pullNextType(), 0, 0);
       state.pauseBtn.textContent = 'Pausar';
       spawnPiece();
+      reiniciarGravidade();
       updateHud();
       setStatus('Jogo iniciado. Posicione cada peça com as setas ou os botões de toque.');
       announce('Novo jogo do Block Wood Puzzle iniciado.');
@@ -562,8 +612,10 @@
       state.paused = !state.paused;
       state.pauseBtn.textContent = state.paused ? 'Continuar' : 'Pausar';
       if (state.paused) {
+        pararGravidade();
         setStatus('Jogo pausado. Pressione P para continuar.');
       } else {
+        reiniciarGravidade();
         setStatus('Jogo retomado. Continue posicionando as peças.');
       }
       renderBoard();
@@ -638,6 +690,7 @@
 
     function cleanup() {
       clearHorizontalRepeat();
+      pararGravidade();
       state.started = false;
       state.paused = false;
       state.gameOver = true;
@@ -657,7 +710,8 @@
     function handleStart() {
       intro.classList.add('concluida');
       state.started = true;
-      setStatus('Jogo iniciado. Posicione cada peça com as setas ou os botões de toque.');
+      reiniciarGravidade();
+      setStatus('Jogo iniciado. As peças descem sozinhas; posicione-as com as setas ou os botões de toque.');
       announce('Jogo iniciado.');
       state.boardEl.focus();
     }
@@ -685,6 +739,8 @@
     updateHud();
     renderBoard();
     setStatus('Pressione "Começar a jogar" para iniciar a partida.');
+    /* segurança: nada de temporizador órfão fora da partida */
+    pararGravidade();
   }
 
   window.BlockWoodTetris = {

@@ -62,6 +62,7 @@
   function criarUi(stage) {
     stage.innerHTML =
       '<div class="hangman-game">' +
+      '<h2 class="titulo-arcade hangman-titulo-arcade" aria-label="ARCADE">ARCADE</h2>' +
       '<section class="game-intro" role="dialog" aria-label="Como jogar o Jogo da Forca">' +
       '<div class="intro-card">' +
       '<h3>Como jogar</h3>' +
@@ -73,12 +74,14 @@
       '<button type="button" class="primary-button" id="hangman-start">Começar a jogar</button>' +
       '</div>' +
       '</section>' +
-      '<div class="hangman-topbar">' +
+      '<div class="placar-grupo" role="group" aria-label="Placar do Jogo da Forca">' +
       '<div class="stat-box">Tentativas: <span id="hangman-left">6</span></div>' +
       '<div class="stat-box">Erros: <span id="hangman-errors">0</span>/6</div>' +
       '<div class="stat-box">Pontos: <span id="hangman-score">0</span></div>' +
       '<div class="stat-box">Sequência: <span id="hangman-streak">0</span></div>' +
       '<div class="stat-box">Recorde: <span id="hangman-best">0</span></div>' +
+      '</div>' +
+      '<div class="hangman-topbar">' +
       '<button type="button" class="primary-button" id="hangman-reset">Nova palavra</button>' +
       '</div>' +
       '<div class="hangman-area">' +

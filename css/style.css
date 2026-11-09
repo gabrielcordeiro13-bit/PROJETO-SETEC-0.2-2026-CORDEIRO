@@ -892,6 +892,30 @@ main {
   flex-wrap: wrap;
 }
 
+/* Grupo de placar agrupado (pontuação/recorde/nível juntos) */
+.placar-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Linha separada para botões de ação (posições claras, fora do placar) */
+.acoes-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Canvas Tetris: cabe na viewport sem rolagem */
+.tetris-board-wrap {
+  align-self: stretch;
+}
+.tetris-board {
+  width: min(100%, 420px, max(150px, 58vh));
+}
+
 .stat-box {
   display: inline-flex;
   align-items: center;
@@ -1052,7 +1076,54 @@ main {
   }
 
   .tetris-board {
-    width: min(100%, 360px);
+    width: min(100%, 360px, max(150px, 58vh));
+  }
+}
+
+@media (max-height: 560px) {
+  .titulo-arcade,
+  .pacman-titulo-arcade {
+    font-size: clamp(1.4rem, 5vw, 2.2rem);
+  }
+}
+
+/* Mobile: HUD compacto para o labirinto caber inteiro na tela */
+@media (max-width: 640px) {
+  .titulo-arcade,
+  .pacman-titulo-arcade {
+    font-size: clamp(1.5rem, 8vw, 2.4rem);
+    margin-bottom: 4px;
+  }
+
+  .placar-grupo {
+    gap: 6px;
+  }
+
+  .placar-grupo .stat-box,
+  .stat-box {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+
+  .acoes-grupo {
+    gap: 6px;
+  }
+
+  .acoes-grupo button,
+  .pacman-panel .secondary-button,
+  .pacman-panel .primary-button {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .pacman-game {
+    gap: 8px;
+  }
+
+  .game-intro .intro-card {
+    padding: 16px 14px;
   }
 }
 
@@ -1066,7 +1137,8 @@ main {
 
 .pacman-panel {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -1074,11 +1146,16 @@ main {
 .pacman-canvas-wrap {
   display: flex;
   justify-content: center;
+  align-items: center;
   max-width: 100%;
 }
 
+/* Enquadra o labirinto na viewport: largura limita pela altura disponível
+ * (proporção nativa 28x31 tiles). */
+.pacman-game .titulo-arcade { margin-bottom: 2px; }
+
 #pacman-canvas {
-  width: min(100%, 620px);
+  width: min(100%, 620px, calc(100vh * 0.362));
   height: auto;
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -2451,7 +2528,8 @@ body.reduzir-movimento *, body.reduzir-movimento *::before, body.reduzir-movimen
 .block-piece.sem-espaco { opacity: .55; }
 .block-piece:focus-visible { outline: 3px solid var(--warning); outline-offset: 2px; }
 
-/* Pac-Man: título ARCADE neon acima do labirinto */
+/* Título ARCADE dourado compartilhado por TODOS os jogos (topo da interface) */
+.titulo-arcade,
 .pacman-titulo-arcade {
   margin: 0;
   text-align: center;
@@ -2465,6 +2543,12 @@ body.reduzir-movimento *, body.reduzir-movimento *::before, body.reduzir-movimen
   background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 14px rgba(255, 212, 41, 0.55)) drop-shadow(0 0 38px rgba(255, 158, 203, 0.35));
+}
+
+.tetris-titulo-arcade,
+.hangman-titulo-arcade {
+  text-align: center;
+  margin: 0;
 }
 
 /* Pac-Man: rodapé do jogo (vidas como ícones + fileira de frutas) */

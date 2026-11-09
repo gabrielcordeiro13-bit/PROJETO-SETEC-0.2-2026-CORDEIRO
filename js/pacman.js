@@ -108,7 +108,7 @@
   function criarUi(stage) {
     stage.innerHTML =
       '<div class="pacman-game">' +
-      '<h2 class="pacman-titulo-arcade" aria-label="ARCADE">ARCADE</h2>' +
+      '<h2 class="titulo-arcade pacman-titulo-arcade" aria-label="ARCADE">ARCADE</h2>' +
       '<section class="game-intro" role="dialog" aria-label="Como jogar Pac-Man">' +
       '<div class="intro-card">' +
       '<h3>Como jogar</h3>' +
@@ -120,12 +120,13 @@
       '<button type="button" class="primary-button" id="pacman-start">Começar a jogar</button>' +
       '</div>' +
       '</section>' +
-      '<div class="pacman-panel">' +
+      '<div class="placar-grupo" role="group" aria-label="Placar do Pac-Man">' +
       '<div class="stat-box">Pontos: <span id="pacman-score">0</span></div>' +
       '<div class="stat-box">Vidas: <span id="pacman-lives">3</span></div>' +
       '<div class="stat-box">Fase: <span id="pacman-level">1</span></div>' +
       '<div class="stat-box">Recorde: <span id="pacman-best">0</span></div>' +
-      '<div class="stat-box" id="pacman-power" hidden>ENERGIA!</div>' +
+      '</div>' +
+      '<div class="acoes-grupo">' +
       '<button type="button" class="secondary-button" id="pacman-sound" aria-pressed="true">♪ Som ligado</button>' +
       '<button type="button" class="secondary-button" id="pacman-pause">Pausar</button>' +
       '<button type="button" class="primary-button" id="pacman-reset">Reiniciar</button>' +
@@ -206,7 +207,6 @@
     var livesEl = document.getElementById('pacman-lives');
     var levelEl = document.getElementById('pacman-level');
     var bestEl = document.getElementById('pacman-best');
-    var powerEl = document.getElementById('pacman-power');
     var soundEl = document.getElementById('pacman-sound');
     var statusEl = document.getElementById('pacman-status');
 
@@ -350,7 +350,6 @@
       livesEl.textContent = String(vidas);
       levelEl.textContent = String(fase);
       bestEl.textContent = String(c ? c.getBest('pacman') : 0);
-      powerEl.hidden = !(tempoJogo < energiaAte);
       var somLigado = !c || !c.getState || c.getState().prefs.som;
       soundEl.textContent = somLigado ? '♪ Som ligado' : '♪ Som desligado';
       soundEl.setAttribute('aria-pressed', String(somLigado));
