@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 function loadBlockWoodModule() {
-  const source = fs.readFileSync(path.join(__dirname, '../js/block-wood.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '../block-wood.js'), 'utf8');
   const context = {
     window: {},
     document: {
@@ -173,7 +173,7 @@ function createBlockWoodRuntime() {
   };
 
   vm.runInNewContext(
-    fs.readFileSync(path.join(__dirname, '../js/block-wood.js'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, '../block-wood.js'), 'utf8'),
     { window, document, console, Math, Array, Number, String, Object, setTimeout, clearTimeout }
   );
 
@@ -184,6 +184,12 @@ function createBlockWoodRuntime() {
     elements,
     init() { window.initBlockWoodGame(); },
     pendingAnimationFrames() { return animationFrames.size; },
+    frame(timestamp) {
+      const next = animationFrames.entries().next().value;
+      assert.ok(next, 'o laço de gravidade deveria estar ativo');
+      animationFrames.delete(next[0]);
+      next[1](timestamp);
+    },
     key(type, key, repeat = false) {
       document.dispatch(type, { key, repeat, preventDefault() {} });
     },
@@ -213,6 +219,11 @@ function createBlockWoodRuntime() {
           transform: cell.style.transform
         } : null)
         .filter(Boolean);
+    },
+    activeTransforms() {
+      return elements.get('block-board').children
+        .filter((cell) => cell.classList.contains('active'))
+        .map((cell) => cell.style.transform);
     },
     filledPositions() {
       const board = elements.get('block-board');
@@ -322,24 +333,36 @@ test('cada seta desloca uma célula e a repetição ao segurar é controlada', (
   assert.equal(game.minActivePosition().column, afterKeyboard.column + 1);
 });
 
-test('as peças ficam paradas sem comandos e descem somente por ação manual', () => {
+test('a peça desce suavemente sozinha e acelera enquanto a seta para baixo está pressionada', () => {
   const game = createBlockWoodRuntime();
   game.init();
   game.elements.get('block-start').dispatch('click');
+  assert.equal(game.pendingAnimationFrames(), 1, 'a gravidade deve agendar animação contínua');
+  game.frame(0);
   const start = game.minActivePosition();
+  for (let timestamp = 25; timestamp <= 450; timestamp += 25) game.frame(timestamp);
   assert.equal(game.minActivePosition().row, start.row);
-  assert.equal(game.pendingAnimationFrames(), 0, 'o jogo não deve iniciar uma queda temporizada');
-
-  game.key('keydown', 'ArrowDown');
+  assert.ok(game.activeTransforms().some((transform) => transform.indexOf('calc(0%') < 0),
+    'a peça deve aparecer entre duas linhas durante a queda');
+  for (let timestamp = 475; timestamp <= 900; timestamp += 25) game.frame(timestamp);
   assert.equal(game.minActivePosition().row, start.row + 1);
-
-  game.elements.get('block-pause').dispatch('click');
   game.key('keydown', 'ArrowDown');
-  assert.equal(game.minActivePosition().row, start.row + 1, 'a peça não deve se mover durante a pausa');
+  const acceleratedRow = game.minActivePosition().row;
+  for (let timestamp = 925; timestamp <= 1000; timestamp += 25) game.frame(timestamp);
+  assert.ok(game.minActivePosition().row > acceleratedRow,
+    'a seta para baixo deve acelerar a queda mantida');
+  game.key('keyup', 'ArrowDown');
+
+  game.elements.get('block-pause').dispatch('click');
+  const pausedRow = game.minActivePosition().row;
+  game.key('keydown', 'ArrowDown');
+  assert.equal(game.minActivePosition().row, pausedRow, 'a peça não deve se mover durante a pausa');
   game.elements.get('block-pause').dispatch('click');
 
+  game.key('keyup', 'ArrowDown');
+  const rowBeforeTouch = game.minActivePosition().row;
   game.stage.querySelector('.block-touch-controls').querySelector('.down').dispatch('click');
-  assert.equal(game.minActivePosition().row, start.row + 2);
+  assert.equal(game.minActivePosition().row, rowBeforeTouch + 1);
 });
 
 test('a peça fixa ao receber comando de descida bloqueado e fica dentro do tabuleiro', () => {
@@ -363,9 +386,31 @@ test('a peça fixa ao receber comando de descida bloqueado e fica dentro do tabu
   assert.ok(fixedCells.length > 0, 'a peça deveria fixar ao encontrar o limite inferior');
   assert.ok(fixedCells.every((cell) => cell.row >= 0 && cell.row < 20 && cell.column >= 0 && cell.column < 10));
   assert.equal(game.minActivePosition().row, 0, 'a próxima peça deve surgir no topo após o travamento');
-  assert.equal(game.pendingAnimationFrames(), 0);
+  assert.equal(game.pendingAnimationFrames(), 1);
 
   game.elements.get('block-reset').dispatch('click');
   assert.equal(game.minActivePosition().row, 0);
   assert.equal(game.filledPositions().length, 0);
+});
+
+test('P pausa, X e Z giram, espaço fixa a peça e R reinicia pelo teclado', () => {
+  const game = createBlockWoodRuntime();
+  game.init();
+  game.elements.get('block-start').dispatch('click');
+
+  game.key('keydown', 'p');
+  assert.match(game.elements.get('block-status').textContent, /pausado/);
+  game.key('keydown', 'p');
+  assert.match(game.elements.get('block-status').textContent, /retomado/);
+
+  game.key('keydown', 'ArrowUp');
+  game.key('keydown', 'x');
+  game.key('keydown', 'z');
+  game.key('keydown', ' ');
+  assert.equal(game.filledPositions().length, 4, 'a queda imediata deve fixar todos os blocos da peça');
+  assert.equal(game.minActivePosition().row, 0, 'uma nova peça deve surgir no topo');
+
+  game.key('keydown', 'r');
+  assert.equal(game.filledPositions().length, 0, 'R deve limpar o tabuleiro');
+  assert.equal(game.minActivePosition().row, 0);
 });

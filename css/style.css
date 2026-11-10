@@ -865,7 +865,7 @@ main {
   }
 
   .game-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .game-card {
@@ -1131,8 +1131,24 @@ main {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  width: min(100%, 680px);
+  width: min(100%, 1120px);
   margin: 0 auto;
+}
+
+.pacman-game > .placar-grupo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  width: 100%;
+}
+
+.pacman-game > .acoes-grupo {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+}
+
+.pacman-game > .acoes-grupo button {
+  min-width: 0;
 }
 
 .pacman-panel {
@@ -1147,6 +1163,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
   max-width: 100%;
 }
 
@@ -1155,8 +1172,10 @@ main {
 .pacman-game .titulo-arcade { margin-bottom: 2px; }
 
 #pacman-canvas {
-  width: min(100%, 620px, calc(100vh * 0.362));
+  width: min(100%, 1000px, 78vh);
+  width: min(100%, 1000px, 78svh);
   height: auto;
+  aspect-ratio: 28 / 31;
   border: 1px solid var(--line);
   border-radius: 18px;
   background: #07131f;
@@ -2607,7 +2626,7 @@ img, canvas, .block-board, .game-stage { max-width: 100%; }
   background: rgba(8, 13, 22, 0.35);
 }
 /* Keep game content above the fixed school watermark. */
-.game-stage { position: relative; overflow: hidden; }
+.game-stage { position: relative; overflow-x: clip; overflow-y: visible; }
 .game-stage > * { position: relative; z-index: 1; }
 /* capa de efeitos: fixed cobre a viewport inteira em qualquer scroll
    (o JS a deixa em cada .screen, o CSS manda onde ela fica) */
@@ -3032,5 +3051,45 @@ body.reduzir-movimento .toast-item { animation: none; }
     .tetris-board {
       width: min(100%, 360px, max(140px, 48svh));
     }
+  }
+}
+
+@media (max-width: 640px) {
+  .pacman-game {
+    gap: 10px;
+  }
+
+  .pacman-game > .placar-grupo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .pacman-game > .placar-grupo .stat-box {
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 7px 5px;
+    font-size: 0.78rem;
+  }
+
+  .pacman-game > .acoes-grupo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .pacman-game > .acoes-grupo button {
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px;
+    font-size: 0.78rem;
+  }
+
+  .pacman-game > .acoes-grupo #pacman-reset {
+    grid-column: 1 / -1;
+  }
+
+  .pacman-rodape-jogo {
+    width: 100%;
+    padding: 4px;
   }
 }

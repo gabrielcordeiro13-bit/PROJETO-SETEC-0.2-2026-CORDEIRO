@@ -317,7 +317,10 @@
       resetBtn: resetBtn,
       boardEl: boardEl,
       nextCells: [],
-      gravidadeTimer: null
+      gravidadeFrame: null,
+      gravityTimestamp: null,
+      fallProgress: 0,
+      softDropHeld: false
     };
 
     /* ---- descida automática (gravidade) ----
@@ -328,24 +331,40 @@
       return Math.max(GRAVIDADE_MIN_MS, GRAVIDADE_BASE_MS - (state.level - 1) * 70);
     }
     function pararGravidade() {
-      if (state.gravidadeTimer !== null) {
-        window.clearInterval(state.gravidadeTimer);
-        state.gravidadeTimer = null;
+      if (state.gravidadeFrame !== null) {
+        window.cancelAnimationFrame(state.gravidadeFrame);
+        state.gravidadeFrame = null;
+      }
+      state.gravityTimestamp = null;
+    }
+    function atualizarGravidade(timestamp) {
+      state.gravidadeFrame = null;
+      if (!state.started || state.paused || state.gameOver ||
+          !stage.closest('.screen.active')) return;
+
+      if (state.gravityTimestamp === null) state.gravityTimestamp = timestamp;
+      var delta = Math.min((timestamp - state.gravityTimestamp) / 1000, 0.05);
+      state.gravityTimestamp = timestamp;
+      var aceleracao = state.softDropHeld ? 10 : 1;
+      state.fallProgress += delta * (1000 / intervaloGravidade()) * aceleracao;
+
+      while (state.fallProgress >= 1 && state.currentPiece) {
+        state.fallProgress -= 1;
+        if (!movePieceAuto(0, 1, true)) {
+          state.fallProgress = 0;
+          break;
+        }
+      }
+
+      renderBoard();
+      if (state.started && !state.paused && !state.gameOver && stage.closest('.screen.active')) {
+        state.gravidadeFrame = window.requestAnimationFrame(atualizarGravidade);
       }
     }
     function reiniciarGravidade() {
       pararGravidade();
       if (!state.started || state.paused || state.gameOver) return;
-      state.gravidadeTimer = window.setInterval(function () {
-        if (!state.started || state.paused || state.gameOver ||
-            !stage.closest('.screen.active')) {
-          pararGravidade();
-          return;
-        }
-        movePiece(0, 1, true);
-        /* o nível pode ter mudado: reprograma com o novo ritmo */
-        reiniciarGravidade();
-      }, intervaloGravidade());
+      state.gravidadeFrame = window.requestAnimationFrame(atualizarGravidade);
     }
 
     function updateHud() {
@@ -433,7 +452,7 @@
         for (var pieceRow = 0; pieceRow < state.currentPiece.matrix.length; pieceRow += 1) {
           for (var pieceCol = 0; pieceCol < state.currentPiece.matrix[pieceRow].length; pieceCol += 1) {
             if (!state.currentPiece.matrix[pieceRow][pieceCol]) continue;
-            var currentY = state.currentPiece.y + pieceRow;
+            var currentY = state.currentPiece.y + pieceRow + state.fallProgress;
             var currentX = state.currentPiece.x + pieceCol;
             var currentDisplayRow = Math.floor(currentY);
             if (currentDisplayRow >= 0 && currentDisplayRow < BOARD_HEIGHT && currentX >= 0 && currentX < BOARD_WIDTH) {
@@ -465,8 +484,10 @@
     }
     function spawnPiece() {
       var nextType = state.nextPiece ? state.nextPiece.type : pullNextType();
-      state.currentPiece = createPiece(nextType, Math.floor((BOARD_WIDTH - 4) / 2), 0);
+      var matrix = SHAPES[nextType].matrix;
+      state.currentPiece = createPiece(nextType, Math.floor((BOARD_WIDTH - matrix[0].length) / 2), 0);
       state.nextPiece = createPiece(pullNextType(), 0, 0);
+      state.fallProgress = 0;
 
       if (!isValidPosition(state.board, state.currentPiece, 0, 0)) {
         endGame();
@@ -482,7 +503,8 @@
       var cleared = result.cleared;
       if (cleared > 0) {
         state.lines += cleared;
-        state.score += (getLineScore(cleared) * state.level) + (cleared === 4 ? 200 : 0);
+        var ganho = (getLineScore(cleared) * state.level) + (cleared === 4 ? 200 : 0);
+        state.score += ganho;
         if (c) {
           if (cleared >= 2) c.unlock('bloco-limpeza-dupla');
         }
@@ -492,12 +514,12 @@
       }
       state.level = 1 + Math.floor(state.lines / 10);
       state.currentPiece = null;
+      state.fallProgress = 0;
       spawnPiece();
-      reiniciarGravidade();
       updateHud();
       renderBoard();
       if (cleared > 0) {
-        setStatus('Linha limpa! +' + ((getLineScore(cleared) * state.level) + (cleared === 4 ? 200 : 0)) + ' pontos.');
+        setStatus('Linha limpa! +' + ganho + ' pontos.');
       } else {
         setStatus('Peça travada. Próxima peça em ação.');
       }
@@ -511,6 +533,7 @@
       if (validMove) {
         state.currentPiece.x += dx;
         state.currentPiece.y += dy;
+        if (dy > 0 && !daGravidade) state.fallProgress = 0;
         if (dy > 0 && dx === 0 && !daGravidade) {
           state.score += 1;
           updateHud();
@@ -555,6 +578,7 @@
         state.score += rows * 2;
         updateHud();
       }
+      state.fallProgress = 0;
       lockCurrentPiece();
       setStatus('Queda rápida! ' + rows + ' linhas alcançadas.');
       announce('Queda rápida ativada.');
@@ -597,6 +621,8 @@
       state.gameOver = false;
       state.started = true;
       state.currentPiece = null;
+      state.fallProgress = 0;
+      state.softDropHeld = false;
       state.nextPiece = createPiece(pullNextType(), 0, 0);
       state.pauseBtn.textContent = 'Pausar';
       spawnPiece();
@@ -609,6 +635,7 @@
     function togglePause() {
       if (state.gameOver) return;
       clearHorizontalRepeat();
+      state.softDropHeld = false;
       state.paused = !state.paused;
       state.pauseBtn.textContent = state.paused ? 'Continuar' : 'Pausar';
       if (state.paused) {
@@ -655,14 +682,21 @@
         horizontalRepeatTimer = window.setTimeout(repeatHorizontal, HORIZONTAL_REPEAT_DELAY_MS);
         return;
       }
+      if (key === 'ArrowDown' && !event.repeat) {
+        state.softDropHeld = true;
+        handleKey(key);
+        return;
+      }
       if (event.repeat) return;
       handleKey(key);
     }
     function onKeyUp(event) {
       if (event.key === heldHorizontalKey) clearHorizontalRepeat();
+      if (event.key === 'ArrowDown') state.softDropHeld = false;
     }
     function onWindowBlur() {
       clearHorizontalRepeat();
+      state.softDropHeld = false;
     }
     function handleKey(key) {
       if (key === 'p' || key === 'P') {
@@ -690,6 +724,7 @@
 
     function cleanup() {
       clearHorizontalRepeat();
+      state.softDropHeld = false;
       pararGravidade();
       state.started = false;
       state.paused = false;
@@ -739,7 +774,7 @@
     updateHud();
     renderBoard();
     setStatus('Pressione "Começar a jogar" para iniciar a partida.');
-    /* segurança: nada de temporizador órfão fora da partida */
+    /* segurança: nenhuma animação órfã fora da partida */
     pararGravidade();
   }
 

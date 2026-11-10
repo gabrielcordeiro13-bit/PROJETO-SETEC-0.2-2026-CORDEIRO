@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 function loadPacmanData() {
-  const source = fs.readFileSync(path.join(__dirname, '../js/pacman.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '../pacman.js'), 'utf8');
   const window = {};
   vm.runInNewContext(source, { window, Set, Math, Number, String, Object, Array });
   return window.PacmanMazeData;
@@ -63,7 +63,7 @@ function loadAudioCore() {
   };
   const window = { AudioContext: AudioContextMock, localStorage, setTimeout() {} };
   vm.runInNewContext(
-    fs.readFileSync(path.join(__dirname, '../js/setec-core.js'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, '../setec-core.js'), 'utf8'),
     { window, document, console, Date, Math, Number, Object, String, Array, performance: { now: () => 0 } }
   );
   return {
@@ -204,9 +204,9 @@ function loadPacmanRuntime(options = {}) {
     Array,
     performance: { now: () => currentTime }
   };
-  let source = fs.readFileSync(path.join(__dirname, '../js/pacman.js'), 'utf8');
+  let source = fs.readFileSync(path.join(__dirname, '../pacman.js'), 'utf8');
   if (options.playerStart) {
-    source = source.replace('var JOGADOR_INI = { l: 25, c: 22 };',
+    source = source.replace('var JOGADOR_INI = { l: 23, c: 13 };',
       'var JOGADOR_INI = { l: ' + options.playerStart.l + ', c: ' + options.playerStart.c + ' };');
   }
   vm.runInNewContext(source, sandbox);
@@ -381,11 +381,11 @@ test('o jogo inicia, move, pausa, retoma, silencia e reinicia sem duplicar execu
 });
 
 test('a colisão anima a morte antes de reposicionar o jogador e manter vidas', () => {
-  const game = loadPacmanRuntime({ playerStart: { l: 14, c: 13 } });
+  const game = loadPacmanRuntime({ playerStart: { l: 23, c: 13 } });
 
   game.init();
   game.elements.get('pacman-start').dispatch('click');
-  game.key('ArrowLeft'); // anda pela linha 22 (sem energia por perto); o fantasma o alcança
+  game.key('ArrowLeft'); // percorre o corredor inferior até o fantasma alcançar o jogador
   let frame = 0;
   while (game.elements.get('pacman-lives').textContent === '3' && frame < 1600) {
     frame += 1;
