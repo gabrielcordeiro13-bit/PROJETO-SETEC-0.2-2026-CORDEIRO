@@ -273,6 +273,16 @@ test('deve permitir peça encaixar perto da borda quando há espaço', () => {
   assert.equal(api.BlockWoodTetris.isValidPosition(board, piece, 1, 0), false);
 });
 
+test('deve respeitar as dimensões reais do tabuleiro em todas as bordas', () => {
+  const api = loadBlockWoodModule();
+  const board = api.BlockWoodTetris.createEmptyBoard(3, 4);
+  const piece = { matrix: [[1]], x: 2, y: 3 };
+
+  assert.equal(api.BlockWoodTetris.isValidPosition(board, piece, 0, 0), true);
+  assert.equal(api.BlockWoodTetris.isValidPosition(board, piece, 1, 0), false);
+  assert.equal(api.BlockWoodTetris.isValidPosition(board, piece, 0, 1), false);
+});
+
 test('deve impedir que uma peça atravesse um obstáculo', () => {
   const api = loadBlockWoodModule();
   const board = api.BlockWoodTetris.createEmptyBoard(10, 20);

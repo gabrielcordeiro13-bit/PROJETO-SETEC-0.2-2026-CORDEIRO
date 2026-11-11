@@ -18,6 +18,7 @@
   var JOGADOR_INI = { l: 23, c: 13 };
   var LINHA_TUNEL = 14;
   var FRUTA_POS = { l: 17, c: 13 };
+  var ORDEM_FRUTAS = ['cereja', 'morango', 'laranja', 'maca', 'melao', 'galaxian', 'sino', 'chave'];
 
   /* Matriz literal do labirinto clássico: contorno completo, blocos internos
    * com curvas, casa dos fantasmas centralizada, túneis na linha 14 e quatro
@@ -69,7 +70,9 @@
     map: MAPA.slice(),
     playerStart: { l: JOGADOR_INI.l, c: JOGADOR_INI.c },
     ghostHouse: { door: PORTA, front: FRENTE_PORTA, interior: INTERIOR },
-    tunnelRow: LINHA_TUNEL
+    tunnelRow: LINHA_TUNEL,
+    fruitOrder: ORDEM_FRUTAS.slice(),
+    isGhostWalkable: ghostTileWalkable
   };
 
   function core() { return window.SetecCore || null; }
@@ -80,11 +83,13 @@
     var cc = ((c % COLS) + COLS) % COLS;
     return MAPA[l].charAt(cc);
   }
-  function andaFantasma(l, c) {
-    var ch = charDe(l, c);
-    /* Só '.' e 'o' são corredores livres. Qualquer outra coisa — '#'
-     * (paredes) ou '=' (miolo fechado das letras de ARCADE) — é obstáculo
-     * físico e NUNCA pode ser atravessado por fantasma ou jogador. */
+  function ghostTileWalkable(l, c) {
+    if (l < 0 || l >= ROWS) return false;
+    if (c < 0 || c >= COLS) {
+      if (l !== LINHA_TUNEL) return false;
+      c = ((c % COLS) + COLS) % COLS;
+    }
+    var ch = MAPA[l].charAt(c);
     return ch === '.' || ch === 'o';
   }
   function andaJogador(l, c) {
@@ -164,9 +169,10 @@
       if (at.l === paraL && at.c === paraC) break;
       for (var i = 0; i < DIRS.length; i += 1) {
         var nl = at.l + DIRS[i].l;
-        var nc = ((at.c + DIRS[i].c) % COLS + COLS) % COLS;
+        var nc = at.c + DIRS[i].c;
         if (nl < 0 || nl >= ROWS) continue;
-        if (!andaFantasma(nl, nc)) continue;
+        if (!ghostTileWalkable(nl, nc)) continue;
+        nc = ((nc % COLS) + COLS) % COLS;
         if (charDe(nl, nc) === '-' || charDe(nl, nc) === ' ') continue;
         var k = chave(nl, nc);
         if (veioDe[k] !== undefined) continue;
@@ -203,6 +209,8 @@
 
     var canvas = document.getElementById('pacman-canvas');
     var ctx = canvas.getContext('2d');
+    var marcaBarbosa = typeof Image === 'function' ? new Image() : null;
+    if (marcaBarbosa) marcaBarbosa.src = 'img/logoBarbosa.png';
     var scoreEl = document.getElementById('pacman-score');
     var livesEl = document.getElementById('pacman-lives');
     var levelEl = document.getElementById('pacman-level');
@@ -277,42 +285,53 @@
     if (typeof document.createElement !== 'function') { /* noop */ }
 
     /* ---- fileira de frutas pixel art (rodapé, estilo arcade) ---- */
-    var FRUTAS_RODAPE = ['#ff3b3b', '#ff9ecb', '#4ade80', '#ffd429', '#ff7d7d', '#ff9ecb', '#ff3b3b', '#4ade80'];
-    function desenharIconeFruta(canvasFruta, cor) {
+    function desenharIconeFruta(canvasFruta, tipo) {
       var g = canvasFruta.getContext('2d');
       var s = 20; // tamanho do icone
-      canvasFruta.width = s; canvasFruta.height = s;
-      var r = s * 0.32;
-      // caule
-      g.strokeStyle = '#4ade80';
-      g.lineWidth = 2;
-      g.beginPath();
-      g.moveTo(s / 2, s * 0.18);
-      g.quadraticCurveTo(s * 0.62, s * 0.12, s * 0.68, s * 0.2);
-      g.stroke();
-      // corpo em dois lóbulos
-      g.fillStyle = cor;
-      g.beginPath();
-      g.arc(s * 0.38, s * 0.58, r, 0, Math.PI * 2);
-      g.fill();
-      g.beginPath();
-      g.arc(s * 0.62, s * 0.58, r, 0, Math.PI * 2);
-      g.fill();
-      // brilho
-      g.fillStyle = 'rgba(255,255,255,.7)';
-      g.beginPath();
-      g.arc(s * 0.34, s * 0.5, r * 0.26, 0, Math.PI * 2);
-      g.fill();
+      canvasFruta.width = s;
+      canvasFruta.height = s;
+      g.lineWidth = 1.6;
+      g.lineCap = 'round';
+      if (tipo === 'cereja') {
+        g.strokeStyle = '#4ade80';
+        g.beginPath(); g.moveTo(10, 7); g.quadraticCurveTo(10, 2, 14, 3); g.moveTo(10, 7); g.quadraticCurveTo(7, 3, 5, 5); g.stroke();
+        g.fillStyle = '#ff3b3b';
+        g.beginPath(); g.arc(6, 12, 4, 0, Math.PI * 2); g.arc(14, 12, 4, 0, Math.PI * 2); g.fill();
+      } else if (tipo === 'morango') {
+        g.fillStyle = '#ff4b62'; g.beginPath(); g.moveTo(3, 6); g.quadraticCurveTo(10, 1, 17, 6); g.lineTo(10, 19); g.closePath(); g.fill();
+        g.fillStyle = '#8feec5'; g.beginPath(); g.moveTo(4, 5); g.lineTo(8, 2); g.lineTo(10, 5); g.lineTo(13, 2); g.lineTo(16, 5); g.lineTo(10, 8); g.closePath(); g.fill();
+        g.fillStyle = '#ffd166'; [[7, 9], [13, 9], [10, 13], [8, 16], [13, 15]].forEach(function (p) { g.fillRect(p[0], p[1], 1, 1); });
+      } else if (tipo === 'laranja') {
+        g.fillStyle = '#ff9f1c'; g.beginPath(); g.arc(10, 11, 7, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = '#ffd166'; g.beginPath(); g.moveTo(10, 5); g.lineTo(10, 17); g.moveTo(4, 11); g.lineTo(16, 11); g.stroke();
+        g.fillStyle = '#8feec5'; g.beginPath(); g.ellipse(13, 3, 3, 1.5, -0.5, 0, Math.PI * 2); g.fill();
+      } else if (tipo === 'maca') {
+        g.fillStyle = '#e83f5b'; g.beginPath(); g.arc(7, 10, 5, 0, Math.PI * 2); g.arc(13, 10, 5, 0, Math.PI * 2); g.lineTo(10, 18); g.closePath(); g.fill();
+        g.strokeStyle = '#8feec5'; g.beginPath(); g.moveTo(10, 5); g.lineTo(11, 2); g.stroke();
+        g.fillStyle = '#8feec5'; g.beginPath(); g.ellipse(14, 3, 3, 1.5, -0.4, 0, Math.PI * 2); g.fill();
+      } else if (tipo === 'melao') {
+        g.fillStyle = '#7ed957'; g.beginPath(); g.arc(10, 11, 7, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = '#d5f77a'; g.beginPath(); g.arc(10, 11, 5, -1.1, 1.1); g.arc(10, 11, 5, 2.05, 4.25); g.stroke();
+      } else if (tipo === 'galaxian') {
+        g.fillStyle = '#58c4ff'; g.beginPath(); g.moveTo(10, 2); g.lineTo(13, 8); g.lineTo(19, 13); g.lineTo(13, 12); g.lineTo(10, 18); g.lineTo(7, 12); g.lineTo(1, 13); g.lineTo(7, 8); g.closePath(); g.fill();
+        g.fillStyle = '#ff4b62'; g.fillRect(8, 8, 4, 5);
+      } else if (tipo === 'sino') {
+        g.fillStyle = '#ffd429'; g.beginPath(); g.moveTo(4, 14); g.quadraticCurveTo(6, 12, 6, 7); g.arc(10, 7, 4, Math.PI, 0); g.quadraticCurveTo(14, 12, 16, 14); g.closePath(); g.fill();
+        g.fillRect(3, 14, 14, 2); g.beginPath(); g.arc(10, 17, 1.5, 0, Math.PI * 2); g.fill();
+      } else {
+        g.strokeStyle = '#ffd429'; g.lineWidth = 2.5; g.beginPath(); g.arc(6, 6, 3.5, 0, Math.PI * 2); g.stroke();
+        g.fillStyle = '#ffd429'; g.fillRect(8, 8, 9, 2); g.fillRect(14, 8, 2, 5); g.fillRect(11, 8, 2, 4);
+      }
     }
 
     function montarFrutasRodape() {
       var cont = document.getElementById('pacman-frutas');
       if (!cont) return;
       cont.innerHTML = '';
-      FRUTAS_RODAPE.forEach(function (cor) {
+      ORDEM_FRUTAS.forEach(function (tipo) {
         var cv = document.createElement('canvas');
         cv.className = 'pacman-fruta-icone';
-        desenharIconeFruta(cv, cor);
+        desenharIconeFruta(cv, tipo);
         cont.appendChild(cv);
       });
     }
@@ -632,7 +651,7 @@
       var lista = [];
       for (var i = 0; i < DIRS.length; i += 1) {
         var nl = l + DIRS[i].l, nc = c + DIRS[i].c;
-        if (!andaFantasma(nl, nc)) continue;
+        if (!ghostTileWalkable(nl, nc)) continue;
         var ch = charDe(nl, nc);
         if (ch === '-' || ch === ' ') continue; // porta/interior só em script
         if (DIRS[i].l === -dirAtual.l && DIRS[i].c === -dirAtual.c) continue; // sem reverter
@@ -717,7 +736,7 @@
           if (f.reverter) {
             var volta = { l: -f.dir.l, c: -f.dir.c };
             var chVolta = charDe(tt.l + volta.l, tt.c + volta.c);
-            if (andaFantasma(tt.l + volta.l, tt.c + volta.c) && chVolta !== '-' && chVolta !== ' ') {
+            if (ghostTileWalkable(tt.l + volta.l, tt.c + volta.c) && chVolta !== '-' && chVolta !== ' ') {
               f.dir = volta;
               f.alvo = proximoCentro(f.x, f.y, f.dir);
             }
@@ -726,7 +745,9 @@
           if (f.alvo) continue;
           var ops = opcoesEm(tt.l, tt.c, f.dir, f);
           if (!ops.length) {
-            f.dir = { l: -f.dir.l, c: -f.dir.c }; // beco: reverte
+            var voltaBeco = { l: -f.dir.l, c: -f.dir.c };
+            if (!ghostTileWalkable(tt.l + voltaBeco.l, tt.c + voltaBeco.c)) return;
+            f.dir = voltaBeco; // beco: reverte apenas para um corredor válido
             f.alvo = proximoCentro(f.x, f.y, f.dir);
           } else {
             var escolha;
@@ -801,6 +822,13 @@
     /* ---- desenho ---- */
     function desenhar(agora) {
       ctx.clearRect(0, 0, LARG, ALT);
+      if (marcaBarbosa && marcaBarbosa.complete && marcaBarbosa.naturalWidth > 0) {
+        var tamanhoMarca = Math.min(LARG, ALT) * 0.52;
+        ctx.save();
+        ctx.globalAlpha = 0.12;
+        ctx.drawImage(marcaBarbosa, (LARG - tamanhoMarca) / 2, (ALT - tamanhoMarca) / 2, tamanhoMarca, tamanhoMarca);
+        ctx.restore();
+      }
       // paredes com visual neon arredondado
       for (var l = 0; l < ROWS; l += 1) {
         for (var cc = 0; cc < COLS; cc += 1) {
@@ -833,7 +861,7 @@
               if (charDe(l, cc + 1) === '.' || charDe(l, cc + 1) === 'o') { ctx.moveTo(x + TILE, y); ctx.lineTo(x + TILE, y + TILE); }
               ctx.stroke();
             } else {
-              ctx.fillStyle = '#050b14';
+              ctx.fillStyle = 'rgba(5, 11, 20, 0.28)';
               ctx.fillRect(x, y, TILE, TILE);
               if (pellets.has(l + ',' + cc)) {
                 var power = powerSet.has(l + ',' + cc);

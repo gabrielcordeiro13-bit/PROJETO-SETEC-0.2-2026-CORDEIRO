@@ -93,6 +93,7 @@
   function isValidPosition(board, piece, offsetX, offsetY) {
     var dx = offsetX || 0;
     var dy = offsetY || 0;
+    var boardWidth = board[0] ? board[0].length : 0;
 
     for (var row = 0; row < piece.matrix.length; row += 1) {
       for (var col = 0; col < piece.matrix[row].length; col += 1) {
@@ -101,7 +102,7 @@
         var nextX = piece.x + col + dx;
         var nextY = piece.y + row + dy;
 
-        if (nextX < 0 || nextX >= BOARD_WIDTH || nextY >= BOARD_HEIGHT) return false;
+        if (nextX < 0 || nextX >= boardWidth || nextY >= board.length) return false;
         if (nextY >= 0 && board[nextY][nextX] !== 0) return false;
       }
     }

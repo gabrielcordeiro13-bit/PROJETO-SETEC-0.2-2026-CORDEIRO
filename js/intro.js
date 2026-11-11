@@ -14,6 +14,7 @@
   var rafId = null;
   var rodando = false;
   var tempoDesenho = 0;
+  var ultimoTimestamp = null;
 
   function reduzido() {
     var c = window.SetecCore;
@@ -50,13 +51,16 @@
     }
   }
 
-  function desenhar() {
+  function desenhar(timestamp) {
     if (!ctx || !rodando) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    var t = (tempoDesenho += 1) * 0.016;
+    var delta = ultimoTimestamp === null ? 1 / 60 : Math.min(Math.max((timestamp - ultimoTimestamp) / 1000, 0), 0.05);
+    ultimoTimestamp = timestamp;
+    tempoDesenho += delta;
+    var t = tempoDesenho;
     for (var i = 0; i < particulas.length; i += 1) {
       var p = particulas[i];
-      p.y += p.vy; // sobe de baixo para cima
+      p.y += p.vy * delta * 60; // mantém a velocidade visual em qualquer taxa de quadros
       // oscilação senoidal suave, individual por partícula (sem repetição aparente)
       var osc = Math.sin(t * p.freq + p.fase) * p.amp;
       var raio = p.r * (0.85 + 0.15 * Math.sin(t * p.pulso + p.fase));
@@ -79,6 +83,7 @@
   function iniciarCanvas() {
     if (!canvas || !ctx || rodando || reduzido()) return;
     rodando = true;
+    ultimoTimestamp = null;
     redimensionar();
     criarParticulas();
     rafId = window.requestAnimationFrame(desenhar);
@@ -86,6 +91,7 @@
 
   function pararCanvas() {
     rodando = false;
+    ultimoTimestamp = null;
     if (rafId !== null) {
       window.cancelAnimationFrame(rafId);
       rafId = null;

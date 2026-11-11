@@ -2122,6 +2122,7 @@ h1 {
   position: absolute;
   border: 3px solid var(--warning);
   box-shadow: 4px 4px 0 rgba(2, 3, 7, .6);
+  animation: intro-subir-fundo linear infinite;
 }
 
 /* variação individual: posição horizontal, tamanho, velocidade e fase do loop */

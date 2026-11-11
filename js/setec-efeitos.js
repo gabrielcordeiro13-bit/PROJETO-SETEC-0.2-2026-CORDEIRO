@@ -13,6 +13,7 @@
 
   var CAPAS = {};            // data-screen -> capa ativa
   var VISIBILIDADE_PAUSA = false;
+  var ultimoTimestampGlobal = null;
 
   function reduzido() {
     var c = window.SetecCore;
@@ -73,13 +74,13 @@
   }
 
   // Mesmo desenho da intro: halo suave + ponto central.
-  function desenhar(cap) {
+  function desenhar(cap, delta) {
     var ctx = cap.ctx;
-    var t = cap.tempo * 0.016;
+    var t = cap.tempo;
     ctx.clearRect(0, 0, cap.canvas.width, cap.canvas.height);
     for (var i = 0; i < cap.particulas.length; i += 1) {
       var p = cap.particulas[i];
-      p.y += p.vy;
+      p.y += p.vy * delta * 60;
       var osc = Math.sin(t * p.freq + p.fase) * p.amp;
       var raio = p.r * (0.85 + 0.15 * Math.sin(t * p.pulso + p.fase));
       if (p.y < -10 * cap.dpr) { p.y = cap.canvas.height + 10 * cap.dpr; p.x = Math.random() * cap.canvas.width; }
@@ -92,12 +93,14 @@
       ctx.fillStyle = 'rgba(' + p.cor + ',' + p.a + ')';
       ctx.fill();
     }
-    cap.tempo += 1;
+    cap.tempo += delta;
   }
 
   // Um único rAF global alimenta todas as capas ativas (economia de recursos).
-  function lacoGlobal() {
+  function lacoGlobal(timestamp) {
     rafGlobal = null;
+    var delta = ultimoTimestampGlobal === null ? 1 / 60 : Math.min(Math.max((timestamp - ultimoTimestampGlobal) / 1000, 0), 0.05);
+    ultimoTimestampGlobal = timestamp;
     var algumaVisivel = false;
     Object.keys(CAPAS).forEach(function (key) {
       var cap = CAPAS[key];
@@ -107,7 +110,7 @@
         return;
       }
       algumaVisivel = true;
-      desenhar(cap);
+      desenhar(cap, delta);
     });
     if (algumaVisivel) rafGlobal = window.requestAnimationFrame(lacoGlobal);
   }
@@ -170,6 +173,7 @@
       // capa fixa não é mais necessária: remove do DOM (era o motivo de “sobras”)
       if (cap.raiz.parentNode) cap.raiz.parentNode.removeChild(cap.raiz);
       delete CAPAS[key];
+      if (Object.keys(CAPAS).length === 0) ultimoTimestampGlobal = null;
     }
   }
 

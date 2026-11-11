@@ -280,6 +280,26 @@ test('o labirinto clássico tem casa dos fantasmas, túneis e quatro energizador
   assert.equal(power, 4);
 });
 
+test('fantasmas só podem atravessar corredores e usar o túnel na linha reservada', () => {
+  const maze = loadPacmanData();
+
+  assert.equal(maze.isGhostWalkable(1, 1), true);
+  assert.equal(maze.isGhostWalkable(0, 1), false);
+  assert.equal(maze.isGhostWalkable(13, 13), false);
+  assert.equal(maze.isGhostWalkable(maze.tunnelRow, -1), true);
+  assert.equal(maze.isGhostWalkable(maze.tunnelRow, maze.columns), true);
+  assert.equal(maze.isGhostWalkable(5, -1), false);
+  assert.equal(maze.isGhostWalkable(5, maze.columns), false);
+});
+
+test('a fileira de itens segue a ordem clássica do Pac-Man', () => {
+  const maze = loadPacmanData();
+
+  assert.deepEqual(Array.from(maze.fruitOrder), [
+    'cereja', 'morango', 'laranja', 'maca', 'melao', 'galaxian', 'sino', 'chave'
+  ]);
+});
+
 test('todos os pontos, inclusive os quatro Power Pellets, são alcançáveis pelo jogador', () => {
   const maze = loadPacmanData();
   const reachable = reachablePellets(maze);
