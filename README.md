@@ -4,7 +4,7 @@ Projeto educacional do 2º ano de Desenvolvimento de Sistemas (Colégio Estadual
 
 ## O que é
 Portal de jogos em **HTML, CSS e JavaScript puro** (sem frameworks, sem backend, sem build):
-- **Block Wood Puzzle** — blocos com queda automática em tabuleiro 10×20, rotação e controles por teclado/toque
+- **Block Wood Puzzle** — blocos em tabuleiro 10×20, com descida manual pelo teclado (segure ↓ para acelerar), rotação e controles por teclado/toque
 - **Pac-Man do laboratório** — labirinto original em Canvas com túneis laterais, oito pontos de energia, quatro fantasmas, animação de morte e fases
 - **Jogo da Forca** — palavras de tecnologia/educação com dicas, teclado físico e virtual
 

@@ -13,7 +13,6 @@
   var particulas = [];
   var rafId = null;
   var rodando = false;
-  var tempoDesenho = 0;
   var ultimoTimestamp = null;
 
   function reduzido() {
@@ -39,13 +38,7 @@
         y: Math.random() * canvas.height,
         r: (Math.random() * 2.4 + 0.9) * dpr,
         vy: -(Math.random() * 0.55 + 0.15) * dpr,
-        vx: (Math.random() - 0.5) * 0.14 * dpr,
         a: Math.random() * 0.5 + 0.25,
-        // variações para um movimento contínuo e natural (oscilação senoidal individual)
-        fase: Math.random() * Math.PI * 2,
-        freq: Math.random() * 0.9 + 0.3,
-        amp: (Math.random() * 0.35 + 0.1) * dpr,
-        pulso: Math.random() * 0.9 + 0.4,
         cor: Math.random() < 0.6 ? '103, 208, 255' : (Math.random() < 0.5 ? '143, 238, 197' : '255, 209, 102')
       });
     }
@@ -56,25 +49,20 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     var delta = ultimoTimestamp === null ? 1 / 60 : Math.min(Math.max((timestamp - ultimoTimestamp) / 1000, 0), 0.05);
     ultimoTimestamp = timestamp;
-    tempoDesenho += delta;
-    var t = tempoDesenho;
     for (var i = 0; i < particulas.length; i += 1) {
       var p = particulas[i];
-      p.y += p.vy * delta * 60; // mantém a velocidade visual em qualquer taxa de quadros
-      // oscilação senoidal suave, individual por partícula (sem repetição aparente)
-      var osc = Math.sin(t * p.freq + p.fase) * p.amp;
-      var raio = p.r * (0.85 + 0.15 * Math.sin(t * p.pulso + p.fase));
+      p.y += p.vy * delta * 60;
       if (p.y < -10 * dpr) { p.y = canvas.height + 10 * dpr; p.x = Math.random() * canvas.width; }
-      if (p.x < -12 * dpr) p.x = canvas.width + 12 * dpr;
-      if (p.x > canvas.width + 12 * dpr) p.x = -12 * dpr;
-      // brilho suave tipo neon
+      var fadeRange = 36 * dpr;
+      var edgeOpacity = Math.max(0, Math.min(1, p.y / fadeRange, (canvas.height - p.y) / fadeRange));
+      var alpha = p.a * edgeOpacity;
       ctx.beginPath();
-      ctx.arc(p.x + osc, p.y, raio * 2.4, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(' + p.cor + ',' + (p.a * 0.12).toFixed(3) + ')';
+      ctx.arc(p.x, p.y, p.r * 2.4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + p.cor + ',' + (alpha * 0.12).toFixed(3) + ')';
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(p.x + osc, p.y, raio, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(' + p.cor + ',' + p.a + ')';
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + p.cor + ',' + alpha.toFixed(3) + ')';
       ctx.fill();
     }
     rafId = window.requestAnimationFrame(desenhar);

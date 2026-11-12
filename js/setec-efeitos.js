@@ -2,7 +2,7 @@
 // Usa EXATAMENTE o mesmo visual/comportamento da tela de entrada (js/intro.js):
 //  - partículas em <canvas> subindo de baixo para cima, com glow neon,
 //    oscilação senoidal individual e pulso de brilho (mesmos parâmetros);
-//  - fantasmas, pastilhas e peças em DOM com a animação CSS "intro-subir-fundo".
+//  - fantasmas, pastilhas e peças em DOM com a animação CSS "ambient-rise".
 // Camada ÚNICA fixa (position: fixed) compartilhada por todas as páginas:
 // cobre a viewport inteira em qualquer rolagem/tela — nunca fica presa dentro
 // de tabuleiros, cards ou containers. Pausa quando a aba fica oculta e quando
@@ -63,10 +63,6 @@
         y: Math.random() * cap.canvas.height,
         r: (Math.random() * 2.4 + 0.9) * cap.dpr,
         vy: -(Math.random() * 0.55 + 0.15) * cap.dpr,
-        fase: Math.random() * Math.PI * 2,
-        freq: Math.random() * 0.9 + 0.3,
-        amp: (Math.random() * 0.35 + 0.1) * cap.dpr,
-        pulso: Math.random() * 0.9 + 0.4,
         a: Math.random() * 0.5 + 0.25,
         cor: Math.random() < 0.6 ? '103, 208, 255' : (Math.random() < 0.5 ? '143, 238, 197' : '255, 209, 102')
       });
@@ -76,24 +72,23 @@
   // Mesmo desenho da intro: halo suave + ponto central.
   function desenhar(cap, delta) {
     var ctx = cap.ctx;
-    var t = cap.tempo;
     ctx.clearRect(0, 0, cap.canvas.width, cap.canvas.height);
     for (var i = 0; i < cap.particulas.length; i += 1) {
       var p = cap.particulas[i];
       p.y += p.vy * delta * 60;
-      var osc = Math.sin(t * p.freq + p.fase) * p.amp;
-      var raio = p.r * (0.85 + 0.15 * Math.sin(t * p.pulso + p.fase));
       if (p.y < -10 * cap.dpr) { p.y = cap.canvas.height + 10 * cap.dpr; p.x = Math.random() * cap.canvas.width; }
+      var fadeRange = 36 * cap.dpr;
+      var edgeOpacity = Math.max(0, Math.min(1, p.y / fadeRange, (cap.canvas.height - p.y) / fadeRange));
+      var alpha = p.a * edgeOpacity;
       ctx.beginPath();
-      ctx.arc(p.x + osc, p.y, raio * 2.4, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(' + p.cor + ',' + (p.a * 0.12).toFixed(3) + ')';
+      ctx.arc(p.x, p.y, p.r * 2.4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + p.cor + ',' + (alpha * 0.12).toFixed(3) + ')';
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(p.x + osc, p.y, raio, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(' + p.cor + ',' + p.a + ')';
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + p.cor + ',' + alpha.toFixed(3) + ')';
       ctx.fill();
     }
-    cap.tempo += delta;
   }
 
   // Um único rAF global alimenta todas as capas ativas (economia de recursos).
@@ -146,7 +141,6 @@
     var cap = {
       raiz: raiz,
       ativa: true,
-      tempo: 0,
       dpr: 1,
       particulas: [],
       personagens: [],

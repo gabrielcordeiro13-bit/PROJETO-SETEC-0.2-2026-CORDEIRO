@@ -8,10 +8,8 @@
   var BOARD_HEIGHT = 20;
   var HORIZONTAL_REPEAT_DELAY_MS = 240;
   var HORIZONTAL_REPEAT_INTERVAL_MS = 130;
-  /* Descida automática: intervalo por nível (ms) — nível 1 é lento, para
-   * pensar; diminui conforme o jogador sobe de nível. */
-  var GRAVIDADE_BASE_MS = 900;
-  var GRAVIDADE_MIN_MS = 140;
+  var DOWN_REPEAT_DELAY_MS = 180;
+  var DOWN_REPEAT_INTERVAL_MS = 70;
   var LINE_SCORES = [0, 100, 300, 500, 800];
 
   var SHAPES = {
@@ -194,7 +192,7 @@
       '<h3>Como jogar</h3>' +
       '<ol>' +
       '<li><strong>Objetivo:</strong> organize as peças e complete linhas para ganhar pontos.</li>' +
-      '<li><strong>Controles:</strong> as peças descem sozinhas em ritmo lento. Use as setas ou os botões de toque para posicionar cada peça enquanto ela desce; <kbd>↓</kbd> acelera a descida e fixa a peça ao encontrar um obstáculo. Use <kbd>↑</kbd> ou <kbd>X</kbd> para girar, <kbd>Z</kbd> para girar no sentido contrário e <kbd>Espaço</kbd> para queda imediata.</li>' +
+      '<li><strong>Controles:</strong> as peças não descem sozinhas. Pressione <kbd>↓</kbd> no teclado para descer uma linha ou segure para descer mais rápido; use <kbd>Espaço</kbd> para queda imediata; a descida é controlada apenas pelo teclado. Use <kbd>←</kbd>/<kbd>→</kbd> ou os botões de toque para mover, <kbd>↑</kbd>/<kbd>X</kbd> ou o botão Girar para girar, e <kbd>Z</kbd> para girar no sentido contrário.</li>' +
       '<li><strong>Extras:</strong> <kbd>P</kbd> pausa, <kbd>R</kbd> reinicia e o jogo termina quando não houver espaço para a próxima peça.</li>' +
       '</ol>' +
       '<button type="button" class="primary-button" id="block-start">Começar a jogar</button>' +
@@ -256,7 +254,7 @@
     var panelInfo = el('div', 'tetris-panel');
     var infoTitle = el('p', 'tetris-panel-label', 'Controles');
     var controls = el('ul', 'tetris-controls');
-    controls.innerHTML = '<li>← / →: mover</li><li>A peça desce sozinha em ritmo lento</li><li>↓: acelerar a descida</li><li>↑ / X: girar</li><li>Z: girar para trás</li><li>Espaço: queda imediata</li><li>P: pausar</li><li>R: reiniciar</li>';
+    controls.innerHTML = '<li>← / →: mover</li><li>↓: descer; segure para acelerar</li><li>↑ / X: girar</li><li>Z: girar para trás</li><li>Espaço (teclado): queda imediata</li><li>P: pausar</li><li>R: reiniciar</li>';
     panelInfo.appendChild(infoTitle);
     panelInfo.appendChild(controls);
 
@@ -265,9 +263,7 @@
     var touchActions = [
       { key: 'ArrowUp', label: 'Girar peça', text: 'Girar', cls: 'rotate' },
       { key: 'ArrowLeft', label: 'Mover para a esquerda', text: '←', cls: 'left' },
-      { key: 'ArrowDown', label: 'Descer peça', text: '↓', cls: 'down' },
-      { key: 'ArrowRight', label: 'Mover para a direita', text: '→', cls: 'right' },
-      { key: ' ', label: 'Queda rápida', text: 'Queda rápida', cls: 'drop' }
+      { key: 'ArrowRight', label: 'Mover para a direita', text: '→', cls: 'right' }
     ];
     var touchButtons = touchActions.map(function (action) {
       var button = el('button', 'block-touch-button ' + action.cls, action.text);
@@ -312,61 +308,15 @@
       gameOver: false,
       best: c ? c.getBest('block-wood') : 0,
       boardCells: boardCells,
+      dynamicCells: [],
+      boardDirty: true,
       nextPreview: nextPreview,
       statusBox: statusBox,
       pauseBtn: pauseBtn,
       resetBtn: resetBtn,
       boardEl: boardEl,
       nextCells: [],
-      gravidadeFrame: null,
-      gravityTimestamp: null,
-      fallProgress: 0,
-      softDropHeld: false
     };
-
-    /* ---- descida automática (gravidade) ----
-     * Um único temporizador para todo o jogo: a peça desce sozinha em ritmo
-     * baixo e constante; ao bater em obstáculo/fim do tabuleiro, fixa e uma
-     * nova peça surge. Comandos de teclado não afetam a gravidade. */
-    function intervaloGravidade() {
-      return Math.max(GRAVIDADE_MIN_MS, GRAVIDADE_BASE_MS - (state.level - 1) * 70);
-    }
-    function pararGravidade() {
-      if (state.gravidadeFrame !== null) {
-        window.cancelAnimationFrame(state.gravidadeFrame);
-        state.gravidadeFrame = null;
-      }
-      state.gravityTimestamp = null;
-    }
-    function atualizarGravidade(timestamp) {
-      state.gravidadeFrame = null;
-      if (!state.started || state.paused || state.gameOver ||
-          !stage.closest('.screen.active')) return;
-
-      if (state.gravityTimestamp === null) state.gravityTimestamp = timestamp;
-      var delta = Math.min((timestamp - state.gravityTimestamp) / 1000, 0.05);
-      state.gravityTimestamp = timestamp;
-      var aceleracao = state.softDropHeld ? 10 : 1;
-      state.fallProgress += delta * (1000 / intervaloGravidade()) * aceleracao;
-
-      while (state.fallProgress >= 1 && state.currentPiece) {
-        state.fallProgress -= 1;
-        if (!movePieceAuto(0, 1, true)) {
-          state.fallProgress = 0;
-          break;
-        }
-      }
-
-      renderBoard();
-      if (state.started && !state.paused && !state.gameOver && stage.closest('.screen.active')) {
-        state.gravidadeFrame = window.requestAnimationFrame(atualizarGravidade);
-      }
-    }
-    function reiniciarGravidade() {
-      pararGravidade();
-      if (!state.started || state.paused || state.gameOver) return;
-      state.gravidadeFrame = window.requestAnimationFrame(atualizarGravidade);
-    }
 
     function updateHud() {
       var scoreEl = document.getElementById('block-score');
@@ -408,18 +358,8 @@
         }
       }
     }
-    function fallTransform(progress) {
-      return 'translateY(calc(' + (progress * 100) + '% + ' + (progress * 3) + 'px))';
-    }
-    function renderBoard() {
-      for (var i = 0; i < state.boardCells.length; i += 1) {
-        var cell = state.boardCells[i];
-        cell.classList.remove('filled', 'ghost', 'active');
-        cell.style.background = '';
-        cell.style.boxShadow = '';
-        cell.style.transform = '';
-      }
-
+    function renderSettledBoard() {
+      if (!state.boardDirty) return;
       for (var row = 0; row < BOARD_HEIGHT; row += 1) {
         for (var col = 0; col < BOARD_WIDTH; col += 1) {
           var index = row * BOARD_WIDTH + col;
@@ -428,9 +368,27 @@
           if (value !== 0) {
             cell.classList.add('filled');
             cell.style.background = value;
+          } else {
+            cell.classList.remove('filled');
+            cell.style.background = '';
           }
         }
       }
+      state.boardDirty = false;
+    }
+    function clearDynamicCells() {
+      for (var i = 0; i < state.dynamicCells.length; i += 1) {
+        var cell = state.dynamicCells[i];
+        cell.classList.remove('ghost', 'active');
+        cell.style.background = '';
+        cell.style.boxShadow = '';
+        cell.style.transform = '';
+      }
+      state.dynamicCells = [];
+    }
+    function renderBoard() {
+      clearDynamicCells();
+      renderSettledBoard();
 
       if (state.currentPiece && !state.gameOver) {
         var ghost = buildGhostPiece(state.board, state.currentPiece);
@@ -453,7 +411,7 @@
         for (var pieceRow = 0; pieceRow < state.currentPiece.matrix.length; pieceRow += 1) {
           for (var pieceCol = 0; pieceCol < state.currentPiece.matrix[pieceRow].length; pieceCol += 1) {
             if (!state.currentPiece.matrix[pieceRow][pieceCol]) continue;
-            var currentY = state.currentPiece.y + pieceRow + state.fallProgress;
+            var currentY = state.currentPiece.y + pieceRow;
             var currentX = state.currentPiece.x + pieceCol;
             var currentDisplayRow = Math.floor(currentY);
             if (currentDisplayRow >= 0 && currentDisplayRow < BOARD_HEIGHT && currentX >= 0 && currentX < BOARD_WIDTH) {
@@ -470,14 +428,16 @@
               ghostCell.classList.add('ghost');
               ghostCell.style.background = 'rgba(91, 209, 255, 0.28)';
               ghostCell.style.boxShadow = 'inset 0 0 0 1px rgba(91, 209, 255, 0.65)';
-              ghostCell.style.transform = fallTransform(ghostMap[ghostKey]);
+              ghostCell.style.transform = '';
+              state.dynamicCells.push(ghostCell);
             }
             if (Object.prototype.hasOwnProperty.call(currentMap, ghostKey) && state.board[ghostRow2][ghostCol2] === 0) {
               var activeCell = state.boardCells[ghostRow2 * BOARD_WIDTH + ghostCol2];
               activeCell.classList.add('active');
               activeCell.style.background = state.currentPiece.color;
               activeCell.style.boxShadow = 'inset 0 0 0 2px rgba(255,255,255,0.18), 0 10px 18px rgba(6, 15, 25, 0.28)';
-              activeCell.style.transform = fallTransform(currentMap[ghostKey]);
+              activeCell.style.transform = '';
+              state.dynamicCells.push(activeCell);
             }
           }
         }
@@ -488,7 +448,6 @@
       var matrix = SHAPES[nextType].matrix;
       state.currentPiece = createPiece(nextType, Math.floor((BOARD_WIDTH - matrix[0].length) / 2), 0);
       state.nextPiece = createPiece(pullNextType(), 0, 0);
-      state.fallProgress = 0;
 
       if (!isValidPosition(state.board, state.currentPiece, 0, 0)) {
         endGame();
@@ -501,6 +460,7 @@
       if (!state.currentPiece) return;
       mergePiece(state.board, state.currentPiece);
       var result = clearCompleteLines(state.board);
+      state.boardDirty = true;
       var cleared = result.cleared;
       if (cleared > 0) {
         state.lines += cleared;
@@ -515,7 +475,6 @@
       }
       state.level = 1 + Math.floor(state.lines / 10);
       state.currentPiece = null;
-      state.fallProgress = 0;
       spawnPiece();
       updateHud();
       renderBoard();
@@ -526,16 +485,12 @@
       }
     }
     function movePiece(dx, dy) {
-      return movePieceAuto(dx, dy, false);
-    }
-    function movePieceAuto(dx, dy, daGravidade) {
       if (!state.currentPiece || state.gameOver || state.paused || !state.started) return false;
       var validMove = isValidPosition(state.board, state.currentPiece, dx, dy);
       if (validMove) {
         state.currentPiece.x += dx;
         state.currentPiece.y += dy;
-        if (dy > 0 && !daGravidade) state.fallProgress = 0;
-        if (dy > 0 && dx === 0 && !daGravidade) {
+        if (dy > 0 && dx === 0) {
           state.score += 1;
           updateHud();
         }
@@ -570,6 +525,7 @@
     }
     function hardDrop() {
       if (!state.currentPiece || state.gameOver || state.paused || !state.started) return;
+      clearDownRepeat();
       var rows = 0;
       while (isValidPosition(state.board, state.currentPiece, 0, 1)) {
         state.currentPiece.y += 1;
@@ -579,14 +535,13 @@
         state.score += rows * 2;
         updateHud();
       }
-      state.fallProgress = 0;
       lockCurrentPiece();
       setStatus('Queda rápida! ' + rows + ' linhas alcançadas.');
       announce('Queda rápida ativada.');
     }
     function endGame() {
       clearHorizontalRepeat();
-      pararGravidade();
+      clearDownRepeat();
       state.gameOver = true;
       state.started = false;
       var previousBest = c ? c.getBest('block-wood') : state.best;
@@ -614,7 +569,9 @@
     }
     function resetGame() {
       clearHorizontalRepeat();
+      clearDownRepeat();
       state.board = createEmptyBoard(BOARD_WIDTH, BOARD_HEIGHT);
+      state.boardDirty = true;
       state.score = 0;
       state.lines = 0;
       state.level = 1;
@@ -622,12 +579,9 @@
       state.gameOver = false;
       state.started = true;
       state.currentPiece = null;
-      state.fallProgress = 0;
-      state.softDropHeld = false;
       state.nextPiece = createPiece(pullNextType(), 0, 0);
       state.pauseBtn.textContent = 'Pausar';
       spawnPiece();
-      reiniciarGravidade();
       updateHud();
       setStatus('Jogo iniciado. Posicione cada peça com as setas ou os botões de toque.');
       announce('Novo jogo do Block Wood Puzzle iniciado.');
@@ -636,14 +590,12 @@
     function togglePause() {
       if (state.gameOver) return;
       clearHorizontalRepeat();
-      state.softDropHeld = false;
+      clearDownRepeat();
       state.paused = !state.paused;
       state.pauseBtn.textContent = state.paused ? 'Continuar' : 'Pausar';
       if (state.paused) {
-        pararGravidade();
         setStatus('Jogo pausado. Pressione P para continuar.');
       } else {
-        reiniciarGravidade();
         setStatus('Jogo retomado. Continue posicionando as peças.');
       }
       renderBoard();
@@ -655,6 +607,13 @@
       }
       heldHorizontalKey = null;
     }
+    function clearDownRepeat() {
+      if (downRepeatTimer !== null) {
+        window.clearTimeout(downRepeatTimer);
+        downRepeatTimer = null;
+      }
+      heldDownKey = false;
+    }
     function repeatHorizontal() {
       horizontalRepeatTimer = null;
       if (!heldHorizontalKey || !stage.closest('.screen.active') ||
@@ -665,8 +624,20 @@
       handleKey(heldHorizontalKey);
       horizontalRepeatTimer = window.setTimeout(repeatHorizontal, HORIZONTAL_REPEAT_INTERVAL_MS);
     }
+    function repeatDown() {
+      downRepeatTimer = null;
+      if (!heldDownKey || !stage.closest('.screen.active') ||
+          !state.started || state.paused || state.gameOver) {
+        clearDownRepeat();
+        return;
+      }
+      handleKey('ArrowDown');
+      downRepeatTimer = window.setTimeout(repeatDown, DOWN_REPEAT_INTERVAL_MS);
+    }
     var heldHorizontalKey = null;
     var horizontalRepeatTimer = null;
+    var heldDownKey = false;
+    var downRepeatTimer = null;
     function onKeyDown(event) {
       if (!stage.closest('.screen.active')) return;
       var key = event.key;
@@ -683,9 +654,12 @@
         horizontalRepeatTimer = window.setTimeout(repeatHorizontal, HORIZONTAL_REPEAT_DELAY_MS);
         return;
       }
-      if (key === 'ArrowDown' && !event.repeat) {
-        state.softDropHeld = true;
+      if (key === 'ArrowDown') {
+        if (event.repeat) return;
+        clearDownRepeat();
         handleKey(key);
+        heldDownKey = true;
+        downRepeatTimer = window.setTimeout(repeatDown, DOWN_REPEAT_DELAY_MS);
         return;
       }
       if (event.repeat) return;
@@ -693,11 +667,11 @@
     }
     function onKeyUp(event) {
       if (event.key === heldHorizontalKey) clearHorizontalRepeat();
-      if (event.key === 'ArrowDown') state.softDropHeld = false;
+      if (event.key === 'ArrowDown') clearDownRepeat();
     }
     function onWindowBlur() {
       clearHorizontalRepeat();
-      state.softDropHeld = false;
+      clearDownRepeat();
     }
     function handleKey(key) {
       if (key === 'p' || key === 'P') {
@@ -725,8 +699,8 @@
 
     function cleanup() {
       clearHorizontalRepeat();
-      state.softDropHeld = false;
-      pararGravidade();
+      clearDownRepeat();
+      reg['block-wood'].ativo = false;
       state.started = false;
       state.paused = false;
       state.gameOver = true;
@@ -746,8 +720,7 @@
     function handleStart() {
       intro.classList.add('concluida');
       state.started = true;
-      reiniciarGravidade();
-      setStatus('Jogo iniciado. As peças descem sozinhas; posicione-as com as setas ou os botões de toque.');
+      setStatus('Jogo iniciado. Use ↓ no teclado para descer as peças.');
       announce('Jogo iniciado.');
       state.boardEl.focus();
     }
@@ -775,8 +748,6 @@
     updateHud();
     renderBoard();
     setStatus('Pressione "Começar a jogar" para iniciar a partida.');
-    /* segurança: nenhuma animação órfã fora da partida */
-    pararGravidade();
   }
 
   window.BlockWoodTetris = {

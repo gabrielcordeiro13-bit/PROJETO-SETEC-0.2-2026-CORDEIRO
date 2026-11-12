@@ -184,12 +184,7 @@ function createBlockWoodRuntime() {
     elements,
     init() { window.initBlockWoodGame(); },
     pendingAnimationFrames() { return animationFrames.size; },
-    frame(timestamp) {
-      const next = animationFrames.entries().next().value;
-      assert.ok(next, 'o laço de gravidade deveria estar ativo');
-      animationFrames.delete(next[0]);
-      next[1](timestamp);
-    },
+    pendingTimers() { return timers.size; },
     key(type, key, repeat = false) {
       document.dispatch(type, { key, repeat, preventDefault() {} });
     },
@@ -210,6 +205,14 @@ function createBlockWoodRuntime() {
         column: Math.min(...positions.map((index) => index % 10))
       };
     },
+    activePositions() {
+      return elements.get('block-board').children
+        .map((cell, index) => cell.classList.contains('active') ? {
+          row: Math.floor(index / 10),
+          column: index % 10
+        } : null)
+        .filter(Boolean);
+    },
     ghostPositions() {
       const board = elements.get('block-board');
       return board.children
@@ -219,11 +222,6 @@ function createBlockWoodRuntime() {
           transform: cell.style.transform
         } : null)
         .filter(Boolean);
-    },
-    activeTransforms() {
-      return elements.get('block-board').children
-        .filter((cell) => cell.classList.contains('active'))
-        .map((cell) => cell.style.transform);
     },
     filledPositions() {
       const board = elements.get('block-board');
@@ -314,7 +312,7 @@ test('cada seta desloca uma célula e a repetição ao segurar é controlada', (
 
   const ghostBeforeMove = game.ghostPositions();
   assert.ok(ghostBeforeMove.length, 'a sombra deveria estar visível');
-  assert.ok(ghostBeforeMove.every((cell) => cell.transform === 'translateY(calc(0% + 0px))'));
+  assert.ok(ghostBeforeMove.every((cell) => cell.transform === ''), 'a sombra deve ficar alinhada à grade');
 
   const start = game.minActivePosition();
   game.key('keydown', 'ArrowRight');
@@ -336,43 +334,65 @@ test('cada seta desloca uma célula e a repetição ao segurar é controlada', (
   game.key('keydown', 'ArrowUp');
   const ghostAfterRotation = game.ghostPositions();
   assert.ok(ghostAfterRotation.length, 'a sombra deveria continuar visível após a rotação');
-  assert.ok(ghostAfterRotation.every((cell) => cell.transform === 'translateY(calc(0% + 0px))'));
+  assert.ok(ghostAfterRotation.every((cell) => cell.transform === ''), 'a sombra deve continuar alinhada à grade');
 
   const afterKeyboard = game.minActivePosition();
   game.stage.querySelector('.block-touch-controls').querySelector('.right').dispatch('click');
   assert.equal(game.minActivePosition().column, afterKeyboard.column + 1);
 });
 
-test('a peça desce suavemente sozinha e acelera enquanto a seta para baixo está pressionada', () => {
+test('segurar ↓ acelera a descida e soltar interrompe a repetição', () => {
   const game = createBlockWoodRuntime();
   game.init();
-  game.elements.get('block-start').dispatch('click');
-  assert.equal(game.pendingAnimationFrames(), 1, 'a gravidade deve agendar animação contínua');
-  game.frame(0);
+  const instructions = game.stage.children[0].children[1].innerHTML;
+  assert.match(instructions, /as peças não descem sozinhas/);
+  assert.match(instructions, /a descida é controlada apenas pelo teclado/);
+
   const start = game.minActivePosition();
-  for (let timestamp = 25; timestamp <= 450; timestamp += 25) game.frame(timestamp);
-  assert.equal(game.minActivePosition().row, start.row);
-  assert.ok(game.activeTransforms().some((transform) => transform.indexOf('calc(0%') < 0),
-    'a peça deve aparecer entre duas linhas durante a queda');
-  for (let timestamp = 475; timestamp <= 900; timestamp += 25) game.frame(timestamp);
-  assert.equal(game.minActivePosition().row, start.row + 1);
+  assert.equal(game.pendingAnimationFrames(), 0, 'o jogo não deve iniciar uma descida automática');
+  game.elements.get('block-start').dispatch('click');
+  assert.equal(game.pendingAnimationFrames(), 0, 'iniciar a partida não deve agendar descida automática');
+  assert.deepEqual(game.minActivePosition(), start);
+
+  const downButton = game.stage.querySelector('.block-touch-controls').querySelector('.down');
+  const dropButton = game.stage.querySelector('.block-touch-controls').querySelector('.drop');
+  assert.equal(downButton, null, 'não deve haver botão tátil de descida');
+  assert.equal(dropButton, null, 'não deve haver botão tátil de queda imediata');
+
+  const rowBeforeTouch = game.minActivePosition().row;
+  game.stage.querySelector('.block-touch-controls').querySelector('.right').dispatch('click');
+  assert.equal(game.minActivePosition().row, rowBeforeTouch, 'o controle tátil de movimento não deve descer a peça');
+
+  const rowBeforeKeyboard = game.minActivePosition().row;
   game.key('keydown', 'ArrowDown');
-  const acceleratedRow = game.minActivePosition().row;
-  for (let timestamp = 925; timestamp <= 1000; timestamp += 25) game.frame(timestamp);
-  assert.ok(game.minActivePosition().row > acceleratedRow,
-    'a seta para baixo deve acelerar a queda mantida');
+  assert.equal(game.minActivePosition().row, rowBeforeKeyboard + 1, '↓ deve descer exatamente uma linha');
+  game.key('keydown', 'ArrowDown', true);
+  assert.equal(game.minActivePosition().row, rowBeforeKeyboard + 1, 'repetições do evento não devem mover mais de uma linha');
+  game.runTimer(180);
+  assert.equal(game.minActivePosition().row, rowBeforeKeyboard + 2, 'segurar ↓ deve continuar descendo após o atraso inicial');
+  game.runTimer(70);
+  assert.equal(game.minActivePosition().row, rowBeforeKeyboard + 3, 'a repetição deve acelerar a descida');
   game.key('keyup', 'ArrowDown');
+  assert.equal(game.pendingTimers(), 0, 'soltar ↓ deve cancelar a repetição');
 
   game.elements.get('block-pause').dispatch('click');
   const pausedRow = game.minActivePosition().row;
   game.key('keydown', 'ArrowDown');
   assert.equal(game.minActivePosition().row, pausedRow, 'a peça não deve se mover durante a pausa');
   game.elements.get('block-pause').dispatch('click');
+});
 
-  game.key('keyup', 'ArrowDown');
-  const rowBeforeTouch = game.minActivePosition().row;
-  game.stage.querySelector('.block-touch-controls').querySelector('.down').dispatch('click');
-  assert.equal(game.minActivePosition().row, rowBeforeTouch + 1);
+test('o quadro Como jogar reaparece ao abrir o jogo novamente', () => {
+  const game = createBlockWoodRuntime();
+  game.init();
+  game.elements.get('block-start').dispatch('click');
+  assert.equal(game.stage.querySelector('.game-intro').classList.contains('concluida'), true);
+
+  game.window.__gameRuntimeRegistry['block-wood'].cleanup();
+  game.init();
+
+  assert.equal(game.stage.querySelector('.game-intro').classList.contains('concluida'), false);
+  assert.ok(game.stage.querySelector('.game-intro').querySelector('#block-start'));
 });
 
 test('a peça fixa ao receber comando de descida bloqueado e fica dentro do tabuleiro', () => {
@@ -396,7 +416,7 @@ test('a peça fixa ao receber comando de descida bloqueado e fica dentro do tabu
   assert.ok(fixedCells.length > 0, 'a peça deveria fixar ao encontrar o limite inferior');
   assert.ok(fixedCells.every((cell) => cell.row >= 0 && cell.row < 20 && cell.column >= 0 && cell.column < 10));
   assert.equal(game.minActivePosition().row, 0, 'a próxima peça deve surgir no topo após o travamento');
-  assert.equal(game.pendingAnimationFrames(), 1);
+  assert.equal(game.pendingAnimationFrames(), 0, 'fixar uma peça não deve iniciar descida automática');
 
   game.elements.get('block-reset').dispatch('click');
   assert.equal(game.minActivePosition().row, 0);

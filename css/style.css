@@ -2104,47 +2104,127 @@ h1 {
   pointer-events: none;
 }
 
-/* silhuetas decorativas dos jogos — sobem de baixo para cima e desaparecem no topo (loop contínuo) */
-.intro-ghost {
+/* Partículas, formas e logos usam a mesma subida vertical, sem disputa de transform. */
+.intro-ghost,
+.intro-pill,
+.intro-peca,
+.intro-logo-mini {
   position: absolute;
+  display: block;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: ambient-rise var(--rise-duration, 10s) linear infinite;
+  animation-delay: var(--rise-delay, 0s);
+}
+
+.intro-ghost {
   clip-path: polygon(0 100%, 0 40%, 8% 16%, 25% 0, 75% 0, 92% 16%, 100% 40%, 100% 100%, 83% 84%, 66% 100%, 50% 84%, 33% 100%, 16% 84%);
-  animation: intro-subir-fundo linear infinite;
 }
 
 .intro-pill {
-  position: absolute;
   background: var(--primary);
   clip-path: polygon(0 0, 100% 35%, 50% 50%, 100% 65%, 0 100%);
-  animation: intro-subir-fundo linear infinite;
 }
 
 .intro-peca {
-  position: absolute;
   border: 3px solid var(--warning);
   box-shadow: 4px 4px 0 rgba(2, 3, 7, .6);
-  animation: intro-subir-fundo linear infinite;
 }
 
-/* variação individual: posição horizontal, tamanho, velocidade e fase do loop */
-.intro-ghost { width: 54px; height: 52px; background: var(--accent); opacity: .4; bottom: -8%; left: 10%; animation-duration: 16s; }
-.intro-ghost.g2 { right: 12%; width: 40px; height: 38px; background: #ff80b6; animation-delay: -5.5s; animation-duration: 19s; }
-.intro-ghost.g3 { right: 22%; width: 32px; height: 30px; background: var(--warning); animation-delay: -11s; animation-duration: 14s; }
+/* variações individuais preservam as posições e o visual existentes. */
+.intro-ghost {
+  width: 54px;
+  height: 52px;
+  --rise-distance: 42px;
+  --rise-duration: 10s;
+  --rise-delay: 0s;
+  --rise-opacity: 0.42;
+  background: var(--accent);
+  opacity: 0;
+  bottom: -8%;
+  left: 10%;
+}
 
-.intro-pill { width: 14px; height: 14px; opacity: .55; }
-.intro-pill.p1 { left: 20%; bottom: -6%; animation-duration: 13s; }
-.intro-pill.p2 { right: 30%; bottom: -10%; background: var(--warning); animation-delay: -7s; animation-duration: 16.5s; }
+.intro-ghost.g2 {
+  right: 12%;
+  width: 40px;
+  height: 38px;
+  --rise-distance: 48px;
+  --rise-duration: 12s;
+  --rise-delay: -5.5s;
+  --rise-opacity: 0.45;
+  background: #ff80b6;
+}
 
-.intro-peca { width: 38px; height: 38px; opacity: .4; }
-.intro-peca.q1 { left: 14%; bottom: -9%; transform: rotate(12deg); animation-duration: 21s; }
-.intro-peca.q2 { right: 16%; bottom: -7%; border-color: var(--primary); animation-delay: -3.2s; animation-duration: 17.5s; }
+.intro-ghost.g3 {
+  right: 22%;
+  width: 32px;
+  height: 30px;
+  --rise-distance: 36px;
+  --rise-duration: 8s;
+  --rise-delay: -11s;
+  --rise-opacity: 0.38;
+  background: var(--warning);
+}
 
-@keyframes intro-subir-fundo {
-  0%   { translate: 0 0; opacity: 0; }
-  8%   { opacity: 1; }
-  25%  { translate: 14px -26vh; }
-  50%  { translate: -10px -52vh; }
-  75%  { translate: 12px -76vh; opacity: 1; }
-  100% { translate: 0 -112vh; opacity: 0; }
+.intro-pill {
+  width: 14px;
+  height: 14px;
+  --rise-distance: 38px;
+  --rise-duration: 9s;
+  --rise-opacity: 0.55;
+  opacity: 0;
+}
+
+.intro-pill.p1 {
+  left: 20%;
+  bottom: -6%;
+}
+
+.intro-pill.p2 {
+  right: 30%;
+  bottom: -10%;
+  --rise-duration: 11s;
+  --rise-delay: -7s;
+  background: var(--warning);
+}
+
+.intro-peca {
+  width: 38px;
+  height: 38px;
+  --rise-distance: 30px;
+  --rise-duration: 13s;
+  --rise-opacity: 0.38;
+  opacity: 0;
+}
+
+.intro-peca.q1 {
+  left: 14%;
+  bottom: -9%;
+  --rise-rotation: 12deg;
+}
+
+.intro-peca.q2 {
+  right: 16%;
+  bottom: -7%;
+  --rise-duration: 12s;
+  --rise-delay: -3.2s;
+  --rise-rotation: -8deg;
+  border-color: var(--primary);
+}
+
+@keyframes ambient-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0) rotate(var(--rise-rotation, 0deg));
+  }
+  15%, 85% {
+    opacity: var(--rise-opacity, 0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, calc(0px - var(--rise-distance, 40px)), 0) rotate(var(--rise-rotation, 0deg));
+  }
 }
 
 /* conteúdo central */
@@ -2158,10 +2238,7 @@ h1 {
   max-width: 860px;
 }
 
-/* Várias logos do XI SETEC 2026 flutuando ao fundo, integradas às partículas.
-   Mesma imagem original, tamanhos/posições/velocidades/atrasos diferentes para
-   um movimento orgânico. A animação sobe e desce suavemente no lugar; as
-   logos nunca cobrem o conteúdo central (z-index abaixo de .intro-content). */
+/* Logos do XI SETEC 2026 compartilham a animação vertical das formas. */
 .intro-logos {
   position: absolute;
   inset: 0;
@@ -2175,16 +2252,11 @@ h1 {
   height: auto;
   opacity: 0;
   filter: drop-shadow(0 0 12px rgba(103, 208, 255, 0.28)) drop-shadow(0 10px 16px rgba(2, 8, 17, 0.45));
-  animation: intro-logo-flutuar var(--dur, 9s) ease-in-out var(--delay, 0s) infinite;
+  --rise-duration: var(--dur, 9s);
+  --rise-delay: var(--delay, 0s);
+  --rise-distance: 54px;
+  --rise-opacity: var(--op, .5);
   will-change: transform, opacity;
-}
-
-@keyframes intro-logo-flutuar {
-  0%   { opacity: 0; transform: translateY(40px) scale(.92); }
-  12%  { opacity: var(--op, .5); }
-  50%  { transform: translateY(-46px) scale(1.02); }
-  88%  { opacity: var(--op, .5); }
-  100% { opacity: 0; transform: translateY(40px) scale(.92); }
 }
 
 /* variação individual: posição, tamanho, velocidade, fase e opacidade */
@@ -2206,8 +2278,26 @@ h1 {
   .intro-logo-mini.l4 { left: 74%; top: 66%; }
 }
 
-/* movimento reduzido: logos estáticas e visíveis, sem flutuação */
-body.reduzir-movimento .intro-logo-mini { animation: none; opacity: .35; transform: none; }
+/* movimento reduzido: elementos decorativos estáticos e visíveis, sem flutuação */
+body.reduzir-movimento .intro-logo-mini,
+body.reduzir-movimento .intro-ghost,
+body.reduzir-movimento .intro-pill,
+body.reduzir-movimento .intro-peca {
+  animation: none !important;
+  opacity: .35;
+  transform: translate3d(0, 0, 0) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-logo-mini,
+  .intro-ghost,
+  .intro-pill,
+  .intro-peca {
+    animation: none !important;
+    opacity: .35;
+    transform: none !important;
+  }
+}
 
 .intro-kicker {
   margin: 0;
@@ -2340,6 +2430,7 @@ body.reduzir-movimento .intro-peca { animation: none !important; }
   position: fixed;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
   pointer-events: none;
 }
 
